@@ -1,0 +1,657 @@
+{
+  "providers": [
+    {
+      "name": "Esri",
+      "icon": "icons/Esri.ico",
+      "type": "xyz",
+      "basemaps": [
+        {
+          "name": "World Imagery",
+          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        },
+        {
+          "name": "World Terrain",
+          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
+        },
+        {
+          "name": "World Street Map",
+          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
+        },
+        {
+          "name": "National Geographic",
+          "url": "http://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}"
+        },
+        {
+          "name": "World Boundaries and Places",
+          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+        },
+        {
+          "name": "Dark Gray",
+          "url": "http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        },
+        {
+          "name": "Light Gray",
+          "url": "http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        },
+        {
+          "name": "World Ocean",
+          "url": "https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
+        },
+        {
+          "name": "World Transportation",
+          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}"
+        },
+        {
+          "name": "World Topo Map",
+          "url": "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+        }
+      ]
+    },
+    {
+      "name": "Google",
+      "icon": "icons/GoogleMaps.svg",
+      "type": "xyz",
+      "basemaps": [
+        {
+          "name": "Google Maps",
+          "url": "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+        },
+        {
+          "name": "Google Satellite",
+          "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+        },
+        {
+          "name": "Google Satellite Hybrid",
+          "url": "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+        },
+        {
+          "name": "Google Terrain",
+          "url": "https://mt1.google.com/vt/lyrs=t&x={x}&y={y}&z={z}"
+        },
+        {
+          "name": "Google Terrain Hybrid",
+          "url": "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}"
+        }
+      ]
+    },
+    {
+      "name": "Bing",
+      "icon": "icons/Bing.svg",
+      "type": "xyz",
+      "basemaps": [
+        {
+          "name": "Bing VirtualEarth",
+          "url": "http://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=1"
+        }
+      ]
+    },
+    {
+      "name": "OpenStreetMap",
+      "icon": "icons/OpenStreetMap.svg",
+      "type": "xyz",
+      "basemaps": [
+        {
+          "name": "OpenStreetMap Standard",
+          "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        },
+        {
+          "name": "OpenStreetMap H.O.T.",
+          "url": "http://tile.openstreetmap.fr/hot/%7Bz%7D/%7Bx%7D/%7By%7D.png"
+        },
+        {
+          "name": "OpenStreetMap Monochrome",
+          "url": "http://tiles.wmflabs.org/bw-mapnik/%7Bz%7D/%7Bx%7D/%7By%7D.png"
+        }
+      ]
+    },
+    {
+      "name": "Sentinel-2 cloudless",
+      "icon": "icons/EOX.png",
+      "type": "wms",
+      "url": "https://tiles.maps.eox.at/wms",
+      "layers": [
+        {
+          "layer_name": "s2cloudless",
+          "layer_title": "Sentinel-2 cloudless layer for 2016 by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless_3857",
+          "layer_title": "Sentinel-2 cloudless layer for 2016 by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2017",
+          "layer_title": "Sentinel-2 cloudless layer for 2017 by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2017_3857",
+          "layer_title": "Sentinel-2 cloudless layer for 2017 by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2018",
+          "layer_title": "Sentinel-2 cloudless layer for 2018 by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2018_3857",
+          "layer_title": "Sentinel-2 cloudless layer for 2018 by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2019",
+          "layer_title": "Sentinel-2 cloudless layer for 2019 by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2019_3857",
+          "layer_title": "Sentinel-2 cloudless layer for 2019 by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2020",
+          "layer_title": "Sentinel-2 cloudless layer for 2020 by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2020_3857",
+          "layer_title": "Sentinel-2 cloudless layer for 2020 by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2021",
+          "layer_title": "Sentinel-2 cloudless layer for 2021 by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2021_3857",
+          "layer_title": "Sentinel-2 cloudless layer for 2021 by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2022",
+          "layer_title": "Sentinel-2 cloudless layer for 2022 by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2022_3857",
+          "layer_title": "Sentinel-2 cloudless layer for 2022 by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2023",
+          "layer_title": "Sentinel-2 cloudless layer for 2023 by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "s2cloudless-2023_3857",
+          "layer_title": "Sentinel-2 cloudless layer for 2023 by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "streets",
+          "layer_title": "Streets overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "streets_3857",
+          "layer_title": "Streets overlay layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "terrain",
+          "layer_title": "Terrain background layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "terrain-light",
+          "layer_title": "Terrain Light background layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "terrain-light_3857",
+          "layer_title": "Terrain Light background layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "terrain_3857",
+          "layer_title": "Terrain background layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+                {
+          "layer_name": "blackmarble",
+          "layer_title": "Black marble background layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "blackmarble_3857",
+          "layer_title": "Black marble background layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "bluemarble",
+          "layer_title": "Blue marble background layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "bluemarble_3857",
+          "layer_title": "Blue marble background layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "coastline",
+          "layer_title": "Coastline overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "coastline_3857",
+          "layer_title": "Coastline overlay layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "coastline_black",
+          "layer_title": "Black coastline overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "graticules",
+          "layer_title": "Graticules overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "hydrography",
+          "layer_title": "Hydrography overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "hydrography_3857",
+          "layer_title": "Hydrography overlay layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "magnetic_graticules",
+          "layer_title": "Magnetic Graticules overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "osm",
+          "layer_title": "OpenStreetMap background layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "osm_3857",
+          "layer_title": "OpenStreetMap background layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "overlay",
+          "layer_title": "Overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "overlay_3857",
+          "layer_title": "Overlay layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "overlay_base",
+          "layer_title": "Overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "overlay_base_3857",
+          "layer_title": "Overlay layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "overlay_base_bright",
+          "layer_title": "Bright overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "overlay_base_bright_3857",
+          "layer_title": "Bright overlay layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "overlay_bright",
+          "layer_title": "Bright overlay layer by EOX - 4326",
+          "crs": [
+            "EPSG:4326"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        },
+        {
+          "layer_name": "overlay_bright_3857",
+          "layer_title": "Bright overlay layer by EOX - 3857",
+          "crs": [
+            "EPSG:900913",
+            "EPSG:3857"
+          ],
+          "format": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "styles": []
+        }
+      ]
+    },
+    {
+      "name": "────────────────",
+      "type": "separator",
+      "icon": ""
+    }
+  ]
+} 
