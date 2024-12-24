@@ -5,16 +5,13 @@ description= A QGIS plugin to load multiple online basemap services
 version=1.0
 author=Chengyan Fan
 email=fanchengyan@outlook.com
-
 about=This plugin is used to load and manage multiple basemap services, supporting XYZ, WMS, WMTS, etc.
+tags=basemap, online map, xyz, wms, wmts, sentinel-2, esri, google maps, bing maps, openstreetmap
 
-tracker=http://github.com/your-repo/issues
-repository=https://github.com/Fanchengyan
-
-tags=basemap, online map, xyz,wms,wmts
-
-homepage=https://github.com/Fanchengyan
-category=Plugins
+homepage=https://github.com/Fanchengyan/Basemaps
+repository=https://github.com/Fanchengyan/Basemaps
+tracker=https://github.com/Fanchengyan/Basemaps/issues
+category=Web
 icon=ui/icon.svg
 
 experimental=False

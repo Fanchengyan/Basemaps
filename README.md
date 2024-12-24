@@ -1,4 +1,4 @@
-# Basemaps Plugin for QGIS
+# Basemaps (Plugin for QGIS)
 
 A QGIS plugin that provides easy access to multiple well-known online basemap services, supporting XYZ tiles, WMS, and WMTS services.
 
