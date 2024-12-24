@@ -57,7 +57,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.btnLoadJson.clicked.connect(self.import_config)
         self.btnSaveJson.clicked.connect(self.save_json)
 
-        # XYZ 相关连接
+        # XYZ connections
         self.btnAddProvider.clicked.connect(self.add_xyz_provider)
         self.btnRemoveProvider.clicked.connect(self.remove_xyz_provider)
         self.btnAddBasemap.clicked.connect(self.add_xyz_basemap)
@@ -66,7 +66,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.btnLoadBasemap.clicked.connect(self.load_xyz_basemap)
         self.listProviders.itemSelectionChanged.connect(self.on_provider_changed)
 
-        # WMS 相关连接
+        # WMS connections
         self.btnAddWmsProvider.clicked.connect(self.add_wms_provider)
         self.btnRemoveWmsProvider.clicked.connect(self.remove_wms_provider)
         self.btnRefreshWmsLayers.clicked.connect(self.refresh_wms_layers)
@@ -87,7 +87,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             try:
                 with open(default_json, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                self.providers_data = data.get("providers", [])  # 只包含默认数据
+                self.providers_data = data.get("providers", []) 
                 self.update_providers_list()
             except Exception as e:
                 QMessageBox.critical(
@@ -101,7 +101,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             try:
                 with open(self.user_config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                self.providers_data.extend(data.get("providers", []))  # 添加用户数据
+                self.providers_data.extend(data.get("providers", []))
                 self.update_providers_list()
             except Exception as e:
                 QMessageBox.critical(
@@ -126,22 +126,22 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 import tempfile
                 import zipfile
 
-                # 创建临时目录
+                # Create temp directory
                 with tempfile.TemporaryDirectory() as temp_dir:
-                    # 解压ZIP文件
+                    # Unzip file
                     with zipfile.ZipFile(file_path, "r") as zip_ref:
                         zip_ref.extractall(temp_dir)
 
-                    # 查找JSON文件
+                    # Find JSON file
                     json_files = list(Path(temp_dir).glob("*.json"))
                     if not json_files:
                         raise Exception("No JSON file found in ZIP")
 
-                    # 加载JSON数据
+                    # Load JSON data
                     with open(json_files[0], "r", encoding="utf-8") as f:
                         data = json.load(f)
 
-                    # 复制图标文件
+                    # Copy icon files
                     icons_dir = Path(temp_dir) / "icons"
                     if icons_dir.exists():
                         target_icons_dir = Path(__file__).parent / "resources" / "icons"
@@ -149,7 +149,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                         for icon_file in icons_dir.glob("*"):
                             shutil.copy2(icon_file, target_icons_dir)
 
-                    # 更新数据
+                    # Update data
                     self.providers_data.extend(data.get("providers", []))
                     self.update_providers_list()
                     self.save_user_config()
@@ -165,13 +165,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.save_user_config()
 
     def save_json(self):
-        """导出配置到 ZIP 文件"""
-        # 检查是否有选中的项目
+        """Export configuration to ZIP file"""
+        # Check if any items are selected
         selected_xyz_items = self.listProviders.selectedItems()
         selected_wms_items = self.listWmsProviders.selectedItems()
         
         if not selected_xyz_items and not selected_wms_items:
-            # 询问用户是否要导出所有用户自定义的提供商
+            # Ask user if they want to export all user-defined providers
             reply = QMessageBox.question(
                 self,
                 self.tr("Export Configuration"),
@@ -181,17 +181,17 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             if reply == QMessageBox.No:
                 return
 
-        # 设置默认文件名
+        # Set default filename
         default_filename = "providers.zip"
         if len(selected_xyz_items) + len(selected_wms_items) == 1:
-            # 如果只选择了一个提供商，使用其名称作为默认文件名
+            # If only one provider is selected, use its name as filename
             if selected_xyz_items:
                 provider_name = selected_xyz_items[0].text()
             else:
                 provider_name = selected_wms_items[0].text()
             default_filename = f"{provider_name}.zip"
         
-        # 获取保存路径
+        # Get save path
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             self.tr("Save Configuration File"),
@@ -202,17 +202,17 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         try:
-            # 收集要导出的提供商和图标
+            # Collect providers and icons to export
             providers_to_export = []
             icon_files = set()
             
             if not selected_xyz_items and not selected_wms_items:
-                # 找到分隔符的索引
+                # Find separator index
                 separator_index = next(
                     (i for i, p in enumerate(self.providers_data) if p.get("type") == "separator"),
                     -1
                 )
-                # 导出所有用户自定义的提供商
+                # Export all user-defined providers
                 providers = self.providers_data[separator_index + 1:] if separator_index >= 0 else []
                 for provider in providers:
                     if provider.get("type") != "separator":
@@ -220,7 +220,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                         if "icon" in provider:
                             icon_files.add(provider["icon"])
             else:
-                # 处理选中的 XYZ 提供商
+                # Process selected XYZ providers
                 for item in selected_xyz_items:
                     provider_data = item.data(Qt.UserRole)
                     if provider_data and provider_data.get("data"):
@@ -230,7 +230,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                             if "icon" in provider:
                                 icon_files.add(provider["icon"])
                 
-                # 处理选中的 WMS 提供商
+                # Process selected WMS providers
                 for item in selected_wms_items:
                     provider_data = item.data(Qt.UserRole)
                     if provider_data and provider_data.get("data"):
@@ -240,12 +240,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                             if "icon" in provider:
                                 icon_files.add(provider["icon"])
 
-            # 创建临时目录并保存文件
+            # Create temp directory and save files
             import tempfile
             import zipfile
             
             with tempfile.TemporaryDirectory() as temp_dir:
-                # 保存 JSON 文件
+                # Save JSON file
                 json_path = Path(temp_dir) / "providers.json"
                 with open(json_path, "w", encoding="utf-8") as f:
                     json.dump(
@@ -255,12 +255,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                         indent=2,
                     )
 
-                # 创建 ZIP 文件
+                # Create ZIP file
                 with zipfile.ZipFile(file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-                    # 添加 JSON 文件
+                    # Add JSON file
                     zipf.write(json_path, "providers.json")
 
-                    # 添加图标文件
+                    # Add icon files
                     for icon_path in icon_files:
                         if icon_path.startswith("icons/"):
                             full_path = Path(__file__).parent / "resources" / icon_path
@@ -285,7 +285,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            # 标记为用户自定义提供商
+            # Mark as user-defined provider
             for provider in data.get("providers", []):
                 provider["builtin"] = False
 
@@ -293,7 +293,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             existing_providers = {p["name"]: p for p in self.providers_data}
             for provider in data.get("providers", []):
                 if provider["name"] in existing_providers:
-                    # 如果内置提供商，创建一个新的用户自定义版本
+                    # If builtin provider, create a new user-defined version
                     if existing_providers[provider["name"]].get("builtin", False):
                         provider["name"] = f"{provider['name']} (Custom)"
                         self.providers_data.append(provider)
@@ -318,13 +318,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
     def save_user_config(self):
         """保存用户配置到文件"""
         try:
-            # 找到分隔符的索引
+            # Find separator index
             separator_index = next(
                 (i for i, p in enumerate(self.providers_data) if p.get("type") == "separator"),
                 -1
             )
             
-            # 只保存分隔符后的用户配置
+            # Save user configuration after separator
             user_data = {
                 "providers": self.providers_data[separator_index + 1:] if separator_index >= 0 else []
             }
@@ -339,11 +339,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             )
 
     def update_providers_list(self):
-        """更新提供商列表"""
+        """Update provider list"""
         self.listProviders.clear()
         self.listWmsProviders.clear()
         
-        # 设置列表的图标大小
+        # Set list icon size
         self.listProviders.setIconSize(QSize(15, 15))
         self.listWmsProviders.setIconSize(QSize(15, 15))
 
@@ -354,9 +354,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return QIcon(pixmap)
             return QIcon(str(Path(__file__).parent / "ui/icon.svg"))
 
-        # 添加提供商到对应的列表
+        # Add providers to corresponding lists
         for i, provider in enumerate(self.providers_data):
-            # 如果是分隔符，添加不可选的分隔项
+            # If separator, add non-selectable separator item
             if provider.get("type") == "separator":
                 for list_widget in [self.listProviders, self.listWmsProviders]:
                     item = QListWidgetItem(provider["name"])
@@ -364,21 +364,21 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     list_widget.addItem(item)
                 continue
 
-            # 创建图标
+            # Create icon
             if "icon" in provider:
                 icon_file = Path(__file__).parent / "resources" / provider["icon"]
                 provider_icon = create_scaled_icon(icon_file)
             else:
                 provider_icon = QIcon(str(Path(__file__).parent / "ui/icon.svg"))
 
-            # 根据类型添加到不同的列表
+            # Add to different lists based on type
             if provider.get("type") == "wms":
                 item = QListWidgetItem(provider["name"])
                 item.setIcon(provider_icon)
                 item.setData(Qt.UserRole, {"index": i, "data": provider})
                 self.listWmsProviders.addItem(item)
-            else:  # xyz 类型
-                # 确保 provider 有 basemaps 字段
+            else:  # xyz type
+                # Ensure provider has basemaps field
                 if "basemaps" not in provider:
                     provider["basemaps"] = []
                 
@@ -410,7 +410,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not selected_items:
             return
 
-        # 读取默认配置中的提供商数量
+        # Read default provider count
         try:
             default_count = len(
                 json.loads(
@@ -422,7 +422,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         except Exception:
             default_count = 0
 
-        # 检查是否选中了默认提供商
+        # Check if default providers are selected
         default_selected = any(
             item.data(Qt.UserRole)["index"] < default_count for item in selected_items
         )
@@ -434,7 +434,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             )
             return
 
-        # 获取要删除的提供商名称列表
+        # Get provider names to delete
         provider_names = [item.text() for item in selected_items]
         names_str = '", "'.join(provider_names)
 
@@ -448,7 +448,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         )
 
         if reply == QMessageBox.Yes:
-            # 收集要删除的提供商索引
+            # Collect indices of providers to remove
             indices_to_remove = [
                 item.data(Qt.UserRole)["index"] for item in selected_items
             ]
@@ -473,12 +473,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         dialog = BasemapInputDialog(self)
         if dialog.exec_() == QDialog.Accepted:
             provider_data = current_item.data(Qt.UserRole)
-            # 直接修改 providers_data 中的数据
+            # Directly modify providers_data data
             self.providers_data[provider_data["index"]]["basemaps"].append(
                 dialog.get_data()
             )
-            self.update_providers_list()  # 刷新提供商列表
-            # 重新选中当前提供商
+            self.update_providers_list()  # Refresh provider list
+            # Re-select current provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
                 if (
@@ -501,12 +501,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         dialog = BasemapInputDialog(self, basemap)
         if dialog.exec_() == QDialog.Accepted:
-            # 直接修改 providers_data 中的数据
+            # Directly modify providers_data data
             provider = self.providers_data[provider_data["index"]]
             basemap_index = provider["basemaps"].index(basemap)
             provider["basemaps"][basemap_index] = dialog.get_data()
             self.update_providers_list()
-            # 重新选中当前提供商
+            # Re-select current provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
                 if (
@@ -524,7 +524,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not current_provider or not selected_basemaps:
             return
 
-        # 获取要删除的底图名称列表
+        # Get basemap names to delete
         basemap_names = [item.text() for item in selected_basemaps]
         names_str = '", "'.join(basemap_names)
 
@@ -539,14 +539,14 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         if reply == QMessageBox.Yes:
             provider_data = current_provider.data(Qt.UserRole)
-            # 直接修改 providers_data 中的数据
+            # Directly modify providers_data data
             provider = self.providers_data[provider_data["index"]]
             basemaps_to_remove = [item.data(Qt.UserRole) for item in selected_basemaps]
             provider["basemaps"] = [
                 b for b in provider["basemaps"] if b not in basemaps_to_remove
             ]
             self.update_providers_list()
-            # 重新选中当前提供商
+            # Re-select current provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
                 if (
@@ -567,9 +567,6 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not current_provider:
             return
 
-        provider_data = current_provider.data(Qt.UserRole)
-        provider_type = provider_data["data"]["type"]
-
         for item in selected_items:
             basemap = item.data(Qt.UserRole)
             self.load_xyz_basemap(basemap)
@@ -581,7 +578,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         for item in selected_items:
             basemap = item.data(Qt.UserRole)
-            if not basemap:  # 添加检查
+            if not basemap:
                 continue
 
             try:
@@ -608,20 +605,20 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 )
 
     def on_provider_changed(self):
-        """更新 XYZ 底图列表"""
+        """update basemap list"""
         current_item = self.listProviders.currentItem()
         if not current_item:
             self.listBasemaps.clear()
             return
 
         provider_data = current_item.data(Qt.UserRole)
-        if not provider_data or "data" not in provider_data:  # 添加检查
+        if not provider_data or "data" not in provider_data:
             return
 
-        # 设置底图列表的图标大小
+        # Set basemap list icon size
         self.listBasemaps.setIconSize(QSize(15, 15))
 
-        # 获取提供商的图标
+        # Get provider icon
         provider = provider_data["data"]
         if "icon" in provider:
             icon_file = Path(__file__).parent / "resources" / provider["icon"]
@@ -632,19 +629,19 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         else:
             provider_icon = QIcon(str(Path(__file__).parent / "ui/icon.svg"))
 
-        # 更新底图列表
+        # Update basemap list
         self.listBasemaps.clear()
         for basemap in provider_data["data"].get("basemaps", []):
             if (
                 isinstance(basemap, dict) and "name" in basemap and "url" in basemap
-            ):  # 添加检查
+            ):
                 item = QListWidgetItem(basemap["name"])
                 item.setIcon(provider_icon)
                 item.setData(Qt.UserRole, basemap)
                 self.listBasemaps.addItem(item)
 
     def on_wms_provider_changed(self):
-        """当 WMS 提供商选择改变时更新图层列表"""
+        """update layer list when WMS provider changed"""
         current_item = self.listWmsProviders.currentItem()
         if not current_item:
             self.listWmsLayers.clear()
@@ -654,10 +651,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not provider_data:
             return
 
-        # 设置图层列表的图标大小
+        # Set layer list icon size
         self.listWmsLayers.setIconSize(QSize(15, 15))
 
-        # 获取提供商的图标
+        # Get provider icon
         provider = provider_data["data"]
         if "icon" in provider:
             icon_file = Path(__file__).parent / "resources" / provider["icon"]
@@ -668,10 +665,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         else:
             provider_icon = QIcon(str(Path(__file__).parent / "ui/icon.svg"))
 
-        # 更新图层列表
+        # Update layer list
         self.listWmsLayers.clear()
         for layer in provider_data["data"].get("layers", []):
-            # 使用 layer_title 作为显示名称，如果没有则使用 layer_name
+            # Use layer_title as display name, if not available use layer_name
             display_name = layer.get(
                 "layer_title", layer.get("layer_name", "Unknown Layer")
             )
@@ -681,7 +678,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.listWmsLayers.addItem(item)
 
     def update_basemaps_list(self):
-        """更新 XYZ 底图列表"""
+        """update basemap list"""
         current_item = self.listProviders.currentItem()
         if not current_item:
             return
@@ -690,10 +687,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not provider_data:
             return
 
-        # 设置底图列表的图标大小
+        # Set basemap list icon size
         self.listBasemaps.setIconSize(QSize(15, 15))
 
-        # 获取提供商的图标
+        # Get provider icon
         provider = provider_data["data"]
         if "icon" in provider:
             icon_file = Path(__file__).parent / "resources" / provider["icon"]
@@ -704,7 +701,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         else:
             provider_icon = QIcon(str(Path(__file__).parent / "ui/icon.svg"))
 
-        # 更新底图列表
+        # Update basemap list
         self.listBasemaps.clear()
         for basemap in provider_data["data"]["basemaps"]:
             item = QListWidgetItem(basemap["name"])
@@ -713,7 +710,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.listBasemaps.addItem(item)
 
     def on_basemap_changed(self):
-        # 不再需要显示详情
+        # no longer need to show details
         pass
 
     def add_xyz_provider(self):
@@ -730,19 +727,19 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 )
                 return
 
-            # 初始化 XYZ 提供商数据
+            # Initialize XYZ provider data
             provider_data.update({
                 "type": "xyz",
-                "basemaps": []  # 初始化空的底图列表
+                "basemaps": []  # Initialize empty basemap list
             })
 
-            # 添加到数据列表
+            # Add to data list
             self.providers_data.append(provider_data)
             
-            # 更新界面显示
+            # Update interface display
             self.update_providers_list()
             
-            # 选中新添加的提供商
+            # Select new added provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
                 if item and item.data(Qt.UserRole):
@@ -750,11 +747,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                         self.listProviders.setCurrentItem(item)
                         break
             
-            # 保存配置
+            # Save config
             self.save_user_config()
 
     def remove_xyz_provider(self):
-        """删除 XYZ 提供商"""
+        """remove XYZ provider"""
         selected_items = self.listProviders.selectedItems()
         if not selected_items:
             QMessageBox.warning(
@@ -764,7 +761,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             )
             return
 
-        # 获取要删除的提供商名称列表
+        # Get provider names to delete
         provider_names = [item.text() for item in selected_items]
         names_str = '", "'.join(provider_names)
 
@@ -776,21 +773,21 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         )
 
         if reply == QMessageBox.Yes:
-            # 收集要删除的索引
+            # Collect indices to remove
             indices_to_remove = []
             for item in selected_items:
                 provider_data = item.data(Qt.UserRole)
                 if provider_data:
                     indices_to_remove.append(provider_data["index"])
             
-            # 按照索引从大到小排序，这样删除时不会影响其他索引
+            # Sort indices from large to small, so deleting will not affect other indices
             indices_to_remove.sort(reverse=True)
             
-            # 删除提供商
+            # Delete provider
             for index in indices_to_remove:
                 self.providers_data.pop(index)
 
-            # 更新界面
+            # Update interface
             self.update_providers_list()
             self.save_user_config()
 
@@ -807,12 +804,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         dialog = BasemapInputDialog(self, provider_type="xyz")
         if dialog.exec_() == QDialog.Accepted:
             provider_data = current_item.data(Qt.UserRole)
-            # 直接修改 providers_data 中的数据
+            # Directly modify providers_data data
             self.providers_data[provider_data["index"]]["basemaps"].append(
                 dialog.get_data()
             )
             self.update_providers_list()
-            # 重新选中当前提供商
+            # Re-select current provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
                 if (
@@ -825,7 +822,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.save_user_config()
 
     def edit_xyz_basemap(self):
-        """编辑 XYZ 底图"""
+        """edit XYZ basemap"""
         current_provider = self.listProviders.currentItem()
         current_basemap = self.listBasemaps.currentItem()
         if not current_provider or not current_basemap:
@@ -841,18 +838,18 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         dialog = BasemapInputDialog(self, basemap)
         if dialog.exec_() == QDialog.Accepted:
-            # 获取编辑后的数据
+            # Get edited data
             new_data = dialog.get_data()
             
-            # 更新数据
+            # Update data
             provider_index = provider_data["index"]
             basemap_index = self.providers_data[provider_index]["basemaps"].index(basemap)
             self.providers_data[provider_index]["basemaps"][basemap_index] = new_data
             
-            # 更新界面显示
+            # Update interface display
             self.update_providers_list()
             
-            # 重新选中当前提供商
+            # Re-select current provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
                 if (
@@ -863,7 +860,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     self.listProviders.setCurrentItem(item)
                     break
             
-            # 保存配置
+            # Save config
             self.save_user_config()
 
     def remove_xyz_basemap(self):
@@ -891,14 +888,14 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         if reply == QMessageBox.Yes:
             provider_data = current_provider.data(Qt.UserRole)
-            # 直接修改 providers_data 中的数据
+            # Directly modify providers_data data
             provider = self.providers_data[provider_data["index"]]
             basemaps_to_remove = [item.data(Qt.UserRole) for item in selected_basemaps]
             provider["basemaps"] = [
                 b for b in provider["basemaps"] if b not in basemaps_to_remove
             ]
             self.update_providers_list()
-            # 重新选中当前提供商
+            # Re-select current provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
                 if (
@@ -924,19 +921,19 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 )
                 return
 
-            # 初始化 WMS 提供商数据
+            # Initialize WMS provider data
             provider_data.update({
                 "type": "wms",
-                "layers": []  # 初始化空的图层列表
+                "layers": []  # Initialize empty layer list
             })
 
-            # 添加到数据列表
+            # Add to data list
             self.providers_data.append(provider_data)
             
-            # 更新界面显示
+            # Update interface display
             self.update_providers_list()
             
-            # 选中新添加的提供商
+            # Select new added provider
             for i in range(self.listWmsProviders.count()):
                 item = self.listWmsProviders.item(i)
                 if item and item.data(Qt.UserRole):
@@ -944,14 +941,14 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                         self.listWmsProviders.setCurrentItem(item)
                         break
             
-            # 保存配置
+            # Save config
             self.save_user_config()
 
-            # 自动触发刷新
+            # Automatically trigger refresh
             self.refresh_wms_layers()
 
     def remove_wms_provider(self):
-        """删除 WMS 提供商"""
+        """remove WMS provider"""
         selected_items = self.listWmsProviders.selectedItems()
         if not selected_items:
             QMessageBox.warning(
@@ -972,21 +969,21 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         )
 
         if reply == QMessageBox.Yes:
-            # 收集要删除的索引
+            # Collect indices to remove
             indices_to_remove = []
             for item in selected_items:
                 provider_data = item.data(Qt.UserRole)
                 if provider_data:
                     indices_to_remove.append(provider_data["index"])
             
-            # 按照索引从大到小排序
+            # Sort indices from large to small, so deleting will not affect other indices
             indices_to_remove.sort(reverse=True)
             
-            # 删除提供商
+            # Delete provider
             for index in indices_to_remove:
                 self.providers_data.pop(index)
 
-            # 更新界面
+            # Update interface
             self.update_providers_list()
             self.save_user_config()
 
@@ -1003,12 +1000,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         dialog = BasemapInputDialog(self, provider_type="wms")
         if dialog.exec_() == QDialog.Accepted:
             provider_data = current_item.data(Qt.UserRole)
-            # 直接修改 providers_data 中的数据
+            # Directly modify providers_data data
             self.providers_data[provider_data["index"]]["layers"].append(
                 dialog.get_data()
             )
             self.update_providers_list()
-            # 重新选中当前提供商
+            # Re-select current provider
             for i in range(self.listWmsProviders.count()):
                 item = self.listWmsProviders.item(i)
                 if (
@@ -1034,7 +1031,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         for item in selected_items:
             layer_data = item.data(Qt.UserRole)
-            # 构建 WMS 参数
+            # Build WMS parameters
             params = {
                 "url": url,
                 "layers": layer_data["layer_name"],
@@ -1043,16 +1040,16 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 "styles": layer_data["styles"][0] if layer_data["styles"] else "",
             }
 
-            # 如果有样式，添加样式参数
+            # If there are styles, add style parameters
             if layer_data.get("styles") and len(layer_data["styles"]) > 0:
                 params["styles"] = layer_data["styles"][0]
 
-            # 使用 QgsDataSourceUri 构建 URI
+            # Build URI using QgsDataSourceUri
             uri = QgsDataSourceUri()
             for key, value in params.items():
                 uri.setParam(key, value)
             
-            # 创建图层
+            # Create layer
             layer = QgsRasterLayer(str(uri.encodedUri(), "utf-8"), layer_data["layer_title"], "wms")
 
             if layer.isValid():
@@ -1067,7 +1064,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 )
 
     def refresh_wms_layers(self):
-        """刷新当前选中 WMS 提供商的图层列表"""
+        """refresh current selected WMS provider's layer list"""
         current_provider = self.listWmsProviders.currentItem()
         if not current_provider:
             QMessageBox.warning(
@@ -1081,16 +1078,16 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         url = provider_data["data"]["url"]
 
         try:
-            # 创建进度对话框
+            # Create progress dialog
             progress = QProgressDialog("Fetching WMS layers...", "Cancel", 0, 0, self)
             progress.setWindowModality(Qt.WindowModal)
             progress.show()
             QApplication.processEvents()
 
-            # 连接 WMS 服务
+            # Connect to WMS service
             wms = WebMapService(url)
 
-            # 获取图层信息
+            # Get layer information
             layers = []
             for layer_name, layer in wms.contents.items():
                 layer_info = {
@@ -1104,14 +1101,14 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 }
                 layers.append(layer_info)
 
-            # 按图层名称排序
+            # Sort by layer name
             layers.sort(key=lambda x: x["layer_name"].lower())
 
-            # 更新提供商数据
+            # Update provider data
             index = provider_data["index"]
             provider = self.providers_data[index]
 
-            # 检查是否是默认提供商
+            # Check if it is a default provider
             try:
                 with open(
                     Path(__file__).parent / "resources" / "default_basemaps.json",
@@ -1126,7 +1123,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 default_providers = {}
 
             if provider["name"] in default_providers:
-                # 如果是默认提供商，创建一个新的用户自定义版本
+                # If it is a default provider, create a new user-defined version
                 new_provider = {
                     "name": f"{provider['name']} (Custom)",
                     "icon": provider.get("icon", "ui/icon.svg"),
@@ -1136,7 +1133,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 }
                 self.providers_data.append(new_provider)
             else:
-                # 如果是用户提供商，直接更新
+                # If it is a user provider, directly update
                 self.providers_data[index] = {
                     "name": provider["name"],
                     "icon": provider.get("icon", "ui/icon.svg"),
@@ -1145,10 +1142,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     "layers": layers,
                 }
 
-            # 更新界面显示
+            # Update interface display
             self.update_providers_list()
 
-            # 重新选中当前提供商
+            # Re-select current provider
             for i in range(self.listWmsProviders.count()):
                 item = self.listWmsProviders.item(i)
                 if item and item.data(Qt.UserRole):
@@ -1163,13 +1160,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                         self.listWmsProviders.setCurrentItem(item)
                         break
 
-            # 保存配置到 JSON 文件
+            # Save config to JSON file
             self.save_user_config()
 
-            # 关闭进度对话框
+            # Close progress dialog
             progress.close()
 
-            # 显示成功消息
+            # Show success message
             QMessageBox.information(
                 self,
                 self.tr("Success"),
@@ -1223,7 +1220,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 new_data["layers"] = provider_data["data"].get("layers", [])
                 new_data["url"] = dialog.url_edit.text()
                 
-                # 更新数据
+                # Update data
                 self.providers_data[provider_data["index"]] = new_data
                 self.update_providers_list()
                 self.save_user_config()
@@ -1261,7 +1258,7 @@ class ProviderInputDialog(QDialog):
         icon_layout.addWidget(self.icon_button)
         layout.addLayout(icon_layout)
 
-        # URL input (只在 WMS 类型时显示)
+        # URL input (only show when WMS type)
         if provider_type == "wms":
             url_layout = QHBoxLayout()
             url_label = QLabel("URL:")
@@ -1329,7 +1326,7 @@ class BasemapInputDialog(QDialog):
         url_layout.addWidget(self.url_edit)
         layout.addLayout(url_layout)
 
-        # Layer settings (只在 WMS 类型时显示)
+        # Layer settings (only show when WMS type)
         if provider_type == "wms":
             layer_group = QGroupBox("Layer Settings")
             layer_layout = QVBoxLayout()
