@@ -2,7 +2,7 @@
 name=Basemaps
 qgisMinimumVersion=3.0
 description= A QGIS plugin to load multiple online basemap services
-version=1.0
+version=1.1
 author=Chengyan Fan
 email=fanchengyan@outlook.com
 about=This plugin allows you to load and manage multiple basemap services, supporting formats like XYZ, WMS, WMTS. If you have additional basemap services to contribute, feel free to submit a pull request or open a discussion in the GitHub repository: https://github.com/Fanchengyan/Basemaps
