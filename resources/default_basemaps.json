@@ -86,25 +86,6 @@
       ]
     },
     {
-      "name": "OpenStreetMap",
-      "icon": "icons/OpenStreetMap.svg",
-      "type": "xyz",
-      "basemaps": [
-        {
-          "name": "OpenStreetMap Standard",
-          "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        },
-        {
-          "name": "OpenStreetMap H.O.T.",
-          "url": "http://tile.openstreetmap.fr/hot/%7Bz%7D/%7Bx%7D/%7By%7D.png"
-        },
-        {
-          "name": "OpenStreetMap Monochrome",
-          "url": "http://tiles.wmflabs.org/bw-mapnik/%7Bz%7D/%7Bx%7D/%7By%7D.png"
-        }
-      ]
-    },
-    {
       "name": "Sentinel-2 cloudless",
       "icon": "icons/EOX.png",
       "type": "wms",
