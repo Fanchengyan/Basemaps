@@ -12,7 +12,8 @@
 
 import json
 from pathlib import Path
-
+from urllib.parse import quote
+import requests
 from owslib.wms import WebMapService
 from qgis.core import QgsDataSourceUri, QgsProject, QgsRasterLayer
 from qgis.PyQt.QtCore import QCoreApplication, QSize, Qt
@@ -598,8 +599,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 name = basemap["name"]
 
                 # Create XYZ layer
-                uri = f"type=xyz&url={url}"
-                layer = QgsRasterLayer(uri, name, "wms")
+                uri = QgsDataSourceUri()
+                uri.setParam("type", "xyz")
+                uri.setParam("url", url)
+                layer = QgsRasterLayer(str(uri.encodedUri(), "utf-8"), name, "wms")
 
                 if layer.isValid():
                     QgsProject.instance().addMapLayer(layer)
