@@ -1,4 +1,4 @@
-# Copyright (C) 2024  Chengyan (Fancy) Fan 
+# Copyright (C) 2024  Chengyan (Fancy) Fan
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,14 +13,15 @@
 import json
 from pathlib import Path
 from urllib.parse import quote
+
 import requests
 from owslib.wms import WebMapService
 from qgis.core import QgsDataSourceUri, QgsProject, QgsRasterLayer
-from qgis.PyQt.QtCore import QCoreApplication, QSize, Qt, QT_VERSION_STR
+from qgis.PyQt.QtCore import QT_VERSION_STR, QCoreApplication, QSize, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
-    QApplication,
     QAbstractItemView,
+    QApplication,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -30,11 +31,11 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidgetItem,
+    QMenu,
     QMessageBox,
     QProgressDialog,
     QPushButton,
     QVBoxLayout,
-    QMenu,
 )
 
 from .ui import UIBasemapsBase
@@ -65,6 +66,8 @@ else:
     button_no = QMessageBox.StandardButton.No
     dialog_accepted = QDialog.DialogCode.Accepted
     window_modal = Qt.WindowModality.WindowModal
+
+
 class BasemapsDialog(QDialog, UIBasemapsBase):
     def __init__(self, iface, parent=None):
         super(BasemapsDialog, self).__init__(parent)
@@ -84,13 +87,19 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         # 设置右键菜单
         self.listProviders.setContextMenuPolicy(custom_context_menu)
-        self.listProviders.customContextMenuRequested.connect(self.show_xyz_provider_context_menu)
-        
+        self.listProviders.customContextMenuRequested.connect(
+            self.show_xyz_provider_context_menu
+        )
+
         self.listBasemaps.setContextMenuPolicy(custom_context_menu)
-        self.listBasemaps.customContextMenuRequested.connect(self.show_xyz_basemap_context_menu)
-        
+        self.listBasemaps.customContextMenuRequested.connect(
+            self.show_xyz_basemap_context_menu
+        )
+
         self.listWmsProviders.setContextMenuPolicy(custom_context_menu)
-        self.listWmsProviders.customContextMenuRequested.connect(self.show_wms_provider_context_menu)
+        self.listWmsProviders.customContextMenuRequested.connect(
+            self.show_wms_provider_context_menu
+        )
 
         # Connect signals and slots
         self.btnLoadJson.clicked.connect(self.import_config)
@@ -126,7 +135,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             try:
                 with open(default_json, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                self.providers_data = data.get("providers", []) 
+                self.providers_data = data.get("providers", [])
                 self.update_providers_list()
             except Exception as e:
                 QMessageBox.critical(
@@ -208,13 +217,15 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Check if any items are selected
         selected_xyz_items = self.listProviders.selectedItems()
         selected_wms_items = self.listWmsProviders.selectedItems()
-        
+
         if not selected_xyz_items and not selected_wms_items:
             # Ask user if they want to export all user-defined providers
             reply = QMessageBox.question(
                 self,
                 self.tr("Export Configuration"),
-                self.tr("No providers selected. Do you want to export all user-defined providers?"),
+                self.tr(
+                    "No providers selected. Do you want to export all user-defined providers?"
+                ),
                 button_yes | button_no,
             )
             if reply == button_no:
@@ -229,7 +240,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             else:
                 provider_name = selected_wms_items[0].text()
             default_filename = f"{provider_name}.zip"
-        
+
         # Get save path
         file_path, _ = QFileDialog.getSaveFileName(
             self,
@@ -244,15 +255,23 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Collect providers and icons to export
             providers_to_export = []
             icon_files = set()
-            
+
             if not selected_xyz_items and not selected_wms_items:
                 # Find separator index
                 separator_index = next(
-                    (i for i, p in enumerate(self.providers_data) if p.get("type") == "separator"),
-                    -1
+                    (
+                        i
+                        for i, p in enumerate(self.providers_data)
+                        if p.get("type") == "separator"
+                    ),
+                    -1,
                 )
                 # Export all user-defined providers
-                providers = self.providers_data[separator_index + 1:] if separator_index >= 0 else []
+                providers = (
+                    self.providers_data[separator_index + 1 :]
+                    if separator_index >= 0
+                    else []
+                )
                 for provider in providers:
                     if provider.get("type") != "separator":
                         providers_to_export.append(provider)
@@ -268,7 +287,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                             providers_to_export.append(provider)
                             if "icon" in provider:
                                 icon_files.add(provider["icon"])
-                
+
                 # Process selected WMS providers
                 for item in selected_wms_items:
                     provider_data = item.data(user_role)
@@ -282,7 +301,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Create temp directory and save files
             import tempfile
             import zipfile
-            
+
             with tempfile.TemporaryDirectory() as temp_dir:
                 # Save JSON file
                 json_path = Path(temp_dir) / "providers.json"
@@ -359,15 +378,21 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         try:
             # Find separator index
             separator_index = next(
-                (i for i, p in enumerate(self.providers_data) if p.get("type") == "separator"),
-                -1
+                (
+                    i
+                    for i, p in enumerate(self.providers_data)
+                    if p.get("type") == "separator"
+                ),
+                -1,
             )
-            
+
             # Save user configuration after separator
             user_data = {
-                "providers": self.providers_data[separator_index + 1:] if separator_index >= 0 else []
+                "providers": self.providers_data[separator_index + 1 :]
+                if separator_index >= 0
+                else []
             }
-            
+
             with open(self.user_config_path, "w", encoding="utf-8") as f:
                 json.dump(user_data, f, ensure_ascii=False, indent=2)
         except Exception as e:
@@ -381,7 +406,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         """Update provider list"""
         self.listProviders.clear()
         self.listWmsProviders.clear()
-        
+
         # Set list icon size
         self.listProviders.setIconSize(QSize(15, 15))
         self.listWmsProviders.setIconSize(QSize(15, 15))
@@ -420,7 +445,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 # Ensure provider has basemaps field
                 if "basemaps" not in provider:
                     provider["basemaps"] = []
-                
+
                 item = QListWidgetItem(provider["name"])
                 item.setIcon(provider_icon)
                 item.setData(user_role, {"index": i, "data": provider})
@@ -676,9 +701,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Update basemap list
         self.listBasemaps.clear()
         for basemap in provider_data["data"].get("basemaps", []):
-            if (
-                isinstance(basemap, dict) and "name" in basemap and "url" in basemap
-            ):
+            if isinstance(basemap, dict) and "name" in basemap and "url" in basemap:
                 item = QListWidgetItem(basemap["name"])
                 item.setIcon(provider_icon)
                 item.setData(user_role, basemap)
@@ -773,17 +796,19 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return
 
             # Initialize XYZ provider data
-            provider_data.update({
-                "type": "xyz",
-                "basemaps": []  # Initialize empty basemap list
-            })
+            provider_data.update(
+                {
+                    "type": "xyz",
+                    "basemaps": [],  # Initialize empty basemap list
+                }
+            )
 
             # Add to data list
             self.providers_data.append(provider_data)
-            
+
             # Update interface display
             self.update_providers_list()
-            
+
             # Select new added provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
@@ -791,7 +816,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     if item.data(user_role)["data"]["name"] == provider_data["name"]:
                         self.listProviders.setCurrentItem(item)
                         break
-            
+
             # Save config
             self.save_user_config()
 
@@ -813,7 +838,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         reply = QMessageBox.question(
             self,
             self.tr("Confirm Deletion"),
-            self.tr('Are you sure you want to remove providers: "{}"?').format(names_str),
+            self.tr('Are you sure you want to remove providers: "{}"?').format(
+                names_str
+            ),
             button_yes | button_no,
         )
 
@@ -824,10 +851,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 provider_data = item.data(user_role)
                 if provider_data:
                     indices_to_remove.append(provider_data["index"])
-            
+
             # Sort indices from large to small, so deleting will not affect other indices
             indices_to_remove.sort(reverse=True)
-            
+
             # Delete provider
             for index in indices_to_remove:
                 self.providers_data.pop(index)
@@ -887,15 +914,17 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if exec_result == dialog_accepted:
             # Get edited data
             new_data = dialog.get_data()
-            
+
             # Update data
             provider_index = provider_data["index"]
-            basemap_index = self.providers_data[provider_index]["basemaps"].index(basemap)
+            basemap_index = self.providers_data[provider_index]["basemaps"].index(
+                basemap
+            )
             self.providers_data[provider_index]["basemaps"][basemap_index] = new_data
-            
+
             # Update interface display
             self.update_providers_list()
-            
+
             # Re-select current provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
@@ -906,7 +935,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 ):
                     self.listProviders.setCurrentItem(item)
                     break
-            
+
             # Save config
             self.save_user_config()
 
@@ -970,17 +999,19 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return
 
             # Initialize WMS provider data
-            provider_data.update({
-                "type": "wms",
-                "layers": []  # Initialize empty layer list
-            })
+            provider_data.update(
+                {
+                    "type": "wms",
+                    "layers": [],  # Initialize empty layer list
+                }
+            )
 
             # Add to data list
             self.providers_data.append(provider_data)
-            
+
             # Update interface display
             self.update_providers_list()
-            
+
             # Select new added provider
             for i in range(self.listWmsProviders.count()):
                 item = self.listWmsProviders.item(i)
@@ -988,7 +1019,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     if item.data(user_role)["data"]["name"] == provider_data["name"]:
                         self.listWmsProviders.setCurrentItem(item)
                         break
-            
+
             # Save config
             self.save_user_config()
 
@@ -1012,7 +1043,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         reply = QMessageBox.question(
             self,
             self.tr("Confirm Deletion"),
-            self.tr('Are you sure you want to remove providers: "{}"?').format(names_str),
+            self.tr('Are you sure you want to remove providers: "{}"?').format(
+                names_str
+            ),
             button_yes | button_no,
         )
 
@@ -1023,10 +1056,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 provider_data = item.data(user_role)
                 if provider_data:
                     indices_to_remove.append(provider_data["index"])
-            
+
             # Sort indices from large to small, so deleting will not affect other indices
             indices_to_remove.sort(reverse=True)
-            
+
             # Delete provider
             for index in indices_to_remove:
                 self.providers_data.pop(index)
@@ -1097,9 +1130,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             uri = QgsDataSourceUri()
             for key, value in params.items():
                 uri.setParam(key, value)
-            
+
             # Create layer
-            layer = QgsRasterLayer(str(uri.encodedUri(), "utf-8"), layer_data["layer_title"], "wms")
+            layer = QgsRasterLayer(
+                str(uri.encodedUri(), "utf-8"), layer_data["layer_title"], "wms"
+            )
 
             if layer.isValid():
                 QgsProject.instance().addMapLayer(layer)
@@ -1113,7 +1148,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 )
 
     def refresh_wms_layers(self):
-        """refresh current selected WMS provider's layer list"""
+        """refresh current selected WMS/WMTS provider's layer list"""
         current_provider = self.listWmsProviders.currentItem()
         if not current_provider:
             QMessageBox.warning(
@@ -1233,20 +1268,20 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
     def show_xyz_provider_context_menu(self, position):
         menu = QMenu()
         edit_action = menu.addAction("Edit")
-        
+
         exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
         action = exec(self.listProviders.mapToGlobal(position))
-        
+
         if action == edit_action:
             self.edit_xyz_provider()
 
     def show_xyz_basemap_context_menu(self, position):
         menu = QMenu()
         edit_action = menu.addAction("Edit")
-        
+
         exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
         action = exec(self.listBasemaps.mapToGlobal(position))
-        
+
         if action == edit_action:
             self.edit_xyz_basemap()
 
@@ -1255,7 +1290,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         edit_action = menu.addAction("Edit")
         exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
         action = exec(self.listWmsProviders.mapToGlobal(position))
-        
+
         if action == edit_action:
             current_item = self.listWmsProviders.currentItem()
             if not current_item:
@@ -1267,14 +1302,16 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return
 
             provider_data = current_item.data(user_role)
-            dialog = ProviderInputDialog(self, provider_data["data"], provider_type="wms")
+            dialog = ProviderInputDialog(
+                self, provider_data["data"], provider_type="wms"
+            )
             exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
             if exec_result == dialog_accepted:
                 new_data = dialog.get_data()
                 new_data["type"] = "wms"
                 new_data["layers"] = provider_data["data"].get("layers", [])
                 new_data["url"] = dialog.url_edit.text()
-                
+
                 # Update data
                 self.providers_data[provider_data["index"]] = new_data
                 self.update_providers_list()
@@ -1303,7 +1340,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 encoding="utf-8",
             ) as f:
                 default_data = json.load(f)
-                default_providers = {p["name"]: p for p in default_data.get("providers", [])}
+                default_providers = {
+                    p["name"]: p for p in default_data.get("providers", [])
+                }
         except Exception:
             default_providers = {}
 
@@ -1324,13 +1363,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             new_data = dialog.get_data()
             new_data["type"] = "xyz"
             new_data["basemaps"] = provider.get("basemaps", [])
-            
+
             # Update data
             self.providers_data[provider_data["index"]] = new_data
-            
+
             # Update interface display
             self.update_providers_list()
-            
+
             # Re-select current provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
@@ -1341,7 +1380,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 ):
                     self.listProviders.setCurrentItem(item)
                     break
-            
+
             # Save config
             self.save_user_config()
 
@@ -1516,3 +1555,4 @@ class BasemapInputDialog(QDialog):
             }
         else:
             return {"name": self.name_edit.text(), "url": self.url_edit.text()}
+        
