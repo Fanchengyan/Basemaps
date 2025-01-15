@@ -5,7 +5,7 @@ description= A QGIS plugin to load multiple online basemap services
 version=1.1
 author=Chengyan Fan
 email=fanchengyan@outlook.com
-about=This plugin allows you to load and manage multiple basemap services, supporting formats like XYZ, WMS, WMTS. If you have additional basemap services to contribute, feel free to submit a pull request or open a discussion in the GitHub repository: https://github.com/Fanchengyan/Basemaps
+about=This plugin allows you to load and manage multiple basemap services, just like Google Maps, Esri World Imagery, Bing Maps, Sentinel-2 cloudless, etc. \n\nIf you have additional basemap services to contribute, feel free to submit a pull request or open a discussion in the GitHub repository: https://github.com/Fanchengyan/Basemaps
 tags=basemap, online map, xyz, wms, wmts, sentinel-2, esri, google maps, bing maps, openstreetmap
 
 homepage=https://github.com/Fanchengyan/Basemaps
