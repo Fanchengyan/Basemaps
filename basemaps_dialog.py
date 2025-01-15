@@ -16,7 +16,7 @@ from urllib.parse import quote
 import requests
 from owslib.wms import WebMapService
 from qgis.core import QgsDataSourceUri, QgsProject, QgsRasterLayer
-from qgis.PyQt.QtCore import QCoreApplication, QSize, Qt
+from qgis.PyQt.QtCore import QCoreApplication, QSize, Qt, QT_VERSION_STR
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QApplication,
@@ -39,7 +39,32 @@ from qgis.PyQt.QtWidgets import (
 
 from .ui import UIBasemapsBase
 
+QT_VERSION_INT = int(QT_VERSION_STR.split(".")[0])
 
+if QT_VERSION_INT <= 5:
+    extended_selection = QAbstractItemView.ExtendedSelection
+    custom_context_menu = Qt.CustomContextMenu
+    user_role = Qt.UserRole
+    item_enabled = Qt.ItemIsEnabled
+    item_selectable = Qt.ItemIsSelectable
+    button_ok = QDialogButtonBox.Ok
+    button_cancel = QDialogButtonBox.Cancel
+    button_yes = QMessageBox.Yes
+    button_no = QMessageBox.No
+    dialog_accepted = QDialog.Accepted
+    window_modal = Qt.WindowModal
+else:
+    extended_selection = QAbstractItemView.SelectionMode.ExtendedSelection
+    custom_context_menu = Qt.ContextMenuPolicy.CustomContextMenu
+    user_role = Qt.ItemDataRole.UserRole
+    item_enabled = Qt.ItemFlag.ItemIsEnabled
+    item_selectable = Qt.ItemFlag.ItemIsSelectable
+    button_ok = QDialogButtonBox.StandardButton.Ok
+    button_cancel = QDialogButtonBox.StandardButton.Cancel
+    button_yes = QMessageBox.StandardButton.Yes
+    button_no = QMessageBox.StandardButton.No
+    dialog_accepted = QDialog.DialogCode.Accepted
+    window_modal = Qt.WindowModality.WindowModal
 class BasemapsDialog(QDialog, UIBasemapsBase):
     def __init__(self, iface, parent=None):
         super(BasemapsDialog, self).__init__(parent)
@@ -50,20 +75,21 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             Path(__file__).parent / "resources" / "user_basemaps.json"
         )
 
-        # 设置所有列表为多选模式
-        self.listProviders.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.listBasemaps.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.listWmsProviders.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.listWmsLayers.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        # set all list to multiple selection mode
+
+        self.listProviders.setSelectionMode(extended_selection)
+        self.listBasemaps.setSelectionMode(extended_selection)
+        self.listWmsProviders.setSelectionMode(extended_selection)
+        self.listWmsLayers.setSelectionMode(extended_selection)
 
         # 设置右键菜单
-        self.listProviders.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.listProviders.setContextMenuPolicy(custom_context_menu)
         self.listProviders.customContextMenuRequested.connect(self.show_xyz_provider_context_menu)
         
-        self.listBasemaps.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.listBasemaps.setContextMenuPolicy(custom_context_menu)
         self.listBasemaps.customContextMenuRequested.connect(self.show_xyz_basemap_context_menu)
         
-        self.listWmsProviders.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.listWmsProviders.setContextMenuPolicy(custom_context_menu)
         self.listWmsProviders.customContextMenuRequested.connect(self.show_wms_provider_context_menu)
 
         # Connect signals and slots
@@ -189,9 +215,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 self,
                 self.tr("Export Configuration"),
                 self.tr("No providers selected. Do you want to export all user-defined providers?"),
-                QMessageBox.Yes | QMessageBox.No,
+                button_yes | button_no,
             )
-            if reply == QMessageBox.No:
+            if reply == button_no:
                 return
 
         # Set default filename
@@ -235,7 +261,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             else:
                 # Process selected XYZ providers
                 for item in selected_xyz_items:
-                    provider_data = item.data(Qt.UserRole)
+                    provider_data = item.data(user_role)
                     if provider_data and provider_data.get("data"):
                         provider = provider_data["data"]
                         if provider.get("type") != "separator":
@@ -245,7 +271,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 
                 # Process selected WMS providers
                 for item in selected_wms_items:
-                    provider_data = item.data(Qt.UserRole)
+                    provider_data = item.data(user_role)
                     if provider_data and provider_data.get("data"):
                         provider = provider_data["data"]
                         if provider.get("type") != "separator":
@@ -373,7 +399,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             if provider.get("type") == "separator":
                 for list_widget in [self.listProviders, self.listWmsProviders]:
                     item = QListWidgetItem(provider["name"])
-                    item.setFlags(item.flags() & ~Qt.ItemIsEnabled & ~Qt.ItemIsSelectable)
+                    item.setFlags(item.flags() & ~item_enabled & ~item_selectable)
                     list_widget.addItem(item)
                 continue
 
@@ -388,7 +414,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             if provider.get("type") == "wms":
                 item = QListWidgetItem(provider["name"])
                 item.setIcon(provider_icon)
-                item.setData(Qt.UserRole, {"index": i, "data": provider})
+                item.setData(user_role, {"index": i, "data": provider})
                 self.listWmsProviders.addItem(item)
             else:  # xyz type
                 # Ensure provider has basemaps field
@@ -397,12 +423,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 
                 item = QListWidgetItem(provider["name"])
                 item.setIcon(provider_icon)
-                item.setData(Qt.UserRole, {"index": i, "data": provider})
+                item.setData(user_role, {"index": i, "data": provider})
                 self.listProviders.addItem(item)
 
     def add_provider(self):
         dialog = ProviderInputDialog(self)
-        if dialog.exec_() == QDialog.Accepted:
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
             provider_data = dialog.get_data()
             if any(p["name"] == provider_data["name"] for p in self.providers_data):
                 QMessageBox.warning(
@@ -437,7 +464,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         # Check if default providers are selected
         default_selected = any(
-            item.data(Qt.UserRole)["index"] < default_count for item in selected_items
+            item.data(user_role)["index"] < default_count for item in selected_items
         )
         if default_selected:
             QMessageBox.warning(
@@ -457,13 +484,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.tr('Are you sure you want to remove providers: "{}"?').format(
                 names_str
             ),
-            QMessageBox.Yes | QMessageBox.No,
+            button_yes | button_no,
         )
 
-        if reply == QMessageBox.Yes:
+        if reply == button_yes:
             # Collect indices of providers to remove
             indices_to_remove = [
-                item.data(Qt.UserRole)["index"] for item in selected_items
+                item.data(user_role)["index"] for item in selected_items
             ]
             self.providers_data = [
                 p
@@ -484,8 +511,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         dialog = BasemapInputDialog(self)
-        if dialog.exec_() == QDialog.Accepted:
-            provider_data = current_item.data(Qt.UserRole)
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
+            provider_data = current_item.data(user_role)
             # Directly modify providers_data data
             self.providers_data[provider_data["index"]]["basemaps"].append(
                 dialog.get_data()
@@ -496,8 +524,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 item = self.listProviders.item(i)
                 if (
                     item
-                    and item.data(Qt.UserRole)
-                    and item.data(Qt.UserRole)["index"] == provider_data["index"]
+                    and item.data(user_role)
+                    and item.data(user_role)["index"] == provider_data["index"]
                 ):
                     self.listProviders.setCurrentItem(item)
                     break
@@ -509,11 +537,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not current_provider or not current_basemap:
             return
 
-        provider_data = current_provider.data(Qt.UserRole)
-        basemap = current_basemap.data(Qt.UserRole)
+        provider_data = current_provider.data(user_role)
+        basemap = current_basemap.data(user_role)
 
         dialog = BasemapInputDialog(self, basemap)
-        if dialog.exec_() == QDialog.Accepted:
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
             # Directly modify providers_data data
             provider = self.providers_data[provider_data["index"]]
             basemap_index = provider["basemaps"].index(basemap)
@@ -524,8 +553,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 item = self.listProviders.item(i)
                 if (
                     item
-                    and item.data(Qt.UserRole)
-                    and item.data(Qt.UserRole)["index"] == provider_data["index"]
+                    and item.data(user_role)
+                    and item.data(user_role)["index"] == provider_data["index"]
                 ):
                     self.listProviders.setCurrentItem(item)
                     break
@@ -547,14 +576,14 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.tr('Are you sure you want to remove basemaps: "{}"?').format(
                 names_str
             ),
-            QMessageBox.Yes | QMessageBox.No,
+            button_yes | button_no,
         )
 
-        if reply == QMessageBox.Yes:
-            provider_data = current_provider.data(Qt.UserRole)
+        if reply == button_yes:
+            provider_data = current_provider.data(user_role)
             # Directly modify providers_data data
             provider = self.providers_data[provider_data["index"]]
-            basemaps_to_remove = [item.data(Qt.UserRole) for item in selected_basemaps]
+            basemaps_to_remove = [item.data(user_role) for item in selected_basemaps]
             provider["basemaps"] = [
                 b for b in provider["basemaps"] if b not in basemaps_to_remove
             ]
@@ -564,8 +593,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 item = self.listProviders.item(i)
                 if (
                     item
-                    and item.data(Qt.UserRole)
-                    and item.data(Qt.UserRole)["index"] == provider_data["index"]
+                    and item.data(user_role)
+                    and item.data(user_role)["index"] == provider_data["index"]
                 ):
                     self.listProviders.setCurrentItem(item)
                     break
@@ -581,7 +610,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         for item in selected_items:
-            basemap = item.data(Qt.UserRole)
+            basemap = item.data(user_role)
             self.load_xyz_basemap(basemap)
 
     def load_xyz_basemap(self):
@@ -590,7 +619,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         for item in selected_items:
-            basemap = item.data(Qt.UserRole)
+            basemap = item.data(user_role)
             if not basemap:
                 continue
 
@@ -626,7 +655,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.listBasemaps.clear()
             return
 
-        provider_data = current_item.data(Qt.UserRole)
+        provider_data = current_item.data(user_role)
         if not provider_data or "data" not in provider_data:
             return
 
@@ -652,7 +681,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             ):
                 item = QListWidgetItem(basemap["name"])
                 item.setIcon(provider_icon)
-                item.setData(Qt.UserRole, basemap)
+                item.setData(user_role, basemap)
                 self.listBasemaps.addItem(item)
 
     def on_wms_provider_changed(self):
@@ -662,7 +691,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.listWmsLayers.clear()
             return
 
-        provider_data = current_item.data(Qt.UserRole)
+        provider_data = current_item.data(user_role)
         if not provider_data:
             return
 
@@ -689,7 +718,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             )
             item = QListWidgetItem(display_name)
             item.setIcon(provider_icon)
-            item.setData(Qt.UserRole, layer)
+            item.setData(user_role, layer)
             self.listWmsLayers.addItem(item)
 
     def update_basemaps_list(self):
@@ -698,7 +727,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not current_item:
             return
 
-        provider_data = current_item.data(Qt.UserRole)
+        provider_data = current_item.data(user_role)
         if not provider_data:
             return
 
@@ -721,7 +750,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         for basemap in provider_data["data"]["basemaps"]:
             item = QListWidgetItem(basemap["name"])
             item.setIcon(provider_icon)
-            item.setData(Qt.UserRole, basemap)
+            item.setData(user_role, basemap)
             self.listBasemaps.addItem(item)
 
     def on_basemap_changed(self):
@@ -730,7 +759,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def add_xyz_provider(self):
         dialog = ProviderInputDialog(self, provider_type="xyz")
-        if dialog.exec_() == QDialog.Accepted:
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
             provider_data = dialog.get_data()
             if any(p["name"] == provider_data["name"] for p in self.providers_data):
                 QMessageBox.warning(
@@ -757,8 +787,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Select new added provider
             for i in range(self.listProviders.count()):
                 item = self.listProviders.item(i)
-                if item and item.data(Qt.UserRole):
-                    if item.data(Qt.UserRole)["data"]["name"] == provider_data["name"]:
+                if item and item.data(user_role):
+                    if item.data(user_role)["data"]["name"] == provider_data["name"]:
                         self.listProviders.setCurrentItem(item)
                         break
             
@@ -784,14 +814,14 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self,
             self.tr("Confirm Deletion"),
             self.tr('Are you sure you want to remove providers: "{}"?').format(names_str),
-            QMessageBox.Yes | QMessageBox.No,
+            button_yes | button_no,
         )
 
-        if reply == QMessageBox.Yes:
+        if reply == button_yes:
             # Collect indices to remove
             indices_to_remove = []
             for item in selected_items:
-                provider_data = item.data(Qt.UserRole)
+                provider_data = item.data(user_role)
                 if provider_data:
                     indices_to_remove.append(provider_data["index"])
             
@@ -817,8 +847,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         dialog = BasemapInputDialog(self, provider_type="xyz")
-        if dialog.exec_() == QDialog.Accepted:
-            provider_data = current_item.data(Qt.UserRole)
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
+            provider_data = current_item.data(user_role)
             # Directly modify providers_data data
             self.providers_data[provider_data["index"]]["basemaps"].append(
                 dialog.get_data()
@@ -829,8 +860,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 item = self.listProviders.item(i)
                 if (
                     item
-                    and item.data(Qt.UserRole)
-                    and item.data(Qt.UserRole)["index"] == provider_data["index"]
+                    and item.data(user_role)
+                    and item.data(user_role)["index"] == provider_data["index"]
                 ):
                     self.listProviders.setCurrentItem(item)
                     break
@@ -848,11 +879,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             )
             return
 
-        provider_data = current_provider.data(Qt.UserRole)
-        basemap = current_basemap.data(Qt.UserRole)
+        provider_data = current_provider.data(user_role)
+        basemap = current_basemap.data(user_role)
 
         dialog = BasemapInputDialog(self, basemap)
-        if dialog.exec_() == QDialog.Accepted:
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
             # Get edited data
             new_data = dialog.get_data()
             
@@ -869,8 +901,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 item = self.listProviders.item(i)
                 if (
                     item
-                    and item.data(Qt.UserRole)
-                    and item.data(Qt.UserRole)["index"] == provider_index
+                    and item.data(user_role)
+                    and item.data(user_role)["index"] == provider_index
                 ):
                     self.listProviders.setCurrentItem(item)
                     break
@@ -898,14 +930,14 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.tr('Are you sure you want to remove basemaps: "{}"?').format(
                 names_str
             ),
-            QMessageBox.Yes | QMessageBox.No,
+            button_yes | button_no,
         )
 
-        if reply == QMessageBox.Yes:
-            provider_data = current_provider.data(Qt.UserRole)
+        if reply == button_yes:
+            provider_data = current_provider.data(user_role)
             # Directly modify providers_data data
             provider = self.providers_data[provider_data["index"]]
-            basemaps_to_remove = [item.data(Qt.UserRole) for item in selected_basemaps]
+            basemaps_to_remove = [item.data(user_role) for item in selected_basemaps]
             provider["basemaps"] = [
                 b for b in provider["basemaps"] if b not in basemaps_to_remove
             ]
@@ -915,8 +947,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 item = self.listProviders.item(i)
                 if (
                     item
-                    and item.data(Qt.UserRole)
-                    and item.data(Qt.UserRole)["index"] == provider_data["index"]
+                    and item.data(user_role)
+                    and item.data(user_role)["index"] == provider_data["index"]
                 ):
                     self.listProviders.setCurrentItem(item)
                     break
@@ -924,7 +956,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def add_wms_provider(self):
         dialog = ProviderInputDialog(self, provider_type="wms")
-        if dialog.exec_() == QDialog.Accepted:
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
             provider_data = dialog.get_data()
             if any(p["name"] == provider_data["name"] for p in self.providers_data):
                 QMessageBox.warning(
@@ -951,8 +984,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Select new added provider
             for i in range(self.listWmsProviders.count()):
                 item = self.listWmsProviders.item(i)
-                if item and item.data(Qt.UserRole):
-                    if item.data(Qt.UserRole)["data"]["name"] == provider_data["name"]:
+                if item and item.data(user_role):
+                    if item.data(user_role)["data"]["name"] == provider_data["name"]:
                         self.listWmsProviders.setCurrentItem(item)
                         break
             
@@ -980,14 +1013,14 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self,
             self.tr("Confirm Deletion"),
             self.tr('Are you sure you want to remove providers: "{}"?').format(names_str),
-            QMessageBox.Yes | QMessageBox.No,
+            button_yes | button_no,
         )
 
-        if reply == QMessageBox.Yes:
+        if reply == button_yes:
             # Collect indices to remove
             indices_to_remove = []
             for item in selected_items:
-                provider_data = item.data(Qt.UserRole)
+                provider_data = item.data(user_role)
                 if provider_data:
                     indices_to_remove.append(provider_data["index"])
             
@@ -1013,8 +1046,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         dialog = BasemapInputDialog(self, provider_type="wms")
-        if dialog.exec_() == QDialog.Accepted:
-            provider_data = current_item.data(Qt.UserRole)
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
+            provider_data = current_item.data(user_role)
             # Directly modify providers_data data
             self.providers_data[provider_data["index"]]["layers"].append(
                 dialog.get_data()
@@ -1025,8 +1059,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 item = self.listWmsProviders.item(i)
                 if (
                     item
-                    and item.data(Qt.UserRole)
-                    and item.data(Qt.UserRole)["index"] == provider_data["index"]
+                    and item.data(user_role)
+                    and item.data(user_role)["index"] == provider_data["index"]
                 ):
                     self.listWmsProviders.setCurrentItem(item)
                     break
@@ -1041,11 +1075,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not current_provider:
             return
 
-        provider_data = current_provider.data(Qt.UserRole)
+        provider_data = current_provider.data(user_role)
         url = provider_data["data"]["url"]
 
         for item in selected_items:
-            layer_data = item.data(Qt.UserRole)
+            layer_data = item.data(user_role)
             # Build WMS parameters
             params = {
                 "url": url,
@@ -1089,13 +1123,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             )
             return
 
-        provider_data = current_provider.data(Qt.UserRole)
+        provider_data = current_provider.data(user_role)
         url = provider_data["data"]["url"]
 
         try:
             # Create progress dialog
             progress = QProgressDialog("Fetching WMS layers...", "Cancel", 0, 0, self)
-            progress.setWindowModality(Qt.WindowModal)
+            progress.setWindowModality(window_modal)
             progress.show()
             QApplication.processEvents()
 
@@ -1163,8 +1197,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Re-select current provider
             for i in range(self.listWmsProviders.count()):
                 item = self.listWmsProviders.item(i)
-                if item and item.data(Qt.UserRole):
-                    item_data = item.data(Qt.UserRole)
+                if item and item.data(user_role):
+                    item_data = item.data(user_role)
                     if (
                         provider["name"] in default_providers
                         and item_data["data"]["name"] == f"{provider['name']} (Custom)"
@@ -1199,7 +1233,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
     def show_xyz_provider_context_menu(self, position):
         menu = QMenu()
         edit_action = menu.addAction("Edit")
-        action = menu.exec_(self.listProviders.mapToGlobal(position))
+        
+        exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
+        action = exec(self.listProviders.mapToGlobal(position))
         
         if action == edit_action:
             self.edit_xyz_provider()
@@ -1207,7 +1243,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
     def show_xyz_basemap_context_menu(self, position):
         menu = QMenu()
         edit_action = menu.addAction("Edit")
-        action = menu.exec_(self.listBasemaps.mapToGlobal(position))
+        
+        exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
+        action = exec(self.listBasemaps.mapToGlobal(position))
         
         if action == edit_action:
             self.edit_xyz_basemap()
@@ -1215,7 +1253,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
     def show_wms_provider_context_menu(self, position):
         menu = QMenu()
         edit_action = menu.addAction("Edit")
-        action = menu.exec_(self.listWmsProviders.mapToGlobal(position))
+        exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
+        action = exec(self.listWmsProviders.mapToGlobal(position))
         
         if action == edit_action:
             current_item = self.listWmsProviders.currentItem()
@@ -1227,9 +1266,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 )
                 return
 
-            provider_data = current_item.data(Qt.UserRole)
+            provider_data = current_item.data(user_role)
             dialog = ProviderInputDialog(self, provider_data["data"], provider_type="wms")
-            if dialog.exec_() == QDialog.Accepted:
+            exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+            if exec_result == dialog_accepted:
                 new_data = dialog.get_data()
                 new_data["type"] = "wms"
                 new_data["layers"] = provider_data["data"].get("layers", [])
@@ -1239,6 +1279,71 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 self.providers_data[provider_data["index"]] = new_data
                 self.update_providers_list()
                 self.save_user_config()
+
+    def edit_xyz_provider(self):
+        """Edit selected XYZ provider"""
+        current_item = self.listProviders.currentItem()
+        if not current_item:
+            QMessageBox.warning(
+                self,
+                self.tr("Warning"),
+                self.tr("Please select a provider to edit."),
+            )
+            return
+
+        provider_data = current_item.data(user_role)
+        if not provider_data:
+            return
+
+        # Check if it's a default provider
+        try:
+            with open(
+                Path(__file__).parent / "resources" / "default_basemaps.json",
+                "r",
+                encoding="utf-8",
+            ) as f:
+                default_data = json.load(f)
+                default_providers = {p["name"]: p for p in default_data.get("providers", [])}
+        except Exception:
+            default_providers = {}
+
+        provider = provider_data["data"]
+        if provider["name"] in default_providers:
+            QMessageBox.warning(
+                self,
+                self.tr("Warning"),
+                self.tr("Default providers cannot be edited."),
+            )
+            return
+
+        # Open edit dialog
+        dialog = ProviderInputDialog(self, provider, provider_type="xyz")
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
+            # Get edited data
+            new_data = dialog.get_data()
+            new_data["type"] = "xyz"
+            new_data["basemaps"] = provider.get("basemaps", [])
+            
+            # Update data
+            self.providers_data[provider_data["index"]] = new_data
+            
+            # Update interface display
+            self.update_providers_list()
+            
+            # Re-select current provider
+            for i in range(self.listProviders.count()):
+                item = self.listProviders.item(i)
+                if (
+                    item
+                    and item.data(user_role)
+                    and item.data(user_role)["index"] == provider_data["index"]
+                ):
+                    self.listProviders.setCurrentItem(item)
+                    break
+            
+            # Save config
+            self.save_user_config()
 
 
 class ProviderInputDialog(QDialog):
@@ -1285,7 +1390,7 @@ class ProviderInputDialog(QDialog):
             layout.addLayout(url_layout)
 
         # Buttons
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box = QDialogButtonBox(button_ok | button_cancel)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
@@ -1394,7 +1499,7 @@ class BasemapInputDialog(QDialog):
             layout.addWidget(layer_group)
 
         # Buttons
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box = QDialogButtonBox(button_ok | button_cancel)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
