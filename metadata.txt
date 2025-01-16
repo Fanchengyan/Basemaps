@@ -1,8 +1,9 @@
 [general]
 name=Basemaps
 qgisMinimumVersion=3.0
+supportsQt6=True
 description= A QGIS plugin to load multiple online basemap services
-version=1.2
+version=1.3
 author=Chengyan Fan
 email=fanchengyan@outlook.com
 about=This plugin allows you to load and manage multiple basemap services. There are some popular basemap services built-in, including:
