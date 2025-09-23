@@ -1,6 +1,7 @@
 [general]
 name=Basemaps
 qgisMinimumVersion=3.0
+qgisMaximumVersion=4.99
 supportsQt6=True
 description= A QGIS plugin to load multiple online basemap services
 version=1.3
