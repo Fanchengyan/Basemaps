@@ -194,9 +194,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QListWidget" name="listWmsLayers">
+          <widget class="QTreeWidget" name="treeWmsLayers">
            <property name="selectionMode">
             <enum>QAbstractItemView::ExtendedSelection</enum>
+           </property>
+           <property name="headerHidden">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
