@@ -10,12 +10,20 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from __future__ import annotations
+
 import json
+import logging
+from io import BytesIO
 from pathlib import Path
-from urllib.parse import quote
 
 import requests
 from owslib.wms import WebMapService
+from owslib.wmts import WebMapTileService
+
+from . import wmts_parser
+
+logger = logging.getLogger(__name__)
 from qgis.core import QgsDataSourceUri, QgsProject, QgsRasterLayer
 from qgis.PyQt.QtCore import QT_VERSION_STR, QCoreApplication, QSize, Qt
 from qgis.PyQt.QtGui import QIcon
@@ -35,6 +43,7 @@ from qgis.PyQt.QtWidgets import (
     QMessageBox,
     QProgressDialog,
     QPushButton,
+    QTreeWidgetItem,
     QVBoxLayout,
 )
 
@@ -83,7 +92,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.listProviders.setSelectionMode(extended_selection)
         self.listBasemaps.setSelectionMode(extended_selection)
         self.listWmsProviders.setSelectionMode(extended_selection)
-        self.listWmsLayers.setSelectionMode(extended_selection)
+        self.treeWmsLayers.setSelectionMode(extended_selection)
 
         # 设置右键菜单
         self.listProviders.setContextMenuPolicy(custom_context_menu)
@@ -708,18 +717,25 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 self.listBasemaps.addItem(item)
 
     def on_wms_provider_changed(self):
-        """update layer list when WMS provider changed"""
+        """
+        Update layer tree when WMS provider changed.
+
+        Build hierarchical tree structure showing:
+        - Layer name (top level)
+          - CRS options (second level)
+            - Format options (third level)
+        """
         current_item = self.listWmsProviders.currentItem()
         if not current_item:
-            self.listWmsLayers.clear()
+            self.treeWmsLayers.clear()
             return
 
         provider_data = current_item.data(user_role)
         if not provider_data:
             return
 
-        # Set layer list icon size
-        self.listWmsLayers.setIconSize(QSize(15, 15))
+        # Set tree icon size
+        self.treeWmsLayers.setIconSize(QSize(15, 15))
 
         # Get provider icon
         provider = provider_data["data"]
@@ -732,17 +748,63 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         else:
             provider_icon = QIcon(str(Path(__file__).parent / "ui/icon.svg"))
 
-        # Update layer list
-        self.listWmsLayers.clear()
+        # Update layer tree with hierarchical structure
+        self.treeWmsLayers.clear()
         for layer in provider_data["data"].get("layers", []):
             # Use layer_title as display name, if not available use layer_name
             display_name = layer.get(
                 "layer_title", layer.get("layer_name", "Unknown Layer")
             )
-            item = QListWidgetItem(display_name)
-            item.setIcon(provider_icon)
-            item.setData(user_role, layer)
-            self.listWmsLayers.addItem(item)
+
+            # Create top-level item for layer
+            layer_item = QTreeWidgetItem([display_name])
+            layer_item.setIcon(0, provider_icon)
+            self.treeWmsLayers.addTopLevelItem(layer_item)
+
+            # Get available CRS, formats, and styles
+            crs_list = layer.get("crs", [])
+            format_list = layer.get("format", [])
+            style_list = layer.get("styles", [""])
+
+            # If only one option for each parameter, create leaf item directly
+            if len(crs_list) <= 1 and len(format_list) <= 1:
+                # Store complete layer data in the layer item itself
+                layer_item.setData(0, user_role, layer)
+                continue
+
+            # Create second-level items for CRS options
+            for crs in crs_list:
+                crs_item = QTreeWidgetItem([crs])
+                layer_item.addChild(crs_item)
+
+                # If multiple formats available, create third level
+                if len(format_list) > 1:
+                    for fmt in format_list:
+                        # Create format item with all layer data
+                        format_item = QTreeWidgetItem([fmt])
+
+                        # Store complete layer configuration
+                        layer_config = {
+                            "layer_name": layer.get("layer_name"),
+                            "layer_title": layer.get("layer_title"),
+                            "crs": [crs],
+                            "format": [fmt],
+                            "styles": style_list,
+                            "service_type": layer.get("service_type", "wms"),
+                        }
+                        format_item.setData(0, user_role, layer_config)
+                        crs_item.addChild(format_item)
+                else:
+                    # Only one format, store data in CRS item
+                    layer_config = {
+                        "layer_name": layer.get("layer_name"),
+                        "layer_title": layer.get("layer_title"),
+                        "crs": [crs],
+                        "format": format_list,
+                        "styles": style_list,
+                        "service_type": layer.get("service_type", "wms"),
+                    }
+                    crs_item.setData(0, user_role, layer_config)
 
     def update_basemaps_list(self):
         """update basemap list"""
@@ -1099,8 +1161,52 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     break
             self.save_user_config()
 
+    def _get_default_layer_config(self, item: QTreeWidgetItem) -> dict | None:
+        """
+        Get default layer configuration from tree item.
+
+        If the item is a parent node without complete data, recursively
+        find the first leaf node and return its configuration.
+
+        Parameters
+        ----------
+        item : QTreeWidgetItem
+            The tree item to get configuration from.
+
+        Returns
+        -------
+        dict | None
+            Complete layer configuration, or None if not found.
+        """
+        # Try to get data from current item
+        layer_data = item.data(0, user_role)
+
+        # If current item has complete data, return it
+        if layer_data and "layer_name" in layer_data:
+            return layer_data
+
+        # If it's a parent node, recursively find first leaf node
+        if item.childCount() > 0:
+            # Get first child
+            first_child = item.child(0)
+            return self._get_default_layer_config(first_child)
+
+        # No valid data found
+        return None
+
     def load_wms_layer(self):
-        selected_items = self.listWmsLayers.selectedItems()
+        """
+        Load selected WMS/WMTS layer(s) from tree to QGIS.
+
+        Notes
+        -----
+        Handles tree items at any level:
+        - Leaf nodes: Load with their specific configuration
+        - Parent nodes: Load using the first child's configuration (default parameters)
+
+        This allows users to quickly load layers without expanding the entire tree.
+        """
+        selected_items = self.treeWmsLayers.selectedItems()
         if not selected_items:
             return
 
@@ -1110,45 +1216,325 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         provider_data = current_provider.data(user_role)
         url = provider_data["data"]["url"]
+        # Check if this is a WMTS service
+        service_type = provider_data["data"].get("service_type", "wms")
 
         for item in selected_items:
-            layer_data = item.data(user_role)
-            # Build WMS parameters
-            params = {
-                "url": url,
-                "layers": layer_data["layer_name"],
-                "format": layer_data["format"][0],
-                "crs": layer_data["crs"][0],
-                "styles": layer_data["styles"][0] if layer_data["styles"] else "",
-            }
+            # Get layer configuration (from current item or first leaf)
+            layer_data = self._get_default_layer_config(item)
 
-            # If there are styles, add style parameters
-            if layer_data.get("styles") and len(layer_data["styles"]) > 0:
-                params["styles"] = layer_data["styles"][0]
+            # Skip if no valid configuration found
+            if not layer_data:
+                continue
 
-            # Build URI using QgsDataSourceUri
-            uri = QgsDataSourceUri()
-            for key, value in params.items():
-                uri.setParam(key, value)
+            # Determine service type from layer data or provider data
+            layer_service_type = layer_data.get("service_type", service_type)
 
-            # Create layer
-            layer = QgsRasterLayer(
-                str(uri.encodedUri(), "utf-8"), layer_data["layer_title"], "wms"
+            if layer_service_type == "wmts":
+                self._load_wmts_layer(url, layer_data)
+            else:
+                self._load_wms_layer(url, layer_data)
+
+    def _load_wms_layer(self, url: str, layer_data: dict) -> None:
+        """
+        Load a WMS layer to QGIS.
+
+        Parameters
+        ----------
+        url : str
+            The WMS service URL.
+        layer_data : dict
+            Layer information dictionary.
+        """
+        # Build WMS parameters
+        params = {
+            "url": url,
+            "layers": layer_data["layer_name"],
+            "format": layer_data["format"][0],
+            "crs": layer_data["crs"][0],
+            "styles": layer_data["styles"][0] if layer_data["styles"] else "",
+        }
+
+        # Build URI using QgsDataSourceUri
+        uri = QgsDataSourceUri()
+        for key, value in params.items():
+            uri.setParam(key, value)
+
+        # Create layer
+        layer = QgsRasterLayer(
+            str(uri.encodedUri(), "utf-8"), layer_data["layer_title"], "wms"
+        )
+
+        if layer.isValid():
+            QgsProject.instance().addMapLayer(layer)
+        else:
+            logger.error("Failed to load WMS layer: %s", layer_data["layer_title"])
+            QMessageBox.critical(
+                self,
+                self.tr("Error"),
+                self.tr("Failed to load WMS layer: {}").format(
+                    layer_data["layer_title"]
+                ),
             )
 
-            if layer.isValid():
-                QgsProject.instance().addMapLayer(layer)
-            else:
-                QMessageBox.critical(
-                    self,
-                    self.tr("Error"),
-                    self.tr("Failed to load WMS layer: {}").format(
-                        layer_data["layer_title"]
-                    ),
-                )
+    def _load_wmts_layer(self, url: str, layer_data: dict) -> None:
+        """
+        Load a WMTS layer to QGIS.
+
+        Parameters
+        ----------
+        url : str
+            The WMTS service URL.
+        layer_data : dict
+            Layer information dictionary.
+        """
+        # Build WMTS URI
+        # QGIS uses a specific format for WMTS connections
+        uri = QgsDataSourceUri()
+        uri.setParam("url", url)
+        uri.setParam("layers", layer_data["layer_name"])
+
+        # Set tile matrix set (CRS)
+        if layer_data.get("crs"):
+            uri.setParam("tileMatrixSet", layer_data["crs"][0])
+
+        # Set format
+        if layer_data.get("format"):
+            uri.setParam("format", layer_data["format"][0])
+
+        # Set style
+        if layer_data.get("styles"):
+            uri.setParam("styles", layer_data["styles"][0])
+        else:
+            uri.setParam("styles", "")
+
+        # Create layer with 'wms' provider (QGIS uses wms provider for WMTS too)
+        layer = QgsRasterLayer(
+            str(uri.encodedUri(), "utf-8"), layer_data["layer_title"], "wms"
+        )
+
+        if layer.isValid():
+            QgsProject.instance().addMapLayer(layer)
+        else:
+            logger.error("Failed to load WMTS layer: %s", layer_data["layer_title"])
+            QMessageBox.critical(
+                self,
+                self.tr("Error"),
+                self.tr("Failed to load WMTS layer: {}").format(
+                    layer_data["layer_title"]
+                ),
+            )
+
+    def _detect_service_type(self, url: str) -> str | None:
+        """
+        Detect whether the URL is for WMS or WMTS service.
+
+        Parameters
+        ----------
+        url : str
+            The service URL to check.
+
+        Returns
+        -------
+        str | None
+            'wmts' if WMTS service, 'wms' if WMS service, None if unknown.
+        """
+        url_lower = url.lower()
+        if "wmts" in url_lower or "wmtscapabilities" in url_lower:
+            return "wmts"
+        if "wms" in url_lower:
+            return "wms"
+        return None
+
+    def _fix_wmts_namespaces(self, xml_content: str) -> str:
+        """
+        Fix non-standard WMTS XML namespace URIs.
+
+        Parameters
+        ----------
+        xml_content : str
+            The WMTS capabilities XML content.
+
+        Returns
+        -------
+        str
+            The XML with fixed namespace URIs.
+
+        Notes
+        -----
+        Some WMTS services (like ArcGIS) use https:// in namespace URIs,
+        which breaks OWSLib parsing. This method normalizes them to http://.
+        """
+        replacements = [
+            ('xmlns="https://www.opengis.net/', 'xmlns="http://www.opengis.net/'),
+            (
+                'xmlns:ows="https://www.opengis.net/',
+                'xmlns:ows="http://www.opengis.net/',
+            ),
+            ('xmlns:xlink="https://www.w3.org/', 'xmlns:xlink="http://www.w3.org/'),
+            (
+                'xmlns:gml="https://www.opengis.net/',
+                'xmlns:gml="http://www.opengis.net/',
+            ),
+            (
+                'xsi:schemaLocation="https://www.opengis.net/',
+                'xsi:schemaLocation="http://www.opengis.net/',
+            ),
+            ("https://schemas.opengis.net/", "http://schemas.opengis.net/"),
+        ]
+        for old, new in replacements:
+            xml_content = xml_content.replace(old, new)
+        return xml_content
+
+    def _fetch_wmts_with_owslib(self, url: str) -> tuple[list[dict], str]:
+        """
+        Fetch WMTS layers using OWSLib with namespace fix fallback.
+
+        Parameters
+        ----------
+        url : str
+            The WMTS capabilities URL.
+
+        Returns
+        -------
+        tuple[list[dict], str]
+            A tuple of (layers list, service type 'wmts').
+
+        Raises
+        ------
+        Exception
+            If OWSLib parsing fails.
+        """
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        xml_content = response.text
+
+        # Try with namespace fix
+        xml_fixed = self._fix_wmts_namespaces(xml_content)
+        wmts = WebMapTileService(url, xml=BytesIO(xml_fixed.encode("utf-8")))
+
+        layers = []
+        for layer_name, layer in wmts.contents.items():
+            # Get available tile matrix sets
+            tile_matrix_sets = []
+            if hasattr(layer, "tilematrixsetlinks"):
+                tile_matrix_sets = list(layer.tilematrixsetlinks.keys())
+
+            # Get available formats
+            formats = []
+            if hasattr(layer, "formats") and layer.formats:
+                formats = list(layer.formats)
+            if not formats:
+                formats = ["image/jpeg"]
+
+            # Get available styles
+            styles = []
+            if hasattr(layer, "styles") and layer.styles:
+                styles = list(layer.styles.keys())
+
+            layer_info = {
+                "layer_name": layer_name,
+                "layer_title": layer.title
+                if hasattr(layer, "title") and layer.title
+                else layer_name,
+                "crs": tile_matrix_sets,
+                "format": formats,
+                "styles": styles,
+                "service_type": "wmts",
+            }
+            layers.append(layer_info)
+
+        return layers, "wmts"
+
+    def _fetch_wmts_with_elementtree(self, url: str) -> tuple[list[dict], str]:
+        """
+        Fetch WMTS layers using ElementTree as fallback parser.
+
+        Parameters
+        ----------
+        url : str
+            The WMTS capabilities URL.
+
+        Returns
+        -------
+        tuple[list[dict], str]
+            A tuple of (layers list, service type 'wmts').
+
+        Raises
+        ------
+        Exception
+            If ElementTree parsing fails.
+        """
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+
+        layers = wmts_parser.parse_wmts_capabilities(response.content)
+        return layers, "wmts"
+
+    def _fetch_wmts_layers(self, url: str) -> tuple[list[dict], str]:
+        """
+        Fetch layers from a WMTS service with multi-level fallback.
+
+        Parameters
+        ----------
+        url : str
+            The WMTS capabilities URL.
+
+        Returns
+        -------
+        tuple[list[dict], str]
+            A tuple of (layers list, service type 'wmts').
+
+        Raises
+        ------
+        Exception
+            If both OWSLib and ElementTree parsing fail.
+        """
+        # Level 1: Try OWSLib with namespace fix
+        try:
+            logger.debug("Attempting to parse WMTS with OWSLib (method 1)")
+            return self._fetch_wmts_with_owslib(url)
+        except Exception as e:
+            logger.warning("OWSLib parsing failed: %s, trying ElementTree fallback", e)
+
+        # Level 2: Try ElementTree parser
+        try:
+            logger.debug("Attempting to parse WMTS with ElementTree (method 2)")
+            return self._fetch_wmts_with_elementtree(url)
+        except Exception as e:
+            logger.error("ElementTree parsing also failed: %s", e)
+            raise
+
+    def _fetch_wms_layers(self, url: str) -> tuple[list[dict], str]:
+        """
+        Fetch layers from a WMS service.
+
+        Parameters
+        ----------
+        url : str
+            The WMS capabilities URL.
+
+        Returns
+        -------
+        tuple[list[dict], str]
+            A tuple of (layers list, service type 'wms').
+        """
+        wms = WebMapService(url)
+        layers = []
+        for layer_name, layer in wms.contents.items():
+            layer_info = {
+                "layer_name": layer_name,
+                "layer_title": layer.title,
+                "crs": [str(crs) for crs in layer.crsOptions],
+                "format": wms.getOperationByName("GetMap").formatOptions,
+                "styles": [style.get("name", "") for style in layer.styles.values()],
+                "service_type": "wms",
+            }
+            layers.append(layer_info)
+        return layers, "wms"
 
     def refresh_wms_layers(self):
-        """refresh current selected WMS/WMTS provider's layer list"""
+        """Refresh current selected WMS/WMTS provider's layer list."""
         current_provider = self.listWmsProviders.currentItem()
         if not current_provider:
             QMessageBox.warning(
@@ -1163,27 +1549,34 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         try:
             # Create progress dialog
-            progress = QProgressDialog("Fetching WMS layers...", "Cancel", 0, 0, self)
+            progress = QProgressDialog("Fetching layers...", "Cancel", 0, 0, self)
             progress.setWindowModality(window_modal)
             progress.show()
             QApplication.processEvents()
 
-            # Connect to WMS service
-            wms = WebMapService(url)
-
-            # Get layer information
+            # Detect service type and fetch layers
+            service_type = self._detect_service_type(url)
             layers = []
-            for layer_name, layer in wms.contents.items():
-                layer_info = {
-                    "layer_name": layer_name,
-                    "layer_title": layer.title,
-                    "crs": [str(crs) for crs in layer.crsOptions],
-                    "format": wms.getOperationByName("GetMap").formatOptions,
-                    "styles": [
-                        style.get("name", "") for style in layer.styles.values()
-                    ],
-                }
-                layers.append(layer_info)
+            detected_type = "wms"
+
+            if service_type == "wmts":
+                try:
+                    layers, detected_type = self._fetch_wmts_layers(url)
+                except Exception as e:
+                    logger.warning("Failed to parse as WMTS, trying WMS: %s", e)
+                    layers, detected_type = self._fetch_wms_layers(url)
+            elif service_type == "wms":
+                try:
+                    layers, detected_type = self._fetch_wms_layers(url)
+                except Exception as e:
+                    logger.warning("Failed to parse as WMS, trying WMTS: %s", e)
+                    layers, detected_type = self._fetch_wmts_layers(url)
+            else:
+                # Try WMTS first, then WMS
+                try:
+                    layers, detected_type = self._fetch_wmts_layers(url)
+                except Exception:
+                    layers, detected_type = self._fetch_wms_layers(url)
 
             # Sort by layer name
             layers.sort(key=lambda x: x["layer_name"].lower())
@@ -1212,6 +1605,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     "name": f"{provider['name']} (Custom)",
                     "icon": provider.get("icon", "ui/icon.svg"),
                     "type": "wms",
+                    "service_type": detected_type,
                     "url": url,
                     "layers": layers,
                 }
@@ -1222,6 +1616,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     "name": provider["name"],
                     "icon": provider.get("icon", "ui/icon.svg"),
                     "type": "wms",
+                    "service_type": detected_type,
                     "url": url,
                     "layers": layers,
                 }
@@ -1254,14 +1649,17 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             QMessageBox.information(
                 self,
                 self.tr("Success"),
-                self.tr("Successfully refreshed WMS layers."),
+                self.tr("Successfully refreshed {} layers.").format(
+                    detected_type.upper()
+                ),
             )
 
         except Exception as e:
+            logger.error("Failed to fetch layers: %s", e)
             QMessageBox.critical(
                 self,
                 self.tr("Error"),
-                self.tr("Failed to fetch WMS layers: {}").format(str(e)),
+                self.tr("Failed to fetch layers: {}").format(str(e)),
             )
             progress.close()
 
@@ -1555,4 +1953,3 @@ class BasemapInputDialog(QDialog):
             }
         else:
             return {"name": self.name_edit.text(), "url": self.url_edit.text()}
-        
