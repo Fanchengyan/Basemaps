@@ -1,6 +1,7 @@
 xyz:
   Strava:
-    icon: ''
+    icon: ui/icon.svg
+    created_at: 1765258446.782388
     basemaps:
     - name: Strava All
       url: https://heatmap-external-b.strava.com/tiles/all/bluered/%7Bz%7D/%7Bx%7D/%7By%7D.png

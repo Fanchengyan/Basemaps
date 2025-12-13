@@ -12,19 +12,16 @@
 
 from __future__ import annotations
 
-from io import BytesIO
 from pathlib import Path
 from typing import Any
 
-import requests
-from owslib.wms import WebMapService
-from owslib.wmts import WebMapTileService
-from qgis.core import QgsDataSourceUri, QgsProject, QgsRasterLayer
+from qgis.core import QgsApplication, QgsDataSourceUri, QgsProject, QgsRasterLayer
+
+from .wms_fetch_task import FetchResult, ServiceType, WMSFetchTask
 from qgis.PyQt.QtCore import QT_VERSION_STR, QCoreApplication, QSize, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
-    QApplication,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -35,13 +32,12 @@ from qgis.PyQt.QtWidgets import (
     QLineEdit,
     QListWidgetItem,
     QMenu,
-    QProgressDialog,
     QPushButton,
     QTreeWidgetItem,
     QVBoxLayout,
 )
 
-from . import config_loader, wmts_parser
+from . import config_loader
 from .messageTool import Logger, MessageBox
 from .ui import IconBasemaps, UIBasemapsBase
 
@@ -87,6 +83,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.providers_data = []
         self.resources_dir = Path(__file__).parent / "resources"
         self.icons_dir = self.resources_dir / "icons"
+
+        # Task management for async WMS/WMTS fetching
+        self._current_fetch_task: WMSFetchTask | None = None
+        self._pending_fetch_context: dict | None = None
 
         # set all list to multiple selection mode
 
@@ -1578,221 +1578,17 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 self,
             )
 
-    def _detect_service_type(self, url: str) -> str | None:
-        """
-        Detect whether the URL is for WMS or WMTS service.
+    def refresh_wms_layers(self) -> None:
+        """Refresh current selected WMS/WMTS provider's layer list.
 
-        Parameters
-        ----------
-        url : str
-            The service URL to check.
-
-        Returns
-        -------
-        str | None
-            'wmts' if WMTS service, 'wms' if WMS service, None if unknown.
-        """
-        url_lower = url.lower()
-        if "wmts" in url_lower or "wmtscapabilities" in url_lower:
-            return "wmts"
-        if "wms" in url_lower:
-            return "wms"
-        return None
-
-    def _fix_wmts_namespaces(self, xml_content: str) -> str:
-        """
-        Fix non-standard WMTS XML namespace URIs.
-
-        Parameters
-        ----------
-        xml_content : str
-            The WMTS capabilities XML content.
-
-        Returns
-        -------
-        str
-            The XML with fixed namespace URIs.
+        Fetches layers from the selected provider's URL using a background
+        task to avoid blocking the QGIS UI.
 
         Notes
         -----
-        Some WMTS services (like ArcGIS) use https:// in namespace URIs,
-        which breaks OWSLib parsing. This method normalizes them to http://.
+        This method creates a QgsTask to perform the HTTP request in the
+        background. The UI is updated via signals when the task completes.
         """
-        replacements = [
-            ('xmlns="https://www.opengis.net/', 'xmlns="http://www.opengis.net/'),
-            (
-                'xmlns:ows="https://www.opengis.net/',
-                'xmlns:ows="http://www.opengis.net/',
-            ),
-            ('xmlns:xlink="https://www.w3.org/', 'xmlns:xlink="http://www.w3.org/'),
-            (
-                'xmlns:gml="https://www.opengis.net/',
-                'xmlns:gml="http://www.opengis.net/',
-            ),
-            (
-                'xsi:schemaLocation="https://www.opengis.net/',
-                'xsi:schemaLocation="http://www.opengis.net/',
-            ),
-            ("https://schemas.opengis.net/", "http://schemas.opengis.net/"),
-        ]
-        for old, new in replacements:
-            xml_content = xml_content.replace(old, new)
-        return xml_content
-
-    def _fetch_wmts_with_owslib(self, url: str) -> tuple[list[dict], str]:
-        """
-        Fetch WMTS layers using OWSLib with namespace fix fallback.
-
-        Parameters
-        ----------
-        url : str
-            The WMTS capabilities URL.
-
-        Returns
-        -------
-        tuple[list[dict], str]
-            A tuple of (layers list, service type 'wmts').
-
-        Raises
-        ------
-        Exception
-            If OWSLib parsing fails.
-        """
-        response = requests.get(url, timeout=30)
-        response.raise_for_status()
-        xml_content = response.text
-
-        # Try with namespace fix
-        xml_fixed = self._fix_wmts_namespaces(xml_content)
-        wmts = WebMapTileService(url, xml=BytesIO(xml_fixed.encode("utf-8")))
-
-        layers = []
-        for layer_name, layer in wmts.contents.items():
-            # Get available tile matrix sets
-            tile_matrix_sets = []
-            if hasattr(layer, "tilematrixsetlinks"):
-                tile_matrix_sets = list(layer.tilematrixsetlinks.keys())
-
-            # Get available formats
-            formats = []
-            if hasattr(layer, "formats") and layer.formats:
-                formats = list(layer.formats)
-            if not formats:
-                formats = ["image/jpeg"]
-
-            # Get available styles
-            styles = []
-            if hasattr(layer, "styles") and layer.styles:
-                styles = list(layer.styles.keys())
-
-            layer_info = {
-                "layer_name": layer_name,
-                "layer_title": layer.title
-                if hasattr(layer, "title") and layer.title
-                else layer_name,
-                "crs": tile_matrix_sets,
-                "format": formats,
-                "styles": styles,
-                "service_type": "wmts",
-            }
-            layers.append(layer_info)
-
-        return layers, "wmts"
-
-    def _fetch_wmts_with_elementtree(self, url: str) -> tuple[list[dict], str]:
-        """
-        Fetch WMTS layers using ElementTree as fallback parser.
-
-        Parameters
-        ----------
-        url : str
-            The WMTS capabilities URL.
-
-        Returns
-        -------
-        tuple[list[dict], str]
-            A tuple of (layers list, service type 'wmts').
-
-        Raises
-        ------
-        Exception
-            If ElementTree parsing fails.
-        """
-        response = requests.get(url, timeout=30)
-        response.raise_for_status()
-
-        layers = wmts_parser.parse_wmts_capabilities(response.content)
-        return layers, "wmts"
-
-    def _fetch_wmts_layers(self, url: str) -> tuple[list[dict], str]:
-        """
-        Fetch layers from a WMTS service with multi-level fallback.
-
-        Parameters
-        ----------
-        url : str
-            The WMTS capabilities URL.
-
-        Returns
-        -------
-        tuple[list[dict], str]
-            A tuple of (layers list, service type 'wmts').
-
-        Raises
-        ------
-        Exception
-            If both OWSLib and ElementTree parsing fail.
-        """
-        # Level 1: Try OWSLib with namespace fix
-        try:
-            Logger.info(
-                "Attempting to parse WMTS with OWSLib (method 1)", notify_user=False
-            )
-            return self._fetch_wmts_with_owslib(url)
-        except Exception as e:
-            Logger.warning(f"OWSLib parsing failed: {e}, trying ElementTree fallback")
-
-        # Level 2: Try ElementTree parser
-        try:
-            Logger.info(
-                "Attempting to parse WMTS with ElementTree (method 2)",
-                notify_user=False,
-            )
-            return self._fetch_wmts_with_elementtree(url)
-        except Exception as e:
-            Logger.critical(f"ElementTree parsing also failed: {e}")
-            raise
-
-    def _fetch_wms_layers(self, url: str) -> tuple[list[dict], str]:
-        """
-        Fetch layers from a WMS service.
-
-        Parameters
-        ----------
-        url : str
-            The WMS capabilities URL.
-
-        Returns
-        -------
-        tuple[list[dict], str]
-            A tuple of (layers list, service type 'wms').
-        """
-        wms = WebMapService(url)
-        layers = []
-        for layer_name, layer in wms.contents.items():
-            layer_info = {
-                "layer_name": layer_name,
-                "layer_title": layer.title,
-                "crs": [str(crs) for crs in layer.crsOptions],
-                "format": wms.getOperationByName("GetMap").formatOptions,
-                "styles": [style.get("name", "") for style in layer.styles.values()],
-                "service_type": "wms",
-            }
-            layers.append(layer_info)
-        return layers, "wms"
-
-    def refresh_wms_layers(self):
-        """Refresh current selected WMS/WMTS provider's layer list."""
         current_provider = self.listWmsProviders.currentItem()
         if not current_provider:
             MessageBox.warning(
@@ -1804,106 +1600,123 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         provider_data = current_provider.data(user_role)
         url = provider_data["data"]["url"]
+        provider_index = provider_data["index"]
 
-        try:
-            # Create progress dialog
-            progress = QProgressDialog("Fetching layers...", "Cancel", 0, 0, self)
-            progress.setWindowModality(window_modal)
-            progress.show()
-            QApplication.processEvents()
+        # Store context for callback
+        self._pending_fetch_context = {
+            "provider_data": provider_data,
+            "provider_index": provider_index,
+            "url": url,
+        }
 
-            # Detect service type and fetch layers
-            service_type = self._detect_service_type(url)
-            layers = []
-            detected_type = "wms"
+        # Create and configure task
+        task = WMSFetchTask(url, timeout=30)
+        task.signals.finished.connect(self._on_wms_fetch_complete)
 
-            if service_type == "wmts":
-                try:
-                    layers, detected_type = self._fetch_wmts_layers(url)
-                except Exception as e:
-                    Logger.warning(f"Failed to parse as WMTS, trying WMS: {e}")
-                    layers, detected_type = self._fetch_wms_layers(url)
-            elif service_type == "wms":
-                try:
-                    layers, detected_type = self._fetch_wms_layers(url)
-                except Exception as e:
-                    Logger.warning(f"Failed to parse as WMS, trying WMTS: {e}")
-                    layers, detected_type = self._fetch_wmts_layers(url)
-            else:
-                # Try WMTS first, then WMS
-                try:
-                    layers, detected_type = self._fetch_wmts_layers(url)
-                except Exception:
-                    layers, detected_type = self._fetch_wms_layers(url)
+        self._current_fetch_task = task
 
-            # Sort by layer name
-            layers.sort(key=lambda x: x["layer_name"].lower())
+        # Add task to QGIS task manager
+        QgsApplication.taskManager().addTask(task)
 
-            # Update provider data
-            index = provider_data["index"]
-            provider = self.providers_data[index]
+        Logger.info(
+            self.tr("Fetching layers in background..."),
+            notify_user=True,
+        )
 
-            # Check if it is a default provider
-            is_default_provider = self._is_default_provider(provider)
+    def _on_wms_fetch_complete(self, result: FetchResult) -> None:
+        """Handle fetch task completion.
 
-            if is_default_provider:
-                # Create user copy with refreshed layers
-                new_provider = self._duplicate_provider_as_user(provider)
-                new_provider.update({
-                    "icon": provider.get("icon", "ui/icon.svg"),
-                    "type": "wms",
-                    "service_type": detected_type,
-                    "url": url,
-                    "layers": layers,
-                })
-                self.providers_data.append(new_provider)
-                selected_provider_name = new_provider["name"]
-            else:
-                # If it is a user provider, directly update
-                self.providers_data[index].update({
-                    "icon": provider.get("icon", "ui/icon.svg"),
-                    "type": "wms",
-                    "service_type": detected_type,
-                    "url": url,
-                    "layers": layers,
-                })
-                selected_provider_name = provider["name"]
+        This method is called on the main thread when the background
+        task completes (successfully or with error).
 
-            # Update interface display
-            self.update_providers_list()
+        Parameters
+        ----------
+        result : FetchResult
+            The fetch operation result.
+        """
+        # Clear task reference
+        self._current_fetch_task = None
 
-            # Re-select current provider
-            for i in range(self.listWmsProviders.count()):
-                item = self.listWmsProviders.item(i)
-                if item and item.data(user_role):
-                    item_data = item.data(user_role)
-                    if item_data["data"]["name"] == selected_provider_name:
-                        self.listWmsProviders.setCurrentItem(item)
-                        break
+        # Handle cancellation
+        if not result.success and "cancelled" in result.error_message.lower():
+            Logger.info("WMS fetch cancelled by user", notify_user=False)
+            return
 
-            # Save config to JSON file
-            self.save_user_config()
-
-            # Close progress dialog
-            progress.close()
-
-            # Show success message
-            MessageBox.information(
-                self.tr("Successfully refreshed {} layers.").format(
-                    detected_type.upper()
-                ),
-                self.tr("Success"),
-                self,
-            )
-
-        except Exception as e:
-            Logger.critical(f"Failed to fetch layers: {e}")
+        # Handle error
+        if not result.success:
+            Logger.critical(f"Failed to fetch layers: {result.error_message}")
             MessageBox.critical(
-                self.tr("Failed to fetch layers: {}").format(str(e)),
+                self.tr("Failed to fetch layers: {}").format(result.error_message),
                 self.tr("Error"),
                 self,
             )
-            progress.close()
+            return
+
+        # Get context
+        context = self._pending_fetch_context
+        if not context:
+            Logger.warning("Fetch completed but context was lost")
+            return
+
+        provider_index = context["provider_index"]
+        url = context["url"]
+
+        # Update provider data
+        provider = self.providers_data[provider_index]
+        detected_type = result.service_type.value
+
+        # Check if default provider
+        is_default_provider = self._is_default_provider(provider)
+
+        if is_default_provider:
+            # Create user copy with refreshed layers
+            new_provider = self._duplicate_provider_as_user(provider)
+            new_provider.update({
+                "icon": provider.get("icon", "ui/icon.svg"),
+                "type": "wms",
+                "service_type": detected_type,
+                "url": url,
+                "layers": result.layers,
+            })
+            self.providers_data.append(new_provider)
+            selected_provider_name = new_provider["name"]
+        else:
+            # Update existing user provider
+            self.providers_data[provider_index].update({
+                "icon": provider.get("icon", "ui/icon.svg"),
+                "type": "wms",
+                "service_type": detected_type,
+                "url": url,
+                "layers": result.layers,
+            })
+            selected_provider_name = provider["name"]
+
+        # Update interface display
+        self.update_providers_list()
+
+        # Re-select provider
+        for i in range(self.listWmsProviders.count()):
+            item = self.listWmsProviders.item(i)
+            if item and item.data(user_role):
+                item_data = item.data(user_role)
+                if item_data["data"]["name"] == selected_provider_name:
+                    self.listWmsProviders.setCurrentItem(item)
+                    break
+
+        # Save config
+        self.save_user_config()
+
+        # Clear context
+        self._pending_fetch_context = None
+
+        # Show success message
+        MessageBox.information(
+            self.tr("Successfully refreshed {} layers.").format(
+                detected_type.upper()
+            ),
+            self.tr("Success"),
+            self,
+        )
 
     def show_xyz_provider_context_menu(self, position):
         current_item = self.listProviders.currentItem()

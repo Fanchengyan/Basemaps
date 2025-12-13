@@ -1,6 +1,7 @@
 xyz:
   Wikimedia:
-    icon: ''
+    icon: ui/icon.svg
+    created_at: 1765258444.782388
     basemaps:
     - name: Wikimedia Map
       url: https://maps.wikimedia.org/osm-intl/%7Bz%7D/%7Bx%7D/%7By%7D.png
