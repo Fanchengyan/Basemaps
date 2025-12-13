@@ -1,0 +1,1689 @@
+wms:
+  ESRI World Imagery Wayback:
+    icon: Esri.ico
+    url: https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/WMTS/1.0.0/WMTSCapabilities.xml
+    service_type: wmts
+    layers:
+      - layer_name: WB_2014_R01
+        layer_title: World Imagery (Wayback 2014-02-20)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R03
+        layer_title: World Imagery (Wayback 2014-03-26)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R05
+        layer_title: World Imagery (Wayback 2014-04-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R06
+        layer_title: World Imagery (Wayback 2014-05-14)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R08
+        layer_title: World Imagery (Wayback 2014-06-11)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R09
+        layer_title: World Imagery (Wayback 2014-06-25)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R10
+        layer_title: World Imagery (Wayback 2014-07-02)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R11
+        layer_title: World Imagery (Wayback 2014-07-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R14
+        layer_title: World Imagery (Wayback 2014-09-17)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R15
+        layer_title: World Imagery (Wayback 2014-10-01)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R17
+        layer_title: World Imagery (Wayback 2014-10-29)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R18
+        layer_title: World Imagery (Wayback 2014-11-12)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R19
+        layer_title: World Imagery (Wayback 2014-12-03)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R20
+        layer_title: World Imagery (Wayback 2014-12-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2014_R21
+        layer_title: World Imagery (Wayback 2014-12-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R01
+        layer_title: World Imagery (Wayback 2015-01-21)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R02
+        layer_title: World Imagery (Wayback 2015-02-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R04
+        layer_title: World Imagery (Wayback 2015-03-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R05
+        layer_title: World Imagery (Wayback 2015-03-25)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R06
+        layer_title: World Imagery (Wayback 2015-04-15)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R07
+        layer_title: World Imagery (Wayback 2015-04-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R08
+        layer_title: World Imagery (Wayback 2015-05-13)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R10
+        layer_title: World Imagery (Wayback 2015-06-24)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R11
+        layer_title: World Imagery (Wayback 2015-07-08)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R13
+        layer_title: World Imagery (Wayback 2015-08-19)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R14
+        layer_title: World Imagery (Wayback 2015-09-02)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R15
+        layer_title: World Imagery (Wayback 2015-09-16)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R16
+        layer_title: World Imagery (Wayback 2015-09-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R17
+        layer_title: World Imagery (Wayback 2015-10-14)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R18
+        layer_title: World Imagery (Wayback 2015-10-28)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R20
+        layer_title: World Imagery (Wayback 2015-11-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2015_R23
+        layer_title: World Imagery (Wayback 2015-12-16)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R02
+        layer_title: World Imagery (Wayback 2016-01-13)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R03
+        layer_title: World Imagery (Wayback 2016-02-04)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R04
+        layer_title: World Imagery (Wayback 2016-02-17)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R05
+        layer_title: World Imagery (Wayback 2016-03-02)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R06
+        layer_title: World Imagery (Wayback 2016-03-16)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R08
+        layer_title: World Imagery (Wayback 2016-04-20)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R09
+        layer_title: World Imagery (Wayback 2016-04-28)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R10
+        layer_title: World Imagery (Wayback 2016-05-11)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R11
+        layer_title: World Imagery (Wayback 2016-06-13)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R12
+        layer_title: World Imagery (Wayback 2016-07-06)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R13
+        layer_title: World Imagery (Wayback 2016-07-20)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R14
+        layer_title: World Imagery (Wayback 2016-08-11)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R15
+        layer_title: World Imagery (Wayback 2016-08-31)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R16
+        layer_title: World Imagery (Wayback 2016-09-14)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R18
+        layer_title: World Imagery (Wayback 2016-10-12)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R19
+        layer_title: World Imagery (Wayback 2016-10-25)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R20
+        layer_title: World Imagery (Wayback 2016-11-16)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R21
+        layer_title: World Imagery (Wayback 2016-12-07)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2016_R22
+        layer_title: World Imagery (Wayback 2016-12-20)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R01
+        layer_title: World Imagery (Wayback 2017-01-11)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R02
+        layer_title: World Imagery (Wayback 2017-01-25)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R03
+        layer_title: World Imagery (Wayback 2017-02-08)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R04
+        layer_title: World Imagery (Wayback 2017-02-27)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R05
+        layer_title: World Imagery (Wayback 2017-03-15)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R06
+        layer_title: World Imagery (Wayback 2017-03-29)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R07
+        layer_title: World Imagery (Wayback 2017-04-19)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R08
+        layer_title: World Imagery (Wayback 2017-05-03)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R09
+        layer_title: World Imagery (Wayback 2017-05-17)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R10
+        layer_title: World Imagery (Wayback 2017-05-31)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R11
+        layer_title: World Imagery (Wayback 2017-06-14)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R12
+        layer_title: World Imagery (Wayback 2017-06-27)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R13
+        layer_title: World Imagery (Wayback 2017-07-14)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R14
+        layer_title: World Imagery (Wayback 2017-08-10)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R15
+        layer_title: World Imagery (Wayback 2017-08-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R16
+        layer_title: World Imagery (Wayback 2017-09-13)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R17
+        layer_title: World Imagery (Wayback 2017-10-04)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R18
+        layer_title: World Imagery (Wayback 2017-10-25)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R19
+        layer_title: World Imagery (Wayback 2017-11-16)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2017_R21
+        layer_title: World Imagery (Wayback 2018-01-08)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R00
+        layer_title: World Imagery (Wayback 2018-01-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R01
+        layer_title: World Imagery (Wayback 2018-01-31)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R02
+        layer_title: World Imagery (Wayback 2018-02-23)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R03
+        layer_title: World Imagery (Wayback 2018-03-14)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R04
+        layer_title: World Imagery (Wayback 2018-03-28)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R05
+        layer_title: World Imagery (Wayback 2018-04-11)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R06
+        layer_title: World Imagery (Wayback 2018-04-25)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R07
+        layer_title: World Imagery (Wayback 2018-05-16)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R08
+        layer_title: World Imagery (Wayback 2018-06-06)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R09
+        layer_title: World Imagery (Wayback 2018-06-27)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R10
+        layer_title: World Imagery (Wayback 2018-07-25)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R11
+        layer_title: World Imagery (Wayback 2018-08-15)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R12
+        layer_title: World Imagery (Wayback 2018-09-06)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R13
+        layer_title: World Imagery (Wayback 2018-09-26)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R14
+        layer_title: World Imagery (Wayback 2018-10-17)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R15
+        layer_title: World Imagery (Wayback 2018-11-07)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R16
+        layer_title: World Imagery (Wayback 2018-11-29)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2018_R17
+        layer_title: World Imagery (Wayback 2018-12-14)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R00
+        layer_title: World Imagery (Wayback 2019-01-09)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R01
+        layer_title: World Imagery (Wayback 2019-01-31)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R02
+        layer_title: World Imagery (Wayback 2019-02-21)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R03
+        layer_title: World Imagery (Wayback 2019-03-13)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R04
+        layer_title: World Imagery (Wayback 2019-04-03)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R05
+        layer_title: World Imagery (Wayback 2019-04-24)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R06
+        layer_title: World Imagery (Wayback 2019-05-15)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R07
+        layer_title: World Imagery (Wayback 2019-06-05)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R08
+        layer_title: World Imagery (Wayback 2019-06-26)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R09
+        layer_title: World Imagery (Wayback 2019-07-17)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R10
+        layer_title: World Imagery (Wayback 2019-08-07)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R11
+        layer_title: World Imagery (Wayback 2019-08-28)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R12
+        layer_title: World Imagery (Wayback 2019-09-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R13
+        layer_title: World Imagery (Wayback 2019-10-09)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R14
+        layer_title: World Imagery (Wayback 2019-10-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2019_R16
+        layer_title: World Imagery (Wayback 2019-12-12)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R01
+        layer_title: World Imagery (Wayback 2020-01-08)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R02
+        layer_title: World Imagery (Wayback 2020-01-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R03
+        layer_title: World Imagery (Wayback 2020-02-20)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R04
+        layer_title: World Imagery (Wayback 2020-03-23)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R05
+        layer_title: World Imagery (Wayback 2020-04-08)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R06
+        layer_title: World Imagery (Wayback 2020-04-29)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R07
+        layer_title: World Imagery (Wayback 2020-05-20)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R08
+        layer_title: World Imagery (Wayback 2020-06-10)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R09
+        layer_title: World Imagery (Wayback 2020-07-01)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R10
+        layer_title: World Imagery (Wayback 2020-07-22)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R11
+        layer_title: World Imagery (Wayback 2020-08-12)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R12
+        layer_title: World Imagery (Wayback 2020-09-02)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R13
+        layer_title: World Imagery (Wayback 2020-09-23)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R14
+        layer_title: World Imagery (Wayback 2020-10-14)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R15
+        layer_title: World Imagery (Wayback 2020-11-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2020_R16
+        layer_title: World Imagery (Wayback 2020-12-16)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R01
+        layer_title: World Imagery (Wayback 2021-01-13)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R03
+        layer_title: World Imagery (Wayback 2021-02-24)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R04
+        layer_title: World Imagery (Wayback 2021-03-17)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R05
+        layer_title: World Imagery (Wayback 2021-04-08)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R06
+        layer_title: World Imagery (Wayback 2021-04-28)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R07
+        layer_title: World Imagery (Wayback 2021-05-19)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R08
+        layer_title: World Imagery (Wayback 2021-06-09)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R09
+        layer_title: World Imagery (Wayback 2021-06-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R10
+        layer_title: World Imagery (Wayback 2021-07-21)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R11
+        layer_title: World Imagery (Wayback 2021-08-11)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R12
+        layer_title: World Imagery (Wayback 2021-09-01)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R13
+        layer_title: World Imagery (Wayback 2021-09-22)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R14
+        layer_title: World Imagery (Wayback 2021-10-13)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R15
+        layer_title: World Imagery (Wayback 2021-11-03)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R16
+        layer_title: World Imagery (Wayback 2021-11-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2021_R17
+        layer_title: World Imagery (Wayback 2021-12-21)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R00
+        layer_title: World Imagery (Wayback 2022-01-12)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R01
+        layer_title: World Imagery (Wayback 2022-02-02)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R02
+        layer_title: World Imagery (Wayback 2022-02-24)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R03
+        layer_title: World Imagery (Wayback 2022-03-16)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R04
+        layer_title: World Imagery (Wayback 2022-04-06)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R05
+        layer_title: World Imagery (Wayback 2022-04-27)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R06
+        layer_title: World Imagery (Wayback 2022-05-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R07
+        layer_title: World Imagery (Wayback 2022-06-08)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R08
+        layer_title: World Imagery (Wayback 2022-06-29)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R09
+        layer_title: World Imagery (Wayback 2022-07-20)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R10
+        layer_title: World Imagery (Wayback 2022-08-10)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R11
+        layer_title: World Imagery (Wayback 2022-08-31)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R12
+        layer_title: World Imagery (Wayback 2022-09-21)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R13
+        layer_title: World Imagery (Wayback 2022-10-12)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R14
+        layer_title: World Imagery (Wayback 2022-11-02)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2022_R15
+        layer_title: World Imagery (Wayback 2022-12-14)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R00
+        layer_title: World Imagery (Wayback 2023-01-11)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R01
+        layer_title: World Imagery (Wayback 2023-02-23)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R02
+        layer_title: World Imagery (Wayback 2023-03-15)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R03
+        layer_title: World Imagery (Wayback 2023-04-05)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R04
+        layer_title: World Imagery (Wayback 2023-05-03)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R05
+        layer_title: World Imagery (Wayback 2023-06-13)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R06
+        layer_title: World Imagery (Wayback 2023-06-29)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R07
+        layer_title: World Imagery (Wayback 2023-08-10)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R08
+        layer_title: World Imagery (Wayback 2023-08-31)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R09
+        layer_title: World Imagery (Wayback 2023-10-11)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R10
+        layer_title: World Imagery (Wayback 2023-11-01)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2023_R11
+        layer_title: World Imagery (Wayback 2023-12-07)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R00
+        layer_title: World Imagery (Wayback 2024-01-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R01
+        layer_title: World Imagery (Wayback 2024-02-08)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R02
+        layer_title: World Imagery (Wayback 2024-03-07)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R03
+        layer_title: World Imagery (Wayback 2024-03-28)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R05
+        layer_title: World Imagery (Wayback 2024-05-09)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R06
+        layer_title: World Imagery (Wayback 2024-06-06)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R07
+        layer_title: World Imagery (Wayback 2024-06-27)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R08
+        layer_title: World Imagery (Wayback 2024-08-15)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R10
+        layer_title: World Imagery (Wayback 2024-09-19)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R11
+        layer_title: World Imagery (Wayback 2024-10-10)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R12
+        layer_title: World Imagery (Wayback 2024-11-18)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2024_R13
+        layer_title: World Imagery (Wayback 2024-12-12)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R01
+        layer_title: World Imagery (Wayback 2025-01-30)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R02
+        layer_title: World Imagery (Wayback 2025-02-27)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R03
+        layer_title: World Imagery (Wayback 2025-03-27)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R04
+        layer_title: World Imagery (Wayback 2025-04-24)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R05
+        layer_title: World Imagery (Wayback 2025-05-29)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R06
+        layer_title: World Imagery (Wayback 2025-06-26)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R07
+        layer_title: World Imagery (Wayback 2025-07-31)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R08
+        layer_title: World Imagery (Wayback 2025-09-04)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R09
+        layer_title: World Imagery (Wayback 2025-09-25)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+      - layer_name: WB_2025_R10
+        layer_title: World Imagery (Wayback 2025-10-23)
+        crs:
+          - default028mm
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default

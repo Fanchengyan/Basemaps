@@ -1,0 +1,383 @@
+wms:
+  EOX Sentinel-2 Cloudless:
+    icon: EOX.png
+    url: https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml
+    service_type: wmts
+    layers:
+    - layer_name: s2cloudless
+      layer_title: Sentinel-2 cloudless layer for 2016 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless_3857
+      layer_title: Sentinel-2 cloudless layer for 2016 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2017
+      layer_title: Sentinel-2 cloudless layer for 2017 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2017_3857
+      layer_title: Sentinel-2 cloudless layer for 2017 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2018
+      layer_title: Sentinel-2 cloudless layer for 2018 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2018_3857
+      layer_title: Sentinel-2 cloudless layer for 2018 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2019
+      layer_title: Sentinel-2 cloudless layer for 2019 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2019_3857
+      layer_title: Sentinel-2 cloudless layer for 2019 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2020
+      layer_title: Sentinel-2 cloudless layer for 2020 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2020_3857
+      layer_title: Sentinel-2 cloudless layer for 2020 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2021
+      layer_title: Sentinel-2 cloudless layer for 2021 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2021_3857
+      layer_title: Sentinel-2 cloudless layer for 2021 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2022
+      layer_title: Sentinel-2 cloudless layer for 2022 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2022_3857
+      layer_title: Sentinel-2 cloudless layer for 2022 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2023
+      layer_title: Sentinel-2 cloudless layer for 2023 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2023_3857
+      layer_title: Sentinel-2 cloudless layer for 2023 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2024
+      layer_title: Sentinel-2 cloudless layer for 2024 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: s2cloudless-2024_3857
+      layer_title: Sentinel-2 cloudless layer for 2024 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: blackmarble
+      layer_title: Black marble background layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: blackmarble_3857
+      layer_title: Black marble background layer by EOX - 3857
+      crs:
+      - g
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: bluemarble
+      layer_title: Blue marble background layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: bluemarble_3857
+      layer_title: Blue marble background layer by EOX - 3857
+      crs:
+      - g
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: coastline
+      layer_title: Coastline overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: coastline_3857
+      layer_title: Coastline overlay layer by EOX - 3857
+      crs:
+      - g
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: coastline_black
+      layer_title: Black coastline overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: graticules
+      layer_title: Graticules overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: hydrography
+      layer_title: Hydrography overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: hydrography_3857
+      layer_title: Hydrography overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: magnetic_graticules
+      layer_title: Magnetic Graticules overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: osm
+      layer_title: OpenStreetMap background layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: osm_3857
+      layer_title: OpenStreetMap background layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: overlay
+      layer_title: Overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: overlay_3857
+      layer_title: Overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: overlay_base
+      layer_title: Overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: overlay_base_3857
+      layer_title: Overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: overlay_base_bright
+      layer_title: Bright overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: overlay_base_bright_3857
+      layer_title: Bright overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: overlay_bright
+      layer_title: Bright overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: overlay_bright_3857
+      layer_title: Bright overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: streets
+      layer_title: Streets overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: streets_3857
+      layer_title: Streets overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+    - layer_name: terrain
+      layer_title: Terrain background layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: terrain-light
+      layer_title: Terrain Light background layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: terrain-light_3857
+      layer_title: Terrain Light background layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+    - layer_name: terrain_3857
+      layer_title: Terrain background layer by EOX - 3857
+      crs:
+      - g
+      format:
+      - image/jpeg
+      styles:
+      - default

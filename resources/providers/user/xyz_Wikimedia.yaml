@@ -1,0 +1,8 @@
+xyz:
+  Wikimedia:
+    icon: ''
+    basemaps:
+    - name: Wikimedia Map
+      url: https://maps.wikimedia.org/osm-intl/%7Bz%7D/%7Bx%7D/%7By%7D.png
+    - name: Wikimedia Hike Bike Map
+      url: http://tiles.wmflabs.org/hikebike/%7Bz%7D/%7Bx%7D/%7By%7D.png

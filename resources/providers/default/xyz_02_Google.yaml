@@ -1,0 +1,16 @@
+xyz:
+  Google:
+    icon: GoogleMaps.svg
+    basemaps:
+      - name: Google Maps
+        url: https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}
+      - name: Google Satellite
+        url: https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}
+      - name: Google Satellite Hybrid
+        url: https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}
+      - name: Google Terrain
+        url: https://mt1.google.com/vt/lyrs=t&x={x}&y={y}&z={z}
+      - name: Google Terrain Hybrid
+        url: https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}
+      - name: Google Roads
+        url: https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}

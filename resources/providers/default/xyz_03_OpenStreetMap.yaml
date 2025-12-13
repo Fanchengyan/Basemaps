@@ -1,0 +1,8 @@
+xyz:
+  OpenStreetMap:
+    icon: OpenStreetMap.svg
+    basemaps:
+      - name: Open Street Map
+        url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+      - name: Open Topo Map
+        url: https://tile.opentopomap.org/{z}/{x}/{y}.png

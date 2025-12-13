@@ -1,0 +1,24 @@
+xyz:
+  CartoDB:
+    icon: CartoDB.png
+    basemaps:
+    - name: CartoDB Light All
+      url: https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png
+    - name: CartoDB Dark All
+      url: https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png
+    - name: CartoDB Light No Labels
+      url: https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png
+    - name: CartoDB Light Only Labels
+      url: https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png
+    - name: CartoDB Dark No Labels
+      url: https://basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png
+    - name: CartoDB Dark Only Labels
+      url: https://basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png
+    - name: CartoDB Voyager
+      url: https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png
+    - name: CartoDB Voyager No Labels
+      url: https://basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}.png
+    - name: CartoDB Voyager Only Labels
+      url: https://basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png
+    - name: CartoDB Voyager Labels Under
+      url: https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png

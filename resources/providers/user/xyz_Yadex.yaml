@@ -1,0 +1,9 @@
+xyz:
+  Yadex:
+    icon: Yandex.svg
+    created_at: 1765258443.782388
+    basemaps:
+    - name: Yandex Satellite
+      url: https://core-sat.maps.yandex.net/tiles?l=sat&x={x}&y={y}&z={z}
+    - name: Yandex Map
+      url: https://core-renderer-tiles.maps.yandex.net/tiles?l=map&x={x}&y={y}&z={z}

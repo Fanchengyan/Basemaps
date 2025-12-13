@@ -1,0 +1,6 @@
+xyz:
+  F4map:
+    icon: F4map.svg
+    basemaps:
+      - name: F4map 2D
+        url: https://tile1.f4map.com/tiles/f4_2d/{z}/{x}/{y}.png

@@ -18,11 +18,8 @@ non-standard XML structures or namespace issues that OWSLib cannot handle.
 
 from __future__ import annotations
 
-import logging
 import xml.etree.ElementTree as ET
 from typing import Optional
-
-logger = logging.getLogger(__name__)
 
 
 def parse_wmts_capabilities(xml_content: bytes | str) -> list[dict]:
