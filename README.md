@@ -32,7 +32,7 @@ A QGIS plugin that provides easy access to multiple well-known online basemap se
 ## Usage
 
 1. **Open the Plugin** either by: 
-   - Click the **Basemaps** icon in the toolbar 
+   - Click the **Basemaps** icon ![Basemaps Plugin](docs/imgs/icon.png) in the toolbar 
    - or go to `Plugins` -> `Basemap Management` -> `Load Basemaps`.
 2. **Load Basemaps**: 
    1. Browse and select a provider in `XYZ Tiles` or `WMS/WMTS` tab
