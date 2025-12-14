@@ -16,8 +16,6 @@ from pathlib import Path
 from typing import Any
 
 from qgis.core import QgsApplication, QgsDataSourceUri, QgsProject, QgsRasterLayer
-
-from .wms_fetch_task import FetchResult, ServiceType, WMSFetchTask
 from qgis.PyQt.QtCore import QT_VERSION_STR, QCoreApplication, QSize, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
@@ -40,6 +38,7 @@ from qgis.PyQt.QtWidgets import (
 from . import config_loader
 from .messageTool import Logger, MessageBox
 from .ui import IconBasemaps, UIBasemapsBase
+from .wms_fetch_task import FetchResult, WMSFetchTask
 
 QT_VERSION_INT = int(QT_VERSION_STR.split(".")[0])
 
@@ -65,12 +64,12 @@ else:
     window_modal = Qt.WindowModality.WindowModal
 
 default_separator = {
-    "name": "Default Providers ───────────────────────────────────────",
+    "name": "Default Providers ─────────────────",
     "type": "separator",
 }
 
 user_separator = {
-    "name": "User Providers ─────────────────────────────────────────",
+    "name": "User Providers ──────────────────",
     "type": "separator",
 }
 
@@ -1515,7 +1514,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             QgsProject.instance().addMapLayer(layer)
         else:
             error_msg = layer.error().message() if layer.error() else "Unknown error"
-            Logger.critical(f"Failed to load WMS layer: {layer_data['layer_title']} - {error_msg}")
+            Logger.critical(
+                f"Failed to load WMS layer: {layer_data['layer_title']} - {error_msg}"
+            )
             MessageBox.critical(
                 self.tr("Failed to load WMS layer: {}\n\nError: {}").format(
                     layer_data["layer_title"], error_msg
@@ -1711,9 +1712,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         # Show success message
         MessageBox.information(
-            self.tr("Successfully refreshed {} layers.").format(
-                detected_type.upper()
-            ),
+            self.tr("Successfully refreshed {} layers.").format(detected_type.upper()),
             self.tr("Success"),
             self,
         )

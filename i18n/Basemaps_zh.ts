@@ -1,172 +1,205 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="zh_CN">
+<TS version="2.1">
 <context>
     <name>BasemapsDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="38"/>
-        <source>Select Basemap Configuration File</source>
-        <translation>选择底图配置文件</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="38"/>
-        <source>JSON files (*.json)</source>
-        <translation>JSON文件 (*.json)</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="1177"/>
-        <source>Error</source>
-        <translation>错误</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="312"/>
-        <source>Failed to load configuration file: {}</source>
-        <translation>加载配置文件失败：{}</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="595"/>
-        <source>Failed to load basemap: {}</source>
-        <translation>无法加载底图：{}</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="93"/>
+        <location filename="../basemaps_dialog.py" line="261"/>
         <source>Failed to load default configuration: {}</source>
         <translation>加载默认配置失败：{}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="107"/>
-        <source>Failed to save user configuration: {}</source>
-        <translation>保存用户配置失败：{}</translation>
+        <location filename="../basemaps_dialog.py" line="1649"/>
+        <source>Error</source>
+        <translation>错误</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="114"/>
+        <location filename="../basemaps_dialog.py" line="288"/>
+        <source>Failed to load user configuration: {}</source>
+        <translation>加载用户配置失败：{}</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="295"/>
         <source>Import Configuration File</source>
         <translation>导入配置文件</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="114"/>
-        <source>ZIP files (*.zip);;JSON files (*.json)</source>
-        <translation>ZIP文件 (*.zip);;JSON文件 (*.json)</translation>
+        <location filename="../basemaps_dialog.py" line="295"/>
+        <source>ZIP files (*.zip);;YAML files (*.yaml *.yml);;JSON files (*.json)</source>
+        <translation>ZIP 文件 (*.zip);;YAML 文件 (*.yaml *.yml);;JSON 文件 (*.json)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="158"/>
+        <location filename="../basemaps_dialog.py" line="345"/>
         <source>Failed to import ZIP file: {}</source>
-        <translation>导入ZIP文件失败：{}</translation>
+        <translation>导入 ZIP 文件失败：{}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="175"/>
+        <location filename="../basemaps_dialog.py" line="362"/>
+        <source>No providers selected. Do you want to export all user-defined providers?</source>
+        <translation>未选择提供者。是否要导出所有用户定义的提供者？</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="362"/>
         <source>Export Configuration</source>
         <translation>导出配置</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="175"/>
-        <source>No providers selected. Do you want to export all user-defined providers?</source>
-        <translation>未选择提供商。是否要导出所有用户自定义的提供商？</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="195"/>
+        <location filename="../basemaps_dialog.py" line="383"/>
         <source>Save Configuration File</source>
         <translation>保存配置文件</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="195"/>
+        <location filename="../basemaps_dialog.py" line="383"/>
         <source>ZIP files (*.zip)</source>
-        <translation>ZIP文件 (*.zip)</translation>
+        <translation>ZIP 文件 (*.zip)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1170"/>
+        <location filename="../basemaps_dialog.py" line="454"/>
+        <source>Configuration saved successfully.</source>
+        <translation>配置保存成功。</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1951"/>
         <source>Success</source>
         <translation>成功</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="270"/>
-        <source>Configuration saved successfully.</source>
-        <translation>配置保存成功</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="335"/>
+        <location filename="../basemaps_dialog.py" line="541"/>
         <source>Failed to save configuration: {}</source>
         <translation>保存配置失败：{}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1208"/>
+        <location filename="../basemaps_dialog.py" line="505"/>
+        <source>Failed to load configuration file: {}</source>
+        <translation>加载配置文件失败：{}</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1279"/>
+        <source>Provider &apos;{}&apos; already exists.</source>
+        <translation>提供者 '{}' 已存在。</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1827"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="915"/>
-        <source>Provider &apos;{}&apos; already exists.</source>
-        <translation>提供商 '{0}' 已存在</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="430"/>
+        <location filename="../basemaps_dialog.py" line="1333"/>
         <source>Default providers cannot be removed.</source>
-        <translation>默认提供商不能被删除</translation>
+        <translation>默认提供者不能被删除。</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="964"/>
+        <location filename="../basemaps_dialog.py" line="1343"/>
+        <source>Are you sure you want to remove providers: &quot;{}&quot;?</source>
+        <translation>确定要删除提供者：&quot;{}&quot; 吗？</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1343"/>
         <source>Confirm Deletion</source>
         <translation>确认删除</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="964"/>
-        <source>Are you sure you want to remove providers: &quot;{}&quot;?</source>
-        <translation>确定要删除这些提供商吗："{}"？</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="797"/>
+        <location filename="../basemaps_dialog.py" line="1157"/>
         <source>Please select a provider first.</source>
-        <translation>请先选择一个提供商</translation>
+        <translation>请先选择一个提供者。</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="880"/>
+        <location filename="../basemaps_dialog.py" line="1244"/>
         <source>Are you sure you want to remove basemaps: &quot;{}&quot;?</source>
-        <translation>确定要删除这些底图吗："{}"？</translation>
+        <translation>确定要删除底图：&quot;{}&quot; 吗？</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="601"/>
+        <location filename="../basemaps_dialog.py" line="808"/>
+        <source>Failed to load basemap: {}</source>
+        <translation>加载底图失败：{}</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="814"/>
         <source>Invalid basemap data: {}</source>
         <translation>无效的底图数据：{}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="954"/>
+        <location filename="../basemaps_dialog.py" line="1319"/>
         <source>Please select providers to remove.</source>
-        <translation>请选择要删除的提供商</translation>
+        <translation>请选择要删除的提供者。</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="829"/>
+        <location filename="../basemaps_dialog.py" line="1190"/>
         <source>Please select a basemap to edit.</source>
-        <translation>请选择要编辑的底图</translation>
+        <translation>请选择要编辑的底图。</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="870"/>
+        <location filename="../basemaps_dialog.py" line="1234"/>
         <source>Please select basemaps to remove.</source>
-        <translation>请选择要删除的底图</translation>
+        <translation>请选择要删除的底图。</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1070"/>
+        <location filename="../basemaps_dialog.py" line="1595"/>
         <source>Please select a WMS provider first.</source>
-        <translation>请先选择一个WMS提供商</translation>
+        <translation>请先选择一个 WMS 提供者。</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1058"/>
-        <source>Failed to load WMS layer: {}</source>
-        <translation>加载WMS图层失败：{}</translation>
+        <location filename="../basemaps_dialog.py" line="1520"/>
+        <source>Failed to load WMS layer: {}
+
+Error: {}</source>
+        <translation>加载 WMS 图层失败：{}
+
+错误：{}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1170"/>
-        <source>Successfully refreshed WMS layers.</source>
-        <translation>成功刷新WMS图层</translation>
+        <location filename="../basemaps_dialog.py" line="1574"/>
+        <source>Failed to load WMTS layer: {}
+
+Error: {}</source>
+        <translation>加载 WMTS 图层失败：{}
+
+错误：{}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1177"/>
-        <source>Failed to fetch WMS layers: {}</source>
-        <translation>获取WMS图层失败：{}</translation>
+        <location filename="../basemaps_dialog.py" line="1622"/>
+        <source>Fetching layers in background...</source>
+        <translation>正在后台获取图层...</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1208"/>
+        <location filename="../basemaps_dialog.py" line="1649"/>
+        <source>Failed to fetch layers: {}</source>
+        <translation>获取图层失败：{}</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1714"/>
+        <source>Successfully refreshed {} layers.</source>
+        <translation>成功刷新 {} 个图层。</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1783"/>
         <source>Please select a WMS provider to edit.</source>
-        <translation>请选择要编辑的WMS提供商</translation>
+        <translation>请选择要编辑的 WMS 提供者。</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1812"/>
+        <source>Please select a provider to edit.</source>
+        <translation>请选择要编辑的提供者。</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1827"/>
+        <source>Default providers cannot be edited.</source>
+        <translation>默认提供者不能被编辑。</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1924"/>
+        <source>Only default providers can be duplicated.</source>
+        <translation>只有默认提供者可以被复制。</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1924"/>
+        <source>Information</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1951"/>
+        <source>Provider duplicated as &apos;{}&apos;</source>
+        <translation>提供者已复制为 '{}'</translation>
     </message>
 </context>
 <context>
@@ -174,17 +207,7 @@
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="14"/>
         <source>Basemaps</source>
-        <translation>底图管理</translation>
-    </message>
-    <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="20"/>
-        <source>Load Configuration File</source>
-        <translation>加载配置文件</translation>
-    </message>
-    <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="37"/>
-        <source>Load Selected Basemap</source>
-        <translation>加载选中的底图</translation>
+        <translation>底图</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="22"/>
@@ -198,13 +221,13 @@
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="55"/>
-        <source>XYZ Services</source>
-        <translation>XYZ服务</translation>
+        <source>XYZ Tiles</source>
+        <translation>XYZ 瓦片</translation>
     </message>
     <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="63"/>
-        <source>XYZ Providers:</source>
-        <translation>XYZ提供商：</translation>
+        <location filename="../ui/basemaps_dialog_base.ui" line="156"/>
+        <source>Providers:</source>
+        <translation>提供者：</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="172"/>
@@ -218,8 +241,8 @@
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="99"/>
-        <source>XYZ Basemaps:</source>
-        <translation>XYZ底图：</translation>
+        <source>Basemaps:</source>
+        <translation>底图：</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="122"/>
@@ -227,27 +250,22 @@
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="215"/>
+        <location filename="../ui/basemaps_dialog_base.ui" line="223"/>
         <source>Load</source>
         <translation>加载</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="148"/>
-        <source>WMS Services</source>
-        <translation>WMS服务</translation>
-    </message>
-    <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="156"/>
-        <source>WMS Providers:</source>
-        <translation>WMS提供商：</translation>
+        <source>WMS/WMTS</source>
+        <translation>WMS/WMTS</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="192"/>
-        <source>WMS Layers:</source>
-        <translation>WMS图层：</translation>
+        <source>Layers:</source>
+        <translation>图层：</translation>
     </message>
     <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="208"/>
+        <location filename="../ui/basemaps_dialog_base.ui" line="216"/>
         <source>Refresh</source>
         <translation>刷新</translation>
     </message>
@@ -255,12 +273,12 @@
 <context>
     <name>BasemapsPlugin</name>
     <message>
-        <location filename="../basemaps.py" line="25"/>
+        <location filename="../basemaps.py" line="37"/>
         <source>Basemap Management</source>
         <translation>底图管理</translation>
     </message>
     <message>
-        <location filename="../basemaps.py" line="33"/>
+        <location filename="../basemaps.py" line="45"/>
         <source>Load Basemaps</source>
         <translation>加载底图</translation>
     </message>

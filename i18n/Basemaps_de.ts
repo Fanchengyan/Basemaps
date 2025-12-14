@@ -4,159 +4,202 @@
 <context>
     <name>BasemapsDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="1177"/>
-        <source>Error</source>
-        <translation>Fehler</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="93"/>
+        <location filename="../basemaps_dialog.py" line="261"/>
         <source>Failed to load default configuration: {}</source>
         <translation>Standardkonfiguration konnte nicht geladen werden: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="107"/>
-        <source>Failed to save user configuration: {}</source>
-        <translation>Benutzerkonfiguration konnte nicht gespeichert werden: {}</translation>
+        <location filename="../basemaps_dialog.py" line="1649"/>
+        <source>Error</source>
+        <translation>Fehler</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="114"/>
+        <location filename="../basemaps_dialog.py" line="288"/>
+        <source>Failed to load user configuration: {}</source>
+        <translation>Benutzerkonfiguration konnte nicht geladen werden: {}</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="295"/>
         <source>Import Configuration File</source>
         <translation>Konfigurationsdatei importieren</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="114"/>
-        <source>ZIP files (*.zip);;JSON files (*.json)</source>
-        <translation>ZIP-Dateien (*.zip);;JSON-Dateien (*.json)</translation>
+        <location filename="../basemaps_dialog.py" line="295"/>
+        <source>ZIP files (*.zip);;YAML files (*.yaml *.yml);;JSON files (*.json)</source>
+        <translation>ZIP-Dateien (*.zip);;YAML-Dateien (*.yaml *.yml);;JSON-Dateien (*.json)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="158"/>
+        <location filename="../basemaps_dialog.py" line="345"/>
         <source>Failed to import ZIP file: {}</source>
         <translation>ZIP-Datei konnte nicht importiert werden: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="175"/>
-        <source>Export Configuration</source>
-        <translation>Konfiguration exportieren</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="175"/>
+        <location filename="../basemaps_dialog.py" line="362"/>
         <source>No providers selected. Do you want to export all user-defined providers?</source>
         <translation>Keine Anbieter ausgewählt. Möchten Sie alle benutzerdefinierten Anbieter exportieren?</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="195"/>
+        <location filename="../basemaps_dialog.py" line="362"/>
+        <source>Export Configuration</source>
+        <translation>Konfiguration exportieren</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="383"/>
         <source>Save Configuration File</source>
         <translation>Konfigurationsdatei speichern</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="195"/>
+        <location filename="../basemaps_dialog.py" line="383"/>
         <source>ZIP files (*.zip)</source>
         <translation>ZIP-Dateien (*.zip)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1170"/>
-        <source>Success</source>
-        <translation>Erfolg</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="270"/>
+        <location filename="../basemaps_dialog.py" line="454"/>
         <source>Configuration saved successfully.</source>
         <translation>Konfiguration erfolgreich gespeichert.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="335"/>
+        <location filename="../basemaps_dialog.py" line="1951"/>
+        <source>Success</source>
+        <translation>Erfolg</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="541"/>
         <source>Failed to save configuration: {}</source>
         <translation>Konfiguration konnte nicht gespeichert werden: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="312"/>
+        <location filename="../basemaps_dialog.py" line="505"/>
         <source>Failed to load configuration file: {}</source>
         <translation>Konfigurationsdatei konnte nicht geladen werden: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1208"/>
-        <source>Warning</source>
-        <translation>Warnung</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="915"/>
+        <location filename="../basemaps_dialog.py" line="1279"/>
         <source>Provider &apos;{}&apos; already exists.</source>
         <translation>Anbieter '{}' existiert bereits.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="430"/>
+        <location filename="../basemaps_dialog.py" line="1827"/>
+        <source>Warning</source>
+        <translation>Warnung</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1333"/>
         <source>Default providers cannot be removed.</source>
         <translation>Standardanbieter können nicht entfernt werden.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="964"/>
+        <location filename="../basemaps_dialog.py" line="1343"/>
+        <source>Are you sure you want to remove providers: &quot;{}&quot;?</source>
+        <translation>Möchten Sie die Anbieter wirklich entfernen: &quot;{}&quot;?</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1343"/>
         <source>Confirm Deletion</source>
         <translation>Löschen bestätigen</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="964"/>
-        <source>Are you sure you want to remove providers: &quot;{}&quot;?</source>
-        <translation>Sind Sie sicher, dass Sie die Anbieter "{}" entfernen möchten?</translation>
-    </message>
-    <message>
-        <location filename="../basemaps_dialog.py" line="797"/>
+        <location filename="../basemaps_dialog.py" line="1157"/>
         <source>Please select a provider first.</source>
         <translation>Bitte wählen Sie zuerst einen Anbieter aus.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="880"/>
+        <location filename="../basemaps_dialog.py" line="1244"/>
         <source>Are you sure you want to remove basemaps: &quot;{}&quot;?</source>
-        <translation>Sind Sie sicher, dass Sie die Grundkarten "{}" entfernen möchten?</translation>
+        <translation>Möchten Sie die Basiskarten wirklich entfernen: &quot;{}&quot;?</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="595"/>
+        <location filename="../basemaps_dialog.py" line="808"/>
         <source>Failed to load basemap: {}</source>
-        <translation>Grundkarte konnte nicht geladen werden: {}</translation>
+        <translation>Basiskarte konnte nicht geladen werden: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="601"/>
+        <location filename="../basemaps_dialog.py" line="814"/>
         <source>Invalid basemap data: {}</source>
-        <translation>Ungültige Grundkartendaten: {}</translation>
+        <translation>Ungültige Basiskartendaten: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="954"/>
+        <location filename="../basemaps_dialog.py" line="1319"/>
         <source>Please select providers to remove.</source>
-        <translation>Bitte wählen Sie die zu entfernenden Anbieter aus.</translation>
+        <translation>Bitte wählen Sie Anbieter zum Entfernen aus.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="829"/>
+        <location filename="../basemaps_dialog.py" line="1190"/>
         <source>Please select a basemap to edit.</source>
-        <translation>Bitte wählen Sie eine Grundkarte zum Bearbeiten aus.</translation>
+        <translation>Bitte wählen Sie eine Basiskarte zum Bearbeiten aus.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="870"/>
+        <location filename="../basemaps_dialog.py" line="1234"/>
         <source>Please select basemaps to remove.</source>
-        <translation>Bitte wählen Sie die zu entfernenden Grundkarten aus.</translation>
+        <translation>Bitte wählen Sie Basiskarten zum Entfernen aus.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1070"/>
+        <location filename="../basemaps_dialog.py" line="1595"/>
         <source>Please select a WMS provider first.</source>
         <translation>Bitte wählen Sie zuerst einen WMS-Anbieter aus.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1058"/>
-        <source>Failed to load WMS layer: {}</source>
-        <translation>WMS-Layer konnte nicht geladen werden: {}</translation>
+        <location filename="../basemaps_dialog.py" line="1520"/>
+        <source>Failed to load WMS layer: {}
+
+Error: {}</source>
+        <translation>WMS-Layer konnte nicht geladen werden: {}
+
+Fehler: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1170"/>
-        <source>Successfully refreshed WMS layers.</source>
-        <translation>WMS-Layer erfolgreich aktualisiert.</translation>
+        <location filename="../basemaps_dialog.py" line="1574"/>
+        <source>Failed to load WMTS layer: {}
+
+Error: {}</source>
+        <translation>WMTS-Layer konnte nicht geladen werden: {}
+
+Fehler: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1177"/>
-        <source>Failed to fetch WMS layers: {}</source>
-        <translation>WMS-Layer konnten nicht abgerufen werden: {}</translation>
+        <location filename="../basemaps_dialog.py" line="1622"/>
+        <source>Fetching layers in background...</source>
+        <translation>Layer werden im Hintergrund abgerufen...</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1208"/>
+        <location filename="../basemaps_dialog.py" line="1649"/>
+        <source>Failed to fetch layers: {}</source>
+        <translation>Layer konnten nicht abgerufen werden: {}</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1714"/>
+        <source>Successfully refreshed {} layers.</source>
+        <translation>{} Layer erfolgreich aktualisiert.</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1783"/>
         <source>Please select a WMS provider to edit.</source>
         <translation>Bitte wählen Sie einen WMS-Anbieter zum Bearbeiten aus.</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1812"/>
+        <source>Please select a provider to edit.</source>
+        <translation>Bitte wählen Sie einen Anbieter zum Bearbeiten aus.</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1827"/>
+        <source>Default providers cannot be edited.</source>
+        <translation>Standardanbieter können nicht bearbeitet werden.</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1924"/>
+        <source>Only default providers can be duplicated.</source>
+        <translation>Nur Standardanbieter können dupliziert werden.</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1924"/>
+        <source>Information</source>
+        <translation>Information</translation>
+    </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="1951"/>
+        <source>Provider duplicated as &apos;{}&apos;</source>
+        <translation>Anbieter dupliziert als '{}'</translation>
     </message>
 </context>
 <context>
@@ -164,7 +207,7 @@
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="14"/>
         <source>Basemaps</source>
-        <translation>Grundkarten</translation>
+        <translation>Basiskarten</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="22"/>
@@ -178,13 +221,13 @@
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="55"/>
-        <source>XYZ Services</source>
-        <translation>XYZ-Dienste</translation>
+        <source>XYZ Tiles</source>
+        <translation>XYZ-Kacheln</translation>
     </message>
     <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="63"/>
-        <source>XYZ Providers:</source>
-        <translation>XYZ-Anbieter:</translation>
+        <location filename="../ui/basemaps_dialog_base.ui" line="156"/>
+        <source>Providers:</source>
+        <translation>Anbieter:</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="172"/>
@@ -198,8 +241,8 @@
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="99"/>
-        <source>XYZ Basemaps:</source>
-        <translation>XYZ-Grundkarten:</translation>
+        <source>Basemaps:</source>
+        <translation>Basiskarten:</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="122"/>
@@ -207,27 +250,22 @@
         <translation>Bearbeiten</translation>
     </message>
     <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="215"/>
+        <location filename="../ui/basemaps_dialog_base.ui" line="223"/>
         <source>Load</source>
         <translation>Laden</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="148"/>
-        <source>WMS Services</source>
-        <translation>WMS-Dienste</translation>
-    </message>
-    <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="156"/>
-        <source>WMS Providers:</source>
-        <translation>WMS-Anbieter:</translation>
+        <source>WMS/WMTS</source>
+        <translation>WMS/WMTS</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="192"/>
-        <source>WMS Layers:</source>
-        <translation>WMS-Layer:</translation>
+        <source>Layers:</source>
+        <translation>Layer:</translation>
     </message>
     <message>
-        <location filename="../ui/basemaps_dialog_base.ui" line="208"/>
+        <location filename="../ui/basemaps_dialog_base.ui" line="216"/>
         <source>Refresh</source>
         <translation>Aktualisieren</translation>
     </message>
@@ -235,14 +273,14 @@
 <context>
     <name>BasemapsPlugin</name>
     <message>
-        <location filename="../basemaps.py" line="25"/>
+        <location filename="../basemaps.py" line="37"/>
         <source>Basemap Management</source>
-        <translation>Grundkartenverwaltung</translation>
+        <translation>Basiskartenverwaltung</translation>
     </message>
     <message>
-        <location filename="../basemaps.py" line="33"/>
+        <location filename="../basemaps.py" line="45"/>
         <source>Load Basemaps</source>
-        <translation>Grundkarten laden</translation>
+        <translation>Basiskarten laden</translation>
     </message>
 </context>
 </TS>
