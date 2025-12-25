@@ -16,8 +16,15 @@ from pathlib import Path
 from typing import Any
 
 from qgis.core import QgsApplication, QgsDataSourceUri, QgsProject, QgsRasterLayer
-from qgis.PyQt.QtCore import QT_VERSION_STR, QCoreApplication, QSize, Qt
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import (
+    QT_VERSION_STR,
+    QCoreApplication,
+    QSize,
+    Qt,
+    QUrl,
+    pyqtSignal,
+)
+from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -29,15 +36,20 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidgetItem,
+    QListWidget,
     QMenu,
     QPushButton,
     QTreeWidgetItem,
+    QTreeWidget,
     QVBoxLayout,
+    QApplication,
 )
 
 from . import config_loader
 from .messageTool import Logger, MessageBox
 from .ui import IconBasemaps, UIBasemapsBase
+from .ui.basemap_delegate import BasemapCardDelegate
+from .preview_manager import PreviewManager
 from .wms_fetch_task import FetchResult, WMSFetchTask
 
 QT_VERSION_INT = int(QT_VERSION_STR.split(".")[0])
@@ -91,8 +103,28 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         self.listProviders.setSelectionMode(extended_selection)
         self.listBasemaps.setSelectionMode(extended_selection)
+        self.listBasemapsGrid.setSelectionMode(extended_selection)
         self.listWmsProviders.setSelectionMode(extended_selection)
         self.treeWmsLayers.setSelectionMode(extended_selection)
+        self.listWmsLayersGrid.setSelectionMode(extended_selection)
+
+        # Initialize Preview Manager
+        self.preview_manager = PreviewManager(self.resources_dir)
+        self.preview_manager.preview_readied.connect(self._on_preview_ready)
+
+        # Set up Grid Views
+        self.basemap_delegate = BasemapCardDelegate(self)
+        for grid_view in [self.listBasemapsGrid, self.listWmsLayersGrid]:
+            grid_view.setItemDelegate(self.basemap_delegate)
+            grid_view.setViewMode(QListWidget.IconMode)
+            grid_view.setResizeMode(QListWidget.Adjust)
+            grid_view.setWrapping(True)
+            grid_view.setSpacing(10)
+            grid_view.setWordWrap(True)
+            # Ensure cards are centered
+            grid_view.setMovement(QListWidget.Static)
+            # Enable hover effects
+            grid_view.setMouseTracking(True)
 
         # set right click menu
         self.listProviders.setContextMenuPolicy(custom_context_menu)
@@ -125,6 +157,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.listBasemaps.itemSelectionChanged.connect(
             self.on_basemap_selection_changed
         )
+        self.listBasemapsGrid.itemSelectionChanged.connect(
+            self.on_basemap_grid_selection_changed
+        )
 
         # WMS connections
         self.btnAddWmsProvider.clicked.connect(self.add_wms_provider)
@@ -134,6 +169,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.listWmsProviders.itemSelectionChanged.connect(self.on_wms_provider_changed)
         self.treeWmsLayers.itemSelectionChanged.connect(
             self.on_wms_layer_selection_changed
+        )
+        self.listWmsLayersGrid.itemSelectionChanged.connect(
+            self.on_wms_layer_grid_selection_changed
         )
 
         # Load configurations
@@ -188,6 +226,18 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return user_separator_index >= 0 and provider_index < user_separator_index
         except ValueError:
             return False
+
+    def reject(self):
+        """Called when dialog is closed or cancelled."""
+        if hasattr(self, "preview_manager"):
+            self.preview_manager.cleanup()
+        super().reject()
+
+    def closeEvent(self, event):
+        """Handle window close button."""
+        if hasattr(self, "preview_manager"):
+            self.preview_manager.cleanup()
+        super().closeEvent(event)
 
     def _duplicate_provider_as_user(
         self, provider: dict[str, Any], suffix: str = " (Custom)"
@@ -822,11 +872,15 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         current_item = self.listProviders.currentItem()
         if not current_item:
             self.listBasemaps.clear()
+            self.listBasemapsGrid.clear()
             self.btnEditBasemap.setEnabled(False)
             self.btnRemoveBasemap.setEnabled(False)
             self.btnRemoveProvider.setEnabled(False)
             return
 
+        # Cancel any pending preview requests from previous provider
+        self.preview_manager.cleanup()
+        
         provider_data = current_item.data(user_role)
         if not provider_data or "data" not in provider_data:
             return
@@ -845,14 +899,26 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         else:
             provider_icon = IconBasemaps
 
-        # Update basemap list
+        # Update basemap list and grid
         self.listBasemaps.clear()
+        self.listBasemapsGrid.clear()
         for basemap in provider_data["data"].get("basemaps", []):
             if isinstance(basemap, dict) and "name" in basemap and "url" in basemap:
+                # List item
                 item = QListWidgetItem(basemap["name"])
                 item.setIcon(provider_icon)
                 item.setData(user_role, basemap)
                 self.listBasemaps.addItem(item)
+                
+                # Grid item
+                grid_item = QListWidgetItem(basemap["name"])
+                grid_item.setData(user_role, basemap)
+                grid_item.setData(Qt.UserRole + 10, provider_icon)
+                grid_item.setToolTip(basemap["name"])  # Show full name on hover
+                self.listBasemapsGrid.addItem(grid_item)
+                
+                # Request preview
+                self.preview_manager.request_preview(provider["name"], basemap["name"], basemap["url"], "xyz")
 
         # Disable edit/remove/add basemap buttons for default providers
         # Disable remove provider button for default providers
@@ -894,6 +960,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         # Update layer tree with hierarchical structure
         self.treeWmsLayers.clear()
+        self.listWmsLayersGrid.clear()
         for layer in provider_data["data"].get("layers", []):
             # Use layer_title as display name, if not available use layer_name
             display_name = layer.get(
@@ -904,6 +971,17 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             layer_item = QTreeWidgetItem([display_name])
             layer_item.setIcon(0, provider_icon)
             self.treeWmsLayers.addTopLevelItem(layer_item)
+
+            # Grid item
+            grid_item = QListWidgetItem(display_name)
+            grid_item.setData(user_role, layer)
+            grid_item.setData(Qt.UserRole + 10, provider_icon)
+            grid_item.setToolTip(display_name)  # Show full name on hover
+            self.listWmsLayersGrid.addItem(grid_item)
+            
+            # Request preview for WMS layer (using queue system to prevent overload)
+            service_type = provider.get("service_type", "wms")
+            self.preview_manager.request_preview(provider["name"], display_name, provider["url"], service_type, layer)
 
             # Get available CRS, formats, and styles
             crs_list = layer.get("crs", [])
@@ -970,6 +1048,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def on_wms_layer_selection_changed(self):
         """Handle WMS layer selection changes to update button states."""
+        self._sync_list_selections(self.treeWmsLayers, self.listWmsLayersGrid)
         current_provider = self.listWmsProviders.currentItem()
         if not current_provider:
             return
@@ -1014,6 +1093,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def on_basemap_selection_changed(self):
         """Handle basemap selection changes to update button states."""
+        self._sync_list_selections(self.listBasemaps, self.listBasemapsGrid)
         current_provider = self.listProviders.currentItem()
         if not current_provider:
             self.btnEditBasemap.setEnabled(False)
@@ -1953,6 +2033,68 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.tr("Success"),
             self,
         )
+
+    def _on_preview_ready(self, key, image_path):
+        """Handle preview image ready event."""
+        # Update grid views (both XYZ and WMS if they match the key)
+        # key format is "{provider_name}_{layer_name}"
+        for grid_view in [self.listBasemapsGrid, self.listWmsLayersGrid]:
+            for i in range(grid_view.count()):
+                item = grid_view.item(i)
+                current_item_key = f"{self._get_current_provider_name(grid_view)}_{item.text()}"
+                if current_item_key == key:
+                    pixmap = QPixmap(image_path)
+                    item.setData(Qt.DecorationRole, pixmap)
+                    # Trigger repaint
+                    grid_view.update()
+
+    def _get_current_provider_name(self, grid_view):
+        if grid_view == self.listBasemapsGrid:
+            provider_list = self.listProviders
+        else:
+            provider_list = self.listWmsProviders
+        
+        current_provider = provider_list.currentItem()
+        return current_provider.text() if current_provider else ""
+
+    def _sync_list_selections(self, source, target):
+        """Helper to synchronize selection between list/tree and grid."""
+        target.blockSignals(True)
+        target.clearSelection()
+        
+        if isinstance(source, QListWidget):
+            selected_items = source.selectedItems()
+            selected_texts = [item.text() for item in selected_items]
+        else:  # QTreeWidget
+            selected_items = source.selectedItems()
+            selected_texts = [item.text(0) for item in selected_items]
+
+        for i in range(target.count()):
+            item = target.item(i)
+            if item.text() in selected_texts:
+                item.setSelected(True)
+        target.blockSignals(False)
+
+    def _sync_tree_selection_from_grid(self, grid, tree):
+        """Helper to synchronize tree selection from grid."""
+        tree.blockSignals(True)
+        tree.clearSelection()
+        selected_texts = [item.text() for item in grid.selectedItems()]
+        
+        # Traverse tree to find matching items
+        for i in range(tree.topLevelItemCount()):
+            item = tree.topLevelItem(i)
+            if item.text(0) in selected_texts:
+                item.setSelected(True)
+        tree.blockSignals(False)
+
+    def on_basemap_grid_selection_changed(self):
+        self._sync_list_selections(self.listBasemapsGrid, self.listBasemaps)
+        self.on_basemap_selection_changed()
+
+    def on_wms_layer_grid_selection_changed(self):
+        self._sync_tree_selection_from_grid(self.listWmsLayersGrid, self.treeWmsLayers)
+        self.on_wms_layer_selection_changed()
 
 
 class ProviderInputDialog(QDialog):

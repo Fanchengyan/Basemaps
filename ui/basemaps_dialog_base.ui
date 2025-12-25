@@ -101,10 +101,62 @@
           </widget>
          </item>
          <item>
-          <widget class="QListWidget" name="listBasemaps">
-           <property name="selectionMode">
-            <enum>QAbstractItemView::ExtendedSelection</enum>
+          <widget class="QTabWidget" name="tabBasemapsView">
+           <property name="currentIndex">
+            <number>0</number>
            </property>
+           <widget class="QWidget" name="tabBasemapsList">
+            <attribute name="title">
+             <string>List</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_list">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QListWidget" name="listBasemaps">
+               <property name="selectionMode">
+                <enum>QAbstractItemView::ExtendedSelection</enum>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tabBasemapsGrid">
+            <attribute name="title">
+             <string>Grid</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_grid">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QListWidget" name="listBasemapsGrid">
+               <property name="selectionMode">
+                <enum>QAbstractItemView::ExtendedSelection</enum>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </item>
          <item>
@@ -194,18 +246,70 @@
           </widget>
          </item>
          <item>
-          <widget class="QTreeWidget" name="treeWmsLayers">
-           <property name="selectionMode">
-            <enum>QAbstractItemView::ExtendedSelection</enum>
+          <widget class="QTabWidget" name="tabWmsView">
+           <property name="currentIndex">
+            <number>0</number>
            </property>
-           <property name="headerHidden">
-            <bool>true</bool>
-           </property>
-           <column>
-            <property name="text">
-             <string notr="true">1</string>
-            </property>
-           </column>
+           <widget class="QWidget" name="tabWmsTree">
+            <attribute name="title">
+             <string>Tree</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_tree">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QTreeWidget" name="treeWmsLayers">
+               <property name="selectionMode">
+                <enum>QAbstractItemView::ExtendedSelection</enum>
+               </property>
+               <property name="headerHidden">
+                <bool>true</bool>
+               </property>
+               <column>
+                <property name="text">
+                 <string notr="true">1</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tabWmsGrid">
+            <attribute name="title">
+             <string>Grid</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_wms_grid">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QListWidget" name="listWmsLayersGrid">
+               <property name="selectionMode">
+                <enum>QAbstractItemView::ExtendedSelection</enum>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </item>
          <item>
