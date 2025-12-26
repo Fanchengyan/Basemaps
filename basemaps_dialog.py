@@ -706,10 +706,15 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Sort indices from large to small, so deleting will not affect other indices
             indices_to_remove.sort(reverse=True)
 
-            # Delete provider files
+            # Delete provider files and preview images
             for provider in providers_to_delete:
                 config_loader.delete_provider_file(
                     self.resources_dir, provider, prefix="user"
+                )
+                # Delete preview images for this provider
+                basemaps = provider.get("basemaps", [])
+                self.preview_manager.delete_provider_previews(
+                    provider["name"], basemaps, "xyz", is_default=False
                 )
 
             # Delete provider from data
@@ -803,6 +808,14 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Directly modify providers_data data
             provider = self.providers_data[provider_data["index"]]
             basemaps_to_remove = [item.data(user_role) for item in selected_basemaps]
+
+            # Delete preview images for removed basemaps
+            for basemap in basemaps_to_remove:
+                if basemap and basemap.get("name"):
+                    self.preview_manager.delete_preview(
+                        provider["name"], basemap["name"], "xyz", is_default=False
+                    )
+
             provider["basemaps"] = [
                 b for b in provider["basemaps"] if b not in basemaps_to_remove
             ]
@@ -918,7 +931,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 self.listBasemapsGrid.addItem(grid_item)
                 
                 # Request preview
-                self.preview_manager.request_preview(provider["name"], basemap["name"], basemap["url"], "xyz")
+                is_default = self._is_default_provider(provider)
+                self.preview_manager.request_preview(
+                    provider["name"], basemap["name"], basemap["url"], "xyz", None, is_default
+                )
 
         # Disable edit/remove/add basemap buttons for default providers
         # Disable remove provider button for default providers
@@ -981,7 +997,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             
             # Request preview for WMS layer (using queue system to prevent overload)
             service_type = provider.get("service_type", "wms")
-            self.preview_manager.request_preview(provider["name"], display_name, provider["url"], service_type, layer)
+            is_default = self._is_default_provider(provider)
+            self.preview_manager.request_preview(
+                provider["name"], display_name, provider["url"], service_type, layer, is_default
+            )
 
             # Get available CRS, formats, and styles
             crs_list = layer.get("crs", [])
@@ -1441,10 +1460,17 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Sort indices from large to small, so deleting will not affect other indices
             indices_to_remove.sort(reverse=True)
 
-            # Delete provider files
+            # Delete provider files and preview images
             for provider in providers_to_delete:
                 config_loader.delete_provider_file(
                     self.resources_dir, provider, prefix="user"
+                )
+                # Delete preview images for this WMS/WMTS provider
+                layers = provider.get("layers", [])
+                service_type = provider.get("service_type", "wms")
+                self.preview_manager.delete_provider_previews(
+                    provider["name"], layers, service_type, is_default=False,
+                    url=provider.get("url", "")
                 )
 
             # Delete provider from data

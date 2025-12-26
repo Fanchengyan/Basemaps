@@ -1,145 +1,10 @@
 wms:
-  EOX Sentinel-2 Cloudless:
+  EOX Sentinel-2 Cloudless (Custom):
     icon: EOX.png
+    created_at: 1766727406.8739672
     url: https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml
     service_type: wmts
     layers:
-    - layer_name: s2cloudless
-      layer_title: Sentinel-2 cloudless layer for 2016 by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless_3857
-      layer_title: Sentinel-2 cloudless layer for 2016 by EOX - 3857
-      crs:
-      - g
-      - GoogleMapsCompatible
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2017
-      layer_title: Sentinel-2 cloudless layer for 2017 by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2017_3857
-      layer_title: Sentinel-2 cloudless layer for 2017 by EOX - 3857
-      crs:
-      - g
-      - GoogleMapsCompatible
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2018
-      layer_title: Sentinel-2 cloudless layer for 2018 by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2018_3857
-      layer_title: Sentinel-2 cloudless layer for 2018 by EOX - 3857
-      crs:
-      - g
-      - GoogleMapsCompatible
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2019
-      layer_title: Sentinel-2 cloudless layer for 2019 by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2019_3857
-      layer_title: Sentinel-2 cloudless layer for 2019 by EOX - 3857
-      crs:
-      - g
-      - GoogleMapsCompatible
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2020
-      layer_title: Sentinel-2 cloudless layer for 2020 by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2020_3857
-      layer_title: Sentinel-2 cloudless layer for 2020 by EOX - 3857
-      crs:
-      - g
-      - GoogleMapsCompatible
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2021
-      layer_title: Sentinel-2 cloudless layer for 2021 by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2021_3857
-      layer_title: Sentinel-2 cloudless layer for 2021 by EOX - 3857
-      crs:
-      - g
-      - GoogleMapsCompatible
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2022
-      layer_title: Sentinel-2 cloudless layer for 2022 by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2022_3857
-      layer_title: Sentinel-2 cloudless layer for 2022 by EOX - 3857
-      crs:
-      - g
-      - GoogleMapsCompatible
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2023
-      layer_title: Sentinel-2 cloudless layer for 2023 by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: s2cloudless-2023_3857
-      layer_title: Sentinel-2 cloudless layer for 2023 by EOX - 3857
-      crs:
-      - g
-      - GoogleMapsCompatible
-      format:
-      - image/jpeg
-      styles:
-      - default
     - layer_name: s2cloudless-2024
       layer_title: Sentinel-2 cloudless layer for 2024 by EOX - 4326
       crs:
@@ -148,6 +13,7 @@ wms:
       - image/jpeg
       styles:
       - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
     - layer_name: s2cloudless-2024_3857
       layer_title: Sentinel-2 cloudless layer for 2024 by EOX - 3857
       crs:
@@ -157,105 +23,18 @@ wms:
       - image/jpeg
       styles:
       - default
-    - layer_name: blackmarble
-      layer_title: Black marble background layer by EOX - 4326
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2023
+      layer_title: Sentinel-2 cloudless layer for 2023 by EOX - 4326
       crs:
       - WGS84
       format:
       - image/jpeg
       styles:
       - default
-    - layer_name: blackmarble_3857
-      layer_title: Black marble background layer by EOX - 3857
-      crs:
-      - g
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: bluemarble
-      layer_title: Blue marble background layer by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: bluemarble_3857
-      layer_title: Blue marble background layer by EOX - 3857
-      crs:
-      - g
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: coastline
-      layer_title: Coastline overlay layer by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/png
-      styles:
-      - default
-    - layer_name: coastline_3857
-      layer_title: Coastline overlay layer by EOX - 3857
-      crs:
-      - g
-      format:
-      - image/png
-      styles:
-      - default
-    - layer_name: coastline_black
-      layer_title: Black coastline overlay layer by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/png
-      styles:
-      - default
-    - layer_name: graticules
-      layer_title: Graticules overlay layer by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/png
-      styles:
-      - default
-    - layer_name: hydrography
-      layer_title: Hydrography overlay layer by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/png
-      styles:
-      - default
-    - layer_name: hydrography_3857
-      layer_title: Hydrography overlay layer by EOX - 3857
-      crs:
-      - g
-      - GoogleMapsCompatible
-      format:
-      - image/png
-      styles:
-      - default
-    - layer_name: magnetic_graticules
-      layer_title: Magnetic Graticules overlay layer by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/png
-      styles:
-      - default
-    - layer_name: osm
-      layer_title: OpenStreetMap background layer by EOX - 4326
-      crs:
-      - WGS84
-      format:
-      - image/jpeg
-      styles:
-      - default
-    - layer_name: osm_3857
-      layer_title: OpenStreetMap background layer by EOX - 3857
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2023/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2023_3857
+      layer_title: Sentinel-2 cloudless layer for 2023 by EOX - 3857
       crs:
       - g
       - GoogleMapsCompatible
@@ -263,91 +42,140 @@ wms:
       - image/jpeg
       styles:
       - default
-    - layer_name: overlay
-      layer_title: Overlay layer by EOX - 4326
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2023_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2022
+      layer_title: Sentinel-2 cloudless layer for 2022 by EOX - 4326
       crs:
       - WGS84
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
-    - layer_name: overlay_3857
-      layer_title: Overlay layer by EOX - 3857
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2022/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2022_3857
+      layer_title: Sentinel-2 cloudless layer for 2022 by EOX - 3857
       crs:
       - g
       - GoogleMapsCompatible
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
-    - layer_name: overlay_base
-      layer_title: Overlay layer by EOX - 4326
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2022_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2021
+      layer_title: Sentinel-2 cloudless layer for 2021 by EOX - 4326
       crs:
       - WGS84
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
-    - layer_name: overlay_base_3857
-      layer_title: Overlay layer by EOX - 3857
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2021/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2021_3857
+      layer_title: Sentinel-2 cloudless layer for 2021 by EOX - 3857
       crs:
       - g
       - GoogleMapsCompatible
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
-    - layer_name: overlay_base_bright
-      layer_title: Bright overlay layer by EOX - 4326
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2021_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2020
+      layer_title: Sentinel-2 cloudless layer for 2020 by EOX - 4326
       crs:
       - WGS84
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
-    - layer_name: overlay_base_bright_3857
-      layer_title: Bright overlay layer by EOX - 3857
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2020_3857
+      layer_title: Sentinel-2 cloudless layer for 2020 by EOX - 3857
       crs:
       - g
       - GoogleMapsCompatible
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
-    - layer_name: overlay_bright
-      layer_title: Bright overlay layer by EOX - 4326
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2019
+      layer_title: Sentinel-2 cloudless layer for 2019 by EOX - 4326
       crs:
       - WGS84
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
-    - layer_name: overlay_bright_3857
-      layer_title: Bright overlay layer by EOX - 3857
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2019/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2019_3857
+      layer_title: Sentinel-2 cloudless layer for 2019 by EOX - 3857
       crs:
       - g
       - GoogleMapsCompatible
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
-    - layer_name: streets
-      layer_title: Streets overlay layer by EOX - 4326
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2019_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2018
+      layer_title: Sentinel-2 cloudless layer for 2018 by EOX - 4326
       crs:
       - WGS84
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
-    - layer_name: streets_3857
-      layer_title: Streets overlay layer by EOX - 3857
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2018/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2018_3857
+      layer_title: Sentinel-2 cloudless layer for 2018 by EOX - 3857
       crs:
       - g
       - GoogleMapsCompatible
       format:
-      - image/png
+      - image/jpeg
       styles:
       - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2018_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2017
+      layer_title: Sentinel-2 cloudless layer for 2017 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2017/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless-2017_3857
+      layer_title: Sentinel-2 cloudless layer for 2017 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2017_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless
+      layer_title: Sentinel-2 cloudless layer for 2016 by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: s2cloudless_3857
+      layer_title: Sentinel-2 cloudless layer for 2016 by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
     - layer_name: terrain
       layer_title: Terrain background layer by EOX - 4326
       crs:
@@ -356,6 +184,16 @@ wms:
       - image/jpeg
       styles:
       - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/terrain/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: terrain_3857
+      layer_title: Terrain background layer by EOX - 3857
+      crs:
+      - g
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/terrain_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
     - layer_name: terrain-light
       layer_title: Terrain Light background layer by EOX - 4326
       crs:
@@ -364,6 +202,7 @@ wms:
       - image/jpeg
       styles:
       - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/terrain-light/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
     - layer_name: terrain-light_3857
       layer_title: Terrain Light background layer by EOX - 3857
       crs:
@@ -373,11 +212,219 @@ wms:
       - image/jpeg
       styles:
       - default
-    - layer_name: terrain_3857
-      layer_title: Terrain background layer by EOX - 3857
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/terrain-light_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: blackmarble
+      layer_title: Black marble background layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/blackmarble/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: blackmarble_3857
+      layer_title: Black marble background layer by EOX - 3857
       crs:
       - g
       format:
       - image/jpeg
       styles:
       - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/blackmarble_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: bluemarble
+      layer_title: Blue marble background layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/bluemarble/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: bluemarble_3857
+      layer_title: Blue marble background layer by EOX - 3857
+      crs:
+      - g
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/bluemarble_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: hydrography
+      layer_title: Hydrography overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/hydrography/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: hydrography_3857
+      layer_title: Hydrography overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/hydrography_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: graticules
+      layer_title: Graticules overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/graticules/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: magnetic_graticules
+      layer_title: Magnetic Graticules overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/magnetic_graticules/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: osm
+      layer_title: OpenStreetMap background layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/osm/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: osm_3857
+      layer_title: OpenStreetMap background layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/jpeg
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/osm_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+    - layer_name: overlay
+      layer_title: Overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/overlay/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: overlay_3857
+      layer_title: Overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/overlay_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: overlay_base
+      layer_title: Overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/overlay_base/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: overlay_base_3857
+      layer_title: Overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/overlay_base_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: overlay_base_bright
+      layer_title: Bright overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/overlay_base_bright/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: overlay_base_bright_3857
+      layer_title: Bright overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/overlay_base_bright_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: overlay_bright
+      layer_title: Bright overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/overlay_bright/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: overlay_bright_3857
+      layer_title: Bright overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/overlay_bright_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: streets
+      layer_title: Streets overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/streets/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: streets_3857
+      layer_title: Streets overlay layer by EOX - 3857
+      crs:
+      - g
+      - GoogleMapsCompatible
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/streets_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: coastline
+      layer_title: Coastline overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/coastline/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: coastline_3857
+      layer_title: Coastline overlay layer by EOX - 3857
+      crs:
+      - g
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/coastline_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+    - layer_name: coastline_black
+      layer_title: Black coastline overlay layer by EOX - 4326
+      crs:
+      - WGS84
+      format:
+      - image/png
+      styles:
+      - default
+      resource_url: http://tiles.maps.eox.at/wmts/1.0.0/coastline_black/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png
+

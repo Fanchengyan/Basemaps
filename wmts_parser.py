@@ -91,6 +91,9 @@ def _parse_layer_element(layer_elem: ET.Element) -> Optional[dict]:
     # Get available styles
     styles = _extract_styles(layer_elem)
 
+    # Get ResourceURL template (for RESTful WMTS)
+    resource_url = _extract_resource_url(layer_elem)
+
     return {
         "layer_name": layer_name,
         "layer_title": layer_title,
@@ -98,6 +101,7 @@ def _parse_layer_element(layer_elem: ET.Element) -> Optional[dict]:
         "format": formats or ["image/jpeg"],
         "styles": styles,
         "service_type": "wmts",
+        "resource_url": resource_url,
     }
 
 
@@ -168,3 +172,31 @@ def _extract_styles(layer_elem: ET.Element) -> list[str]:
             if style_id:
                 styles.append(style_id)
     return styles
+
+
+def _extract_resource_url(layer_elem: ET.Element) -> str | None:
+    """
+    Extract ResourceURL template for tile requests from a Layer element.
+
+    Parameters
+    ----------
+    layer_elem : ET.Element
+        The Layer XML element.
+
+    Returns
+    -------
+    str | None
+        The ResourceURL template for tiles, or None if not found.
+
+    Notes
+    -----
+    ResourceURL is used by RESTful WMTS services. The template contains
+    placeholders like {TileMatrixSet}, {TileMatrix}, {TileRow}, {TileCol}.
+    """
+    for child in layer_elem.iter():
+        if child.tag.endswith('}ResourceURL') or child.tag == 'ResourceURL':
+            resource_type = child.get('resourceType', '')
+            template = child.get('template')
+            if template and resource_type == 'tile':
+                return template
+    return None

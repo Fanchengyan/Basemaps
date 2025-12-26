@@ -334,6 +334,15 @@ class WMSFetchTask(QgsTask):
             if hasattr(layer, "styles") and layer.styles:
                 styles = list(layer.styles.keys())
 
+            # Extract ResourceURL template for tile requests
+            resource_url = None
+            if hasattr(layer, "resourceURLs") and layer.resourceURLs:
+                for res in layer.resourceURLs:
+                    if isinstance(res, dict):
+                        if res.get("resourceType") == "tile":
+                            resource_url = res.get("template")
+                            break
+
             layer_info = {
                 "layer_name": layer_name,
                 "layer_title": (
@@ -343,6 +352,7 @@ class WMSFetchTask(QgsTask):
                 "format": formats,
                 "styles": styles,
                 "service_type": "wmts",
+                "resource_url": resource_url,
             }
             layers.append(layer_info)
 
