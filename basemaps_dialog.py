@@ -174,6 +174,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.on_wms_layer_grid_selection_changed
         )
 
+        # Sync List/Grid view between XYZ and WMS/WMTS tabs
+        self.tabBasemapsView.currentChanged.connect(self._on_xyz_view_changed)
+        self.tabWmsView.currentChanged.connect(self._on_wms_view_changed)
+
         # Load configurations
         self.load_default_basemaps()
         self.load_user_basemaps()
@@ -2121,6 +2125,32 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
     def on_wms_layer_grid_selection_changed(self):
         self._sync_tree_selection_from_grid(self.listWmsLayersGrid, self.treeWmsLayers)
         self.on_wms_layer_selection_changed()
+
+    def _on_xyz_view_changed(self, index: int) -> None:
+        """Sync WMS/WMTS view when XYZ view changes.
+
+        Parameters
+        ----------
+        index : int
+            The new tab index (0=List, 1=Grid).
+        """
+        # Block signals to prevent infinite loop
+        self.tabWmsView.blockSignals(True)
+        self.tabWmsView.setCurrentIndex(index)
+        self.tabWmsView.blockSignals(False)
+
+    def _on_wms_view_changed(self, index: int) -> None:
+        """Sync XYZ view when WMS/WMTS view changes.
+
+        Parameters
+        ----------
+        index : int
+            The new tab index (0=Tree, 1=Grid).
+        """
+        # Block signals to prevent infinite loop
+        self.tabBasemapsView.blockSignals(True)
+        self.tabBasemapsView.setCurrentIndex(index)
+        self.tabBasemapsView.blockSignals(False)
 
 
 class ProviderInputDialog(QDialog):
