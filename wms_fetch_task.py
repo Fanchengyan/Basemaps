@@ -346,7 +346,9 @@ class WMSFetchTask(QgsTask):
             layer_info = {
                 "layer_name": layer_name,
                 "layer_title": (
-                    layer.title if hasattr(layer, "title") and layer.title else layer_name
+                    layer.title
+                    if hasattr(layer, "title") and layer.title
+                    else layer_name
                 ),
                 "crs": tile_matrix_sets,
                 "format": formats,
@@ -417,9 +419,15 @@ class WMSFetchTask(QgsTask):
         """
         replacements = [
             ('xmlns="https://www.opengis.net/', 'xmlns="http://www.opengis.net/'),
-            ('xmlns:ows="https://www.opengis.net/', 'xmlns:ows="http://www.opengis.net/'),
+            (
+                'xmlns:ows="https://www.opengis.net/',
+                'xmlns:ows="http://www.opengis.net/',
+            ),
             ('xmlns:xlink="https://www.w3.org/', 'xmlns:xlink="http://www.w3.org/'),
-            ('xmlns:gml="https://www.opengis.net/', 'xmlns:gml="http://www.opengis.net/'),
+            (
+                'xmlns:gml="https://www.opengis.net/',
+                'xmlns:gml="http://www.opengis.net/',
+            ),
             (
                 'xsi:schemaLocation="https://www.opengis.net/',
                 'xsi:schemaLocation="http://www.opengis.net/',

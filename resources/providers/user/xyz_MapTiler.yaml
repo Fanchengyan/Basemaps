@@ -1,0 +1,54 @@
+xyz:
+  MapTiler:
+    icon: /Users/fancy/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/Basemaps/resources/icons/icon.svg
+    token: t7npuHG94xHix0SeijYQ
+    token_param: key
+    basemaps:
+    - name: MapTiler Base
+      tags:
+      - Streets
+      url: https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png
+    - name: MapTiler Backdrop
+      tags:
+      - Terrain
+      url: https://api.maptiler.com/maps/backdrop-v4/{z}/{x}/{y}.png
+    - name: MapTiler Dataviz
+      tags:
+      - Streets
+      url: https://api.maptiler.com/maps/dataviz-v4/{z}/{x}/{y}.png
+    - name: MapTiler Landscape
+      tags:
+      - Terrain
+      url: https://api.maptiler.com/maps/landscape-v4/{z}/{x}/{y}.png
+    - name: MapTiler Ocean
+      tags:
+      - Terrain
+      url: https://api.maptiler.com/maps/ocean-v4/{z}/{x}/{y}.png
+    - name: MapTiler Outdoor
+      tags:
+      - Terrain
+      url: https://api.maptiler.com/maps/outdoor-v4/{z}/{x}/{y}.png
+    - name: MapTiler Satellite Hybrid
+      tags:
+      - Satellite
+      url: https://api.maptiler.com/maps/hybrid-v4/{z}/{x}/{y}.jpg
+    - name: MapTiler Satellite Plain
+      tags:
+      - Satellite
+      url: https://api.maptiler.com/maps/satellite-v4/{z}/{x}/{y}.jpg
+    - name: MapTiler Streets
+      tags:
+      - Streets
+      url: https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png
+    - name: MapTiler Toner
+      tags:
+      - Streets
+      url: https://api.maptiler.com/maps/toner-v2/{z}/{x}/{y}.png
+    - name: MapTiler Topo
+      tags:
+      - Terrain
+      url: https://api.maptiler.com/maps/topo-v4/{z}/{x}/{y}.png
+    - name: MapTiler Winter
+      tags:
+      - Terrain
+      url: https://api.maptiler.com/maps/winter-v4/{z}/{x}/{y}.png

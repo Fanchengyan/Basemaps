@@ -13,40 +13,54 @@
   <property name="windowTitle">
    <string>Basemaps</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QPushButton" name="btnLoadProvider">
-       <property name="text">
-        <string>Import</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnSaveProvider">
-       <property name="text">
-        <string>Export</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QTabWidget" name="tabWidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="btnLoadProvider">
+        <property name="text">
+         <string>Import</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSaveProvider">
+        <property name="text">
+         <string>Export</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelTagFilter">
+        <property name="text">
+         <string>Tag:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="tagFilterCombo">
+        <property name="minimumWidth">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
       <number>0</number>
      </property>
@@ -71,44 +85,83 @@
            </property>
           </widget>
          </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-            <widget class="QPushButton" name="btnAddProvider">
-             <property name="text">
-              <string>Add</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnRemoveProvider">
-             <property name="text">
-              <string>Remove</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+              <widget class="QPushButton" name="btnAddProvider">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Add</string>
+               </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="btnEditProvider">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Edit</string>
+               </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="btnRemoveProvider">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Remove</string>
+               </property>
+              </widget>
+            </item>
+           </layout>
+          </item>
         </layout>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_search_xyz">
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Layers:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="searchBasemaps">
+              <property name="placeholderText">
+               <string>Search layers…</string>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
          <item>
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Basemaps:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QTabWidget" name="tabBasemapsView">
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <widget class="QWidget" name="tabBasemapsList">
-            <attribute name="title">
-             <string>List</string>
-            </attribute>
+            <widget class="QTabWidget" name="tabBasemapsView">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="tabBasemapsList">
+              <attribute name="title">
+               <string>Text</string>
+              </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_list">
              <property name="leftMargin">
               <number>0</number>
@@ -131,10 +184,10 @@
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="tabBasemapsGrid">
-            <attribute name="title">
-             <string>Grid</string>
-            </attribute>
+            <widget class="QWidget" name="tabBasemapsGrid">
+             <attribute name="title">
+              <string>Gallery</string>
+             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_grid">
              <property name="leftMargin">
               <number>0</number>
@@ -162,32 +215,56 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
            <item>
-            <widget class="QPushButton" name="btnAddBasemap">
-             <property name="text">
-              <string>Add</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnEditBasemap">
-             <property name="text">
-              <string>Edit</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnRemoveBasemap">
-             <property name="text">
-              <string>Remove</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnLoadBasemap">
-             <property name="text">
-              <string>Load</string>
-             </property>
-            </widget>
+             <widget class="QPushButton" name="btnAddBasemap">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Add</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnEditBasemap">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Edit</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnRemoveBasemap">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Remove</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnLoadBasemap">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Load</string>
+              </property>
+             </widget>
            </item>
           </layout>
          </item>
@@ -216,44 +293,83 @@
            </property>
           </widget>
          </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
-           <item>
-            <widget class="QPushButton" name="btnAddWmsProvider">
-             <property name="text">
-              <string>Add</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnRemoveWmsProvider">
-             <property name="text">
-              <string>Remove</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <item>
+              <widget class="QPushButton" name="btnAddWmsProvider">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Add</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnEditWmsProvider">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Edit</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnRemoveWmsProvider">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Remove</string>
+               </property>
+              </widget>
+             </item>
+           </layout>
+          </item>
         </layout>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_5">
-         <item>
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>Layers:</string>
-           </property>
-          </widget>
-         </item>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_search_wms">
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>Layers:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="searchWmsLayers">
+              <property name="placeholderText">
+               <string>Search layers…</string>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
          <item>
           <widget class="QTabWidget" name="tabWmsView">
            <property name="currentIndex">
             <number>0</number>
            </property>
-           <widget class="QWidget" name="tabWmsTree">
-            <attribute name="title">
-             <string>Tree</string>
-            </attribute>
+            <widget class="QWidget" name="tabWmsTree">
+             <attribute name="title">
+              <string>Text</string>
+             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_tree">
              <property name="leftMargin">
               <number>0</number>
@@ -268,13 +384,16 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QTreeWidget" name="treeWmsLayers">
-               <property name="selectionMode">
-                <enum>QAbstractItemView::ExtendedSelection</enum>
-               </property>
-               <property name="headerHidden">
-                <bool>true</bool>
-               </property>
+               <widget class="QTreeWidget" name="treeWmsLayers">
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::ExtendedSelection</enum>
+                </property>
+                <property name="contextMenuPolicy">
+                 <enum>Qt::CustomContextMenu</enum>
+                </property>
+                <property name="headerHidden">
+                 <bool>true</bool>
+                </property>
                <column>
                 <property name="text">
                  <string notr="true">1</string>
@@ -284,10 +403,10 @@
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="tabWmsGrid">
-            <attribute name="title">
-             <string>Grid</string>
-            </attribute>
+            <widget class="QWidget" name="tabWmsGrid">
+             <attribute name="title">
+              <string>Gallery</string>
+             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_wms_grid">
              <property name="leftMargin">
               <number>0</number>
@@ -302,33 +421,61 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QListWidget" name="listWmsLayersGrid">
-               <property name="selectionMode">
-                <enum>QAbstractItemView::ExtendedSelection</enum>
-               </property>
-              </widget>
+               <widget class="QListWidget" name="listWmsLayersGrid">
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::ExtendedSelection</enum>
+                </property>
+                <property name="contextMenuPolicy">
+                 <enum>Qt::CustomContextMenu</enum>
+                </property>
+               </widget>
              </item>
             </layout>
            </widget>
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_7">
-           <item>
-            <widget class="QPushButton" name="btnRefreshWmsLayers">
-             <property name="text">
-              <string>Refresh</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnLoadWmsLayer">
-             <property name="text">
-              <string>Load</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+              <widget class="QPushButton" name="btnRefreshWmsLayers">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Refresh</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnEditWmsLayer">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Edit</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnLoadWmsLayer">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Load</string>
+               </property>
+              </widget>
+            </item>
+           </layout>
          </item>
         </layout>
        </item>

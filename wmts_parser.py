@@ -42,14 +42,14 @@ def parse_wmts_capabilities(xml_content: bytes | str) -> list[dict]:
         If no layers are found in the capabilities document.
     """
     if isinstance(xml_content, str):
-        xml_content = xml_content.encode('utf-8')
+        xml_content = xml_content.encode("utf-8")
 
     root = ET.fromstring(xml_content)
     layers = []
 
     # Find all Layer elements, regardless of namespace
     for layer_elem in root.iter():
-        if layer_elem.tag.endswith('}Layer') or layer_elem.tag == 'Layer':
+        if layer_elem.tag.endswith("}Layer") or layer_elem.tag == "Layer":
             layer_info = _parse_layer_element(layer_elem)
             if layer_info:
                 layers.append(layer_info)
@@ -75,18 +75,18 @@ def _parse_layer_element(layer_elem: ET.Element) -> Optional[dict]:
         Layer information dictionary or None if layer_name is missing.
     """
     # Get Identifier (layer name)
-    layer_name = _find_text(layer_elem, 'Identifier')
+    layer_name = _find_text(layer_elem, "Identifier")
     if not layer_name:
         return None
 
     # Get Title
-    layer_title = _find_text(layer_elem, 'Title') or layer_name
+    layer_title = _find_text(layer_elem, "Title") or layer_name
 
     # Get TileMatrixSet links
-    tile_matrix_sets = _find_all_text(layer_elem, 'TileMatrixSet')
+    tile_matrix_sets = _find_all_text(layer_elem, "TileMatrixSet")
 
     # Get available formats
-    formats = _find_all_text(layer_elem, 'Format')
+    formats = _find_all_text(layer_elem, "Format")
 
     # Get available styles
     styles = _extract_styles(layer_elem)
@@ -122,7 +122,7 @@ def _find_text(elem: ET.Element, local_name: str) -> Optional[str]:
         The text content of the element or None if not found.
     """
     for child in elem.iter():
-        if child.tag.endswith('}' + local_name) or child.tag == local_name:
+        if child.tag.endswith("}" + local_name) or child.tag == local_name:
             return child.text
     return None
 
@@ -145,7 +145,7 @@ def _find_all_text(elem: ET.Element, local_name: str) -> list[str]:
     """
     results = []
     for child in elem.iter():
-        if child.tag.endswith('}' + local_name) or child.tag == local_name:
+        if child.tag.endswith("}" + local_name) or child.tag == local_name:
             if child.text:
                 results.append(child.text)
     return results
@@ -167,8 +167,8 @@ def _extract_styles(layer_elem: ET.Element) -> list[str]:
     """
     styles = []
     for child in layer_elem.iter():
-        if child.tag.endswith('}Style') or child.tag == 'Style':
-            style_id = _find_text(child, 'Identifier')
+        if child.tag.endswith("}Style") or child.tag == "Style":
+            style_id = _find_text(child, "Identifier")
             if style_id:
                 styles.append(style_id)
     return styles
@@ -194,9 +194,9 @@ def _extract_resource_url(layer_elem: ET.Element) -> str | None:
     placeholders like {TileMatrixSet}, {TileMatrix}, {TileRow}, {TileCol}.
     """
     for child in layer_elem.iter():
-        if child.tag.endswith('}ResourceURL') or child.tag == 'ResourceURL':
-            resource_type = child.get('resourceType', '')
-            template = child.get('template')
-            if template and resource_type == 'tile':
+        if child.tag.endswith("}ResourceURL") or child.tag == "ResourceURL":
+            resource_type = child.get("resourceType", "")
+            template = child.get("template")
+            if template and resource_type == "tile":
                 return template
     return None

@@ -1,0 +1,16 @@
+xyz:
+  USGS:
+    icon: /Users/fancy/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/Basemaps/resources/icons/USGS.ico
+    basemaps:
+    - name: USTopo
+      url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}
+      tags:
+      - Terrain
+    - name: USImagery
+      url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}
+      tags:
+      - Satellite
+    - name: USImageryTopo
+      url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}
+      tags:
+      - Satellite

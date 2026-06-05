@@ -108,6 +108,12 @@ def _convert_yaml_to_providers(
             if "created_at" in provider_config:
                 provider["created_at"] = provider_config["created_at"]
 
+            # Preserve token if it exists
+            if "token" in provider_config:
+                provider["token"] = provider_config["token"]
+            if "token_param" in provider_config:
+                provider["token_param"] = provider_config["token_param"]
+
             # Add type-specific fields
             if type_name == "xyz":
                 provider["basemaps"] = provider_config.get("basemaps", [])
@@ -155,6 +161,12 @@ def save_config_as_yaml(
         if "created_at" in provider:
             provider_config["created_at"] = provider["created_at"]
 
+        # Preserve token if it exists
+        if "token" in provider:
+            provider_config["token"] = provider["token"]
+        if "token_param" in provider:
+            provider_config["token_param"] = provider["token_param"]
+
         if type_name == "xyz":
             provider_config["basemaps"] = provider.get("basemaps", [])
         elif type_name == "wms":
@@ -184,6 +196,8 @@ def save_config_as_yaml(
                     ordered_layer["format"] = layer["format"]
                 if "styles" in layer:
                     ordered_layer["styles"] = layer["styles"]
+                if "tags" in layer:
+                    ordered_layer["tags"] = layer["tags"]
                 # Add any other fields except service_type (which is at provider level)
                 for key, value in layer.items():
                     if key not in ordered_layer and key != "service_type":
@@ -279,6 +293,12 @@ def save_provider_to_yaml(
     if "created_at" in provider:
         provider_config["created_at"] = provider["created_at"]
 
+    # Preserve token if it exists
+    if "token" in provider:
+        provider_config["token"] = provider["token"]
+    if "token_param" in provider:
+        provider_config["token_param"] = provider["token_param"]
+
     if provider_type == "xyz":
         provider_config["basemaps"] = provider.get("basemaps", [])
     elif provider_type == "wms":
@@ -303,6 +323,8 @@ def save_provider_to_yaml(
                 ordered_layer["format"] = layer["format"]
             if "styles" in layer:
                 ordered_layer["styles"] = layer["styles"]
+            if "tags" in layer:
+                ordered_layer["tags"] = layer["tags"]
             # Remove service_type from layer level - it's at provider level now
             # Add any other fields except service_type
             for key, value in layer.items():

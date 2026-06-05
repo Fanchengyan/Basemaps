@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from qgis.core import QgsNetworkAccessManager
 from qgis.PyQt.QtCore import QObject, pyqtSignal, QUrl, Qt
@@ -203,7 +204,9 @@ class PreviewManager(QObject):
             self._pending_tasks.add(shared_key)
             # Initialize waiting list with the first key
             self._wayback_waiting[shared_key] = [key]
-            Logger.info(f"Wayback preview requested: shared_key={shared_key}, first_key={key}")
+            Logger.info(
+                f"Wayback preview requested: shared_key={shared_key}, first_key={key}"
+            )
 
         # Analyze if we need composite fetch
         is_bing = "{q}" in url
@@ -240,13 +243,17 @@ class PreviewManager(QObject):
             if not resource_url:
                 # Check cache first
                 layer_name_for_cache = layer_data.get("layer_name", "")
-                cached_url = self._resource_url_cache.get(url, {}).get(layer_name_for_cache)
+                cached_url = self._resource_url_cache.get(url, {}).get(
+                    layer_name_for_cache
+                )
                 if cached_url:
                     layer_data["resource_url"] = cached_url
                     Logger.info(f"Using cached ResourceURL for {layer_name_for_cache}")
                 else:
                     # Need to fetch capabilities first
-                    Logger.info(f"No ResourceURL for {layer_name_for_cache}, fetching capabilities...")
+                    Logger.info(
+                        f"No ResourceURL for {layer_name_for_cache}, fetching capabilities..."
+                    )
                     self._fetch_capabilities_async(url, task)
                     return
 
@@ -402,18 +409,22 @@ class PreviewManager(QObject):
         try:
             # Try Qt6 style first
             from qgis.PyQt.QtNetwork import QNetworkRequest as QNR
-            if hasattr(QNR, 'RedirectPolicyAttribute'):
-                request.setAttribute(QNR.RedirectPolicyAttribute, 1)  # 1 = NoLessSafeRedirectPolicy
-            elif hasattr(QNR, 'FollowRedirectsAttribute'):
+
+            if hasattr(QNR, "RedirectPolicyAttribute"):
+                request.setAttribute(
+                    QNR.RedirectPolicyAttribute, 1
+                )  # 1 = NoLessSafeRedirectPolicy
+            elif hasattr(QNR, "FollowRedirectsAttribute"):
                 request.setAttribute(QNR.FollowRedirectsAttribute, True)
         except Exception:
             pass
 
         reply = nam.get(request)
         reply.finished.connect(
-            lambda r=reply, rid=req_id, t=task, c_idx=composite_idx: self._on_reply_finished(
-                r, rid, t, c_idx
-            )
+            lambda r=reply,
+            rid=req_id,
+            t=task,
+            c_idx=composite_idx: self._on_reply_finished(r, rid, t, c_idx)
         )
         self._active_requests[req_id] = reply
 
@@ -561,6 +572,7 @@ class PreviewManager(QObject):
                 preview_url = preview_url.replace("{TileCol}", str(x))
                 preview_url = preview_url.replace("{Style}", style)
                 preview_url = preview_url.replace("{style}", style)
+                preview_url = self._append_auth_query_params(preview_url, url)
                 Logger.info(f"WMTS preview URL (ResourceURL): {preview_url}")
                 return preview_url
 
@@ -590,6 +602,53 @@ class PreviewManager(QObject):
 
         return None
 
+    @staticmethod
+    def _append_auth_query_params(tile_url: str, provider_url: str) -> str:
+        """Append provider authentication query parameters to a tile URL.
+
+        Parameters
+        ----------
+        tile_url : str
+            Constructed tile URL.
+        provider_url : str
+            Provider URL that may contain authentication query parameters.
+
+        Returns
+        -------
+        str
+            Tile URL with authentication query parameters appended.
+        """
+        provider_parts = urlsplit(provider_url)
+        provider_params = parse_qsl(provider_parts.query, keep_blank_values=True)
+        if not provider_params:
+            return tile_url
+
+        ignored_params = {"service", "request", "version"}
+        auth_params = [
+            (key, value)
+            for key, value in provider_params
+            if key.lower() not in ignored_params
+        ]
+        if not auth_params:
+            return tile_url
+
+        tile_parts = urlsplit(tile_url)
+        existing_keys = {key for key, _ in parse_qsl(tile_parts.query)}
+        merged_params = parse_qsl(tile_parts.query, keep_blank_values=True)
+        merged_params.extend(
+            (key, value) for key, value in auth_params if key not in existing_keys
+        )
+
+        return urlunsplit(
+            (
+                tile_parts.scheme,
+                tile_parts.netloc,
+                tile_parts.path,
+                urlencode(merged_params),
+                tile_parts.fragment,
+            )
+        )
+
     def _on_reply_finished(
         self, reply, req_id: str, task: dict, composite_idx: int
     ) -> None:
@@ -611,7 +670,9 @@ class PreviewManager(QObject):
         # Log for WMTS requests (including Wayback)
         if task.get("service_type") == "wmts":
             if success:
-                Logger.info(f"WMTS tile fetch OK - key: {key}, idx: {composite_idx}, size: {len(content)}")
+                Logger.info(
+                    f"WMTS tile fetch OK - key: {key}, idx: {composite_idx}, size: {len(content)}"
+                )
             else:
                 Logger.info(
                     f"WMTS tile fetch FAILED - key: {key}, idx: {composite_idx}, HTTP: {http_status}, "
@@ -666,7 +727,9 @@ class PreviewManager(QObject):
 
         painter.end()
 
-        final_img = canvas.scaled(256, 256, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        final_img = canvas.scaled(
+            256, 256, Qt.IgnoreAspectRatio, Qt.SmoothTransformation
+        )
 
         key = task["key"]
         path = task["path"]
@@ -680,7 +743,9 @@ class PreviewManager(QObject):
                 self._pending_tasks.discard(shared_key)
                 # Emit signal for all waiting keys
                 waiting_keys = self._wayback_waiting.pop(shared_key, [])
-                Logger.info(f"Wayback preview saved to {path}, emitting for {len(waiting_keys)} keys")
+                Logger.info(
+                    f"Wayback preview saved to {path}, emitting for {len(waiting_keys)} keys"
+                )
                 for wkey in waiting_keys:
                     self.preview_readied.emit(wkey, str(path))
             else:
@@ -806,7 +871,9 @@ class PreviewManager(QObject):
                 layer_data = task.get("layer_data")
                 if layer_data:
                     layer_name = layer_data.get("layer_name", "")
-                    cached_url = self._resource_url_cache.get(provider_url, {}).get(layer_name)
+                    cached_url = self._resource_url_cache.get(provider_url, {}).get(
+                        layer_name
+                    )
                     if cached_url:
                         layer_data["resource_url"] = cached_url
                 self._request_queue.insert(0, task)
