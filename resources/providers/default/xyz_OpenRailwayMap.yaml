@@ -2,23 +2,23 @@ xyz:
   OpenRailwayMap:
     icon: /Users/fancy/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/Basemaps/resources/icons/OpenRailWayMap.png
     basemaps:
-    - name: Standard
-      url: https://tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png
-      tags:
-      - Streets
-    - name: "Max Speed\r"
-      url: https://tiles.openrailwaymap.org/maxspeed/{z}/{x}/{y}.png
-      tags:
-      - Thematic
-    - name: Signals
-      url: https://tiles.openrailwaymap.org/signals/{z}/{x}/{y}.png
-      tags:
-      - Thematic
-    - name: Electrified
-      url: https://tiles.openrailwaymap.org/electrified/{z}/{x}/{y}.png
-      tags:
-      - Thematic
-    - name: Gauge
-      url: https://tiles.openrailwaymap.org/gauge/{z}/{x}/{y}.png
-      tags:
-      - Thematic
+      - name: Standard
+        url: https://tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png
+        tags:
+          - Overlay/Transportation
+      - name: "Max Speed\r"
+        url: https://tiles.openrailwaymap.org/maxspeed/{z}/{x}/{y}.png
+        tags:
+          - Overlay/Transportation
+      - name: Signals
+        url: https://tiles.openrailwaymap.org/signals/{z}/{x}/{y}.png
+        tags:
+          - Overlay/Transportation
+      - name: Electrified
+        url: https://tiles.openrailwaymap.org/electrified/{z}/{x}/{y}.png
+        tags:
+          - Overlay/Transportation
+      - name: Gauge
+        url: https://tiles.openrailwaymap.org/gauge/{z}/{x}/{y}.png
+        tags:
+          - Overlay/Transportation

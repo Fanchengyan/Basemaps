@@ -2,7 +2,7 @@ xyz:
   Bing:
     icon: Bing.svg
     basemaps:
-    - name: Bing VirtualEarth
-      url: http://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=1
-      tags:
-      - Satellite
+      - name: Bing VirtualEarth
+        url: http://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=1
+        tags:
+          - Satellite

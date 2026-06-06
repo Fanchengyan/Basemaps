@@ -238,77 +238,49 @@ def save_config_as_yaml(
     Logger.info(f"Successfully saved {len(providers)} providers to {filepath}")
 
 
-def save_provider_to_yaml(
-    directory: Path,
-    provider: dict[str, Any],
-    prefix: Literal["default", "user"] = "user",
-) -> Path | None:
-    """Save a single provider to its own YAML file.
+def _build_provider_yaml_data(provider: dict[str, Any]) -> dict[str, Any]:
+    """Build the YAML data structure for a single provider.
 
-    Parameters
-    ----------
-    directory : Path
-        Base directory (usually resources/)
-    provider : dict[str, Any]
-        Provider configuration dictionary
-    prefix : Literal['default', 'user']
-        File prefix ('default' or 'user')
-
-    Returns
-    -------
-    Path | None
-        Path to the saved file, or None if skipped
+    Returns a dict suitable for yaml.dump: ``{type: {provider_name: {...}}}``.
     """
     provider_type = provider.get("type")
     provider_name = provider.get("name", "unknown")
 
-    if provider_type == "separator":
-        Logger.info("Skipping separator provider", notify_user=False)
-        return None
-
     if provider_type not in ["xyz", "wms"]:
         raise ValueError(f"Invalid provider type: {provider_type}")
 
-    # Create directory structure: resources/providers/{prefix}/
-    providers_dir = directory / "providers" / prefix
-    providers_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create safe filename from provider name
-    safe_name = (
-        provider_name.replace(" ", "_")
-        .replace("/", "_")
-        .replace("(", "")
-        .replace(")", "")
-    )
-    filename = f"{provider_type}_{safe_name}.yaml"
-    filepath = providers_dir / filename
-
-    # Create single-provider YAML structure
-    yaml_data = {provider_type: {provider_name: {}}}
+    yaml_data: dict[str, Any] = {provider_type: {provider_name: {}}}
     provider_config = yaml_data[provider_type][provider_name]
 
     provider_config["icon"] = provider.get("icon", "")
 
-    # Preserve created_at timestamp if it exists
     if "created_at" in provider:
         provider_config["created_at"] = provider["created_at"]
-
-    # Preserve token if it exists
     if "token" in provider:
         provider_config["token"] = provider["token"]
     if "token_param" in provider:
         provider_config["token_param"] = provider["token_param"]
 
     if provider_type == "xyz":
-        provider_config["basemaps"] = provider.get("basemaps", [])
+        basemaps = provider.get("basemaps", [])
+        normalized_basemaps = []
+        for bm in basemaps:
+            ordered_bm = OrderedDict()
+            if "name" in bm:
+                ordered_bm["name"] = bm["name"]
+            if "url" in bm:
+                ordered_bm["url"] = bm["url"]
+            if "tags" in bm:
+                ordered_bm["tags"] = bm["tags"]
+            for key, value in bm.items():
+                if key not in ordered_bm:
+                    ordered_bm[key] = value
+            normalized_basemaps.append(ordered_bm)
+        provider_config["basemaps"] = normalized_basemaps
     elif provider_type == "wms":
         provider_config["url"] = provider.get("url", "")
-
-        # service_type at provider level (not in each layer)
         if "service_type" in provider:
             provider_config["service_type"] = provider["service_type"]
-
-        # Normalize layer field order
         layers = provider.get("layers", [])
         normalized_layers = []
         for layer in layers:
@@ -325,16 +297,17 @@ def save_provider_to_yaml(
                 ordered_layer["styles"] = layer["styles"]
             if "tags" in layer:
                 ordered_layer["tags"] = layer["tags"]
-            # Remove service_type from layer level - it's at provider level now
-            # Add any other fields except service_type
             for key, value in layer.items():
                 if key not in ordered_layer and key != "service_type":
                     ordered_layer[key] = value
             normalized_layers.append(ordered_layer)
-
         provider_config["layers"] = normalized_layers
 
-    # Save to file
+    return yaml_data
+
+
+def _write_provider_yaml(filepath: Path, yaml_data: dict[str, Any]) -> None:
+    """Write provider YAML data to a file, preserving OrderedDict order."""
     class OrderedDumper(yaml.SafeDumper):
         pass
 
@@ -343,6 +316,7 @@ def save_provider_to_yaml(
 
     OrderedDumper.add_representer(OrderedDict, ordered_dict_representer)
 
+    filepath.parent.mkdir(parents=True, exist_ok=True)
     with open(filepath, "w", encoding="utf-8") as f:
         yaml.dump(
             yaml_data,
@@ -354,9 +328,74 @@ def save_provider_to_yaml(
             indent=2,
         )
 
-    Logger.info(f"Saved provider '{provider_name}' to {filepath}")
 
-    # Update provider's source_file to reflect new location
+def save_provider_to_path(
+    filepath: str | Path,
+    provider: dict[str, Any],
+) -> None:
+    """Save a provider to a specific YAML file path.
+
+    Parameters
+    ----------
+    filepath : str | Path
+        Exact output file path.
+    provider : dict[str, Any]
+        Provider configuration dictionary.
+    """
+    filepath = Path(filepath)
+    provider_name = provider.get("name", "unknown")
+    yaml_data = _build_provider_yaml_data(provider)
+    _write_provider_yaml(filepath, yaml_data)
+    Logger.info(f"Saved provider '{provider_name}' to {filepath}")
+    if isinstance(provider, dict):
+        provider["source_file"] = str(filepath.resolve())
+
+
+def save_provider_to_yaml(
+    directory: Path,
+    provider: dict[str, Any],
+    prefix: Literal["default", "user"] = "user",
+) -> Path | None:
+    """Save a single provider to its own YAML file (auto-generated path).
+
+    Parameters
+    ----------
+    directory : Path
+        Base directory (usually resources/).
+    provider : dict[str, Any]
+        Provider configuration dictionary.
+    prefix : Literal['default', 'user']
+        File prefix ('default' or 'user').
+
+    Returns
+    -------
+    Path | None
+        Path to the saved file, or None if skipped.
+    """
+    provider_type = provider.get("type")
+    provider_name = provider.get("name", "unknown")
+
+    if provider_type == "separator":
+        Logger.info("Skipping separator provider", notify_user=False)
+        return None
+
+    if provider_type not in ["xyz", "wms"]:
+        raise ValueError(f"Invalid provider type: {provider_type}")
+
+    providers_dir = directory / "providers" / prefix
+    safe_name = (
+        provider_name.replace(" ", "_")
+        .replace("/", "_")
+        .replace("(", "")
+        .replace(")", "")
+    )
+    filename = f"{provider_type}_{safe_name}.yaml"
+    filepath = providers_dir / filename
+
+    yaml_data = _build_provider_yaml_data(provider)
+    _write_provider_yaml(filepath, yaml_data)
+
+    Logger.info(f"Saved provider '{provider_name}' to {filepath}")
     if isinstance(provider, dict):
         provider["source_file"] = str(filepath.resolve())
 
@@ -536,3 +575,125 @@ def delete_provider_file(
 
     Logger.warning(f"Provider file not found: {new_filepath} or {old_filepath}")
     return False
+
+
+# ---------------------------------------------------------------------------
+# Tag overrides – persist tag edits on default (built-in) provider items
+# ---------------------------------------------------------------------------
+
+TAG_OVERRIDES_FILENAME = "tag_overrides.yaml"
+
+
+def load_tag_overrides(
+    resources_dir: Path,
+) -> dict[str, dict[str, dict[str, list[str]]]]:
+    """Load tag overrides for default-provider basemaps and layers.
+
+    Parameters
+    ----------
+    resources_dir : Path
+        Base resources directory.
+
+    Returns
+    -------
+    dict
+        Nested dict: ``{type: {provider_name: {item_name: {"tags": [...]}}}}``.
+        *type* is ``"xyz"`` or ``"wms"``.  *item_name* is a basemap ``name``
+        (XYZ) or a ``layer_name`` (WMS/WMTS).
+    """
+    overrides_file = resources_dir / TAG_OVERRIDES_FILENAME
+    if not overrides_file.exists():
+        return {}
+
+    try:
+        with open(overrides_file, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        return data or {}
+    except Exception:
+        Logger.warning(f"Failed to load tag overrides from {overrides_file}")
+        return {}
+
+
+def save_tag_overrides(
+    resources_dir: Path,
+    overrides: dict[str, dict[str, dict[str, list[str]]]],
+) -> None:
+    """Persist tag overrides to disk.
+
+    Parameters
+    ----------
+    resources_dir : Path
+        Base resources directory.
+    overrides : dict
+        Same structure as returned by :func:`load_tag_overrides`.
+    """
+    overrides_file = resources_dir / TAG_OVERRIDES_FILENAME
+
+    # Remove empty keys recursively
+    def _prune_empty(d: dict) -> dict:
+        result = {}
+        for k, v in d.items():
+            if isinstance(v, dict):
+                v = _prune_empty(v)
+                if v:
+                    result[k] = v
+            elif v:
+                result[k] = v
+        return result
+
+    overrides = _prune_empty(overrides)
+
+    if not overrides:
+        if overrides_file.exists():
+            overrides_file.unlink()
+            Logger.info("Removed empty tag overrides file")
+        return
+
+    with open(overrides_file, "w", encoding="utf-8") as f:
+        yaml.dump(
+            overrides,
+            f,
+            allow_unicode=True,
+            default_flow_style=False,
+            sort_keys=False,
+            indent=2,
+        )
+    Logger.info(f"Saved tag overrides to {overrides_file}")
+
+
+def apply_tag_overrides(
+    providers: list[dict[str, Any]],
+    overrides: dict[str, dict[str, dict[str, list[str]]]],
+) -> None:
+    """Apply persisted tag overrides to providers **in-place**.
+
+    Parameters
+    ----------
+    providers : list[dict]
+        Flat provider list (already loaded from YAML files).
+    overrides : dict
+        Tag overrides as returned by :func:`load_tag_overrides`.
+    """
+    if not overrides:
+        return
+
+    for provider in providers:
+        provider_type = provider.get("type")
+        provider_name = provider.get("name")
+        if not provider_type or not provider_name:
+            continue
+
+        provider_overrides = overrides.get(provider_type, {}).get(provider_name, {})
+        if not provider_overrides:
+            continue
+
+        if provider_type == "xyz":
+            for bm in provider.get("basemaps", []):
+                bm_name = bm.get("name")
+                if bm_name and bm_name in provider_overrides:
+                    bm["tags"] = list(provider_overrides[bm_name].get("tags", []))
+        elif provider_type == "wms":
+            for layer in provider.get("layers", []):
+                layer_name = layer.get("layer_name")
+                if layer_name and layer_name in provider_overrides:
+                    layer["tags"] = list(provider_overrides[layer_name].get("tags", []))
