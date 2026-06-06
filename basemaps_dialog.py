@@ -1367,17 +1367,32 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         else:
             provider_icon = IconBasemaps
 
-        # Update basemap list and grid
+        # Update basemap list and grid (chunked for large providers)
+        from qgis.PyQt.QtCore import QTimer
+
         self.listBasemaps.clear()
         self.listBasemapsGrid.clear()
 
         token = provider.get("token", "")
         token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
-        for basemap in sorted(
-            provider_data["data"].get("basemaps", []), key=self._sort_key_by_tag
-        ):
-            is_valid = isinstance(basemap, dict) and "name" in basemap
-            if is_valid and ("url" in basemap or basemap.get("tile_type") == "vector"):
+        is_default_provider = self._is_default_provider(provider)
+
+        # Filter valid basemaps and sort once
+        basemaps = [
+            bm for bm in sorted(
+                provider_data["data"].get("basemaps", []), key=self._sort_key_by_tag
+            )
+            if isinstance(bm, dict) and "name" in bm
+            and ("url" in bm or bm.get("tile_type") == "vector")
+        ]
+
+        CHUNK = 15
+
+        def process_chunk(start: int):
+            """Process one chunk, schedule next if more remain."""
+            end = min(start + CHUNK, len(basemaps))
+            for i in range(start, end):
+                basemap = basemaps[i]
                 tile_type = basemap.get("tile_type", "raster")
                 protocol = "vector" if tile_type == "vector" else "xyz"
 
@@ -1398,7 +1413,6 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 self.listBasemapsGrid.addItem(grid_item)
 
                 # Request preview
-                is_default = self._is_default_provider(provider)
                 if tile_type == "vector":
                     preview_url = self._append_token(
                         basemap.get("url", ""), token, token_param
@@ -1408,22 +1422,21 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     )
                     if preview_url:
                         self.preview_manager.request_vector_preview(
-                            provider["name"],
-                            basemap["name"],
-                            preview_url,
-                            preview_style_url,
-                            is_default,
+                            provider["name"], basemap["name"],
+                            preview_url, preview_style_url, is_default_provider,
                         )
                 else:
                     preview_url = self._append_token(basemap["url"], token, token_param)
                     self.preview_manager.request_preview(
-                        provider["name"],
-                        basemap["name"],
-                        preview_url,
-                        "xyz",
-                        None,
-                        is_default,
+                        provider["name"], basemap["name"],
+                        preview_url, "xyz", None, is_default_provider,
                     )
+
+            if end < len(basemaps):
+                QCoreApplication.processEvents()
+                QTimer.singleShot(5, lambda s=end: process_chunk(s))
+
+        process_chunk(0)
 
         # Disable add basemap / edit provider / remove provider for default providers
         is_default = self._is_default_provider(provider)
@@ -1441,14 +1454,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.listBasemapsGrid.viewport().update()
 
     def on_wms_provider_changed(self):
-        """
-        Update layer tree when WMS provider changed.
+        """Update layer tree when WMS provider changed (chunked to keep UI responsive)."""
+        from qgis.PyQt.QtCore import QTimer
 
-        Build hierarchical tree structure showing:
-        - Layer name (top level)
-          - CRS options (second level)
-            - Format options (third level)
-        """
         current_item = self.listWmsProviders.currentItem()
         if not current_item:
             self.treeWmsLayers.clear()
@@ -1473,117 +1481,87 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             if icon_file.exists():
                 provider_icon = QIcon(str(icon_file))
 
-        # Update layer tree with hierarchical structure
+        is_default = self._is_default_provider(provider)
+        preview_url_base = self._append_token(provider["url"], token, token_param)
+
+        # Sort layers once
+        layers = sorted(
+            provider_data["data"].get("layers", []), key=self._sort_key_by_tag
+        )
+
+        # Clear and prepare for chunked population
         self.treeWmsLayers.clear()
         self.listWmsLayersGrid.clear()
-        for layer in sorted(
-            provider_data["data"].get("layers", []), key=self._sort_key_by_tag
-        ):
-            # Use layer_title as display name, if not available use layer_name
-            display_name = layer.get(
-                "layer_title", layer.get("layer_name", "Unknown Layer")
-            )
 
-            # Create top-level item for layer
-            layer_item = QTreeWidgetItem([display_name])
-            layer_item.setIcon(0, provider_icon)
-            self.treeWmsLayers.addTopLevelItem(layer_item)
+        CHUNK = 15
 
-            # Grid item
-            grid_item = QListWidgetItem(display_name)
-            grid_item.setData(user_role, layer)
-            grid_item.setData(Qt.UserRole + 10, provider_icon)
-            service_type = layer.get(
-                "service_type", provider.get("service_type", "wms")
-            )
-            grid_item.setData(Qt.UserRole + 12, service_type)
-            grid_item.setToolTip(display_name)  # Show full name on hover
-            layer_tags = layer.get("tags", [])
-            grid_item.setData(Qt.UserRole + 11, layer_tags[0] if layer_tags else None)
-            self.listWmsLayersGrid.addItem(grid_item)
+        def process_chunk(start: int):
+            """Process one chunk of layers, schedule next if more remain."""
+            end = min(start + CHUNK, len(layers))
+            for i in range(start, end):
+                layer = layers[i]
+                display_name = layer.get(
+                    "layer_title", layer.get("layer_name", "Unknown Layer")
+                )
+                service_type = layer.get(
+                    "service_type", provider.get("service_type", "wms")
+                )
 
-            # Request preview for WMS layer (using queue system to prevent overload)
-            is_default = self._is_default_provider(provider)
-            preview_url = self._append_token(provider["url"], token, token_param)
-            self.preview_manager.request_preview(
-                provider["name"],
-                display_name,
-                preview_url,
-                service_type,
-                layer,
-                is_default,
-            )
+                # Tree item
+                layer_item = QTreeWidgetItem([display_name])
+                layer_item.setIcon(0, provider_icon)
+                self.treeWmsLayers.addTopLevelItem(layer_item)
 
-            # Get available CRS, formats, and styles
-            crs_list = layer.get("crs", [])
-            format_list = layer.get("format", [])
-            style_list = layer.get("styles", [""])
-
-            # If only one option for each parameter, create leaf item directly
-            if len(crs_list) <= 1 and len(format_list) <= 1:
-                # Store complete layer data in the layer item itself
-                layer_item.setData(0, user_role, layer)
-                continue
-
-            # For multi-parameter layers, store default config in parent node
-            # This allows loading by clicking the parent node (uses first CRS)
-            # Note: service_type is at provider level, not layer level
-            provider_service_type = provider.get("service_type", "wms")
-            layer_tags = layer.get("tags", [])
-            default_config = {
-                "layer_name": layer.get("layer_name"),
-                "layer_title": layer.get("layer_title"),
-                "crs": [crs_list[0]] if crs_list else [],
-                "format": format_list if format_list else [],
-                "styles": style_list,
-                "service_type": provider_service_type,
-                "tags": layer_tags,
-            }
-            layer_item.setData(0, user_role, default_config)
-
-            # Create second-level items for CRS options
-            for crs in crs_list:
-                crs_item = QTreeWidgetItem([crs])
-                layer_item.addChild(crs_item)
-
-                # If multiple formats available, create third level
-                if len(format_list) > 1:
-                    for fmt in format_list:
-                        # Create format item with all layer data
-                        format_item = QTreeWidgetItem([fmt])
-
-                        # Store complete layer configuration
-                        layer_config = {
-                            "layer_name": layer.get("layer_name"),
-                            "layer_title": layer.get("layer_title"),
-                            "crs": [crs],
-                            "format": [fmt],
-                            "styles": style_list,
-                            "service_type": provider_service_type,
-                            "tags": layer_tags,
-                        }
-                        format_item.setData(0, user_role, layer_config)
-                        crs_item.addChild(format_item)
+                # Store layer data on tree item (leaf node for single-CRS layers)
+                crs_list = layer.get("crs", [])
+                format_list = layer.get("format", [])
+                if len(crs_list) <= 1 and len(format_list) <= 1:
+                    layer_item.setData(0, user_role, layer)
                 else:
-                    # Only one format, store data in CRS item
-                    layer_config = {
+                    # Multi-param: store default config, children added lazily
+                    provider_service_type = provider.get("service_type", "wms")
+                    layer_tags = layer.get("tags", [])
+                    default_config = {
                         "layer_name": layer.get("layer_name"),
                         "layer_title": layer.get("layer_title"),
-                        "crs": [crs],
-                        "format": format_list,
-                        "styles": style_list,
+                        "crs": [crs_list[0]] if crs_list else [],
+                        "format": format_list if format_list else [],
+                        "styles": layer.get("styles", [""]),
                         "service_type": provider_service_type,
                         "tags": layer_tags,
                     }
-                    crs_item.setData(0, user_role, layer_config)
+                    layer_item.setData(0, user_role, default_config)
 
-        # Disable remove provider and edit tags buttons for default providers
-        is_default = self._is_default_provider(provider)
-        self.btnEditWmsProvider.setEnabled(not is_default)
-        self.btnRemoveWmsProvider.setEnabled(not is_default)
+                # Grid item
+                grid_item = QListWidgetItem(display_name)
+                grid_item.setData(user_role, layer)
+                grid_item.setData(Qt.UserRole + 10, provider_icon)
+                grid_item.setData(Qt.UserRole + 12, service_type)
+                grid_item.setToolTip(display_name)
+                layer_tags = layer.get("tags", [])
+                grid_item.setData(Qt.UserRole + 11, layer_tags[0] if layer_tags else None)
+                self.listWmsLayersGrid.addItem(grid_item)
 
-        # Apply tag filter to the newly loaded WMS layers
-        self._apply_tag_filter()
+                # Queue preview request
+                self.preview_manager.request_preview(
+                    provider["name"],
+                    display_name,
+                    preview_url_base,
+                    service_type,
+                    layer,
+                    is_default,
+                )
+
+            if end < len(layers):
+                QCoreApplication.processEvents()
+                QTimer.singleShot(5, lambda s=end: process_chunk(s))
+            else:
+                # Done — finalize
+                self.btnEditWmsProvider.setEnabled(not is_default)
+                self.btnRemoveWmsProvider.setEnabled(not is_default)
+                self._apply_tag_filter()
+
+        process_chunk(0)
 
     def on_wms_layer_selection_changed(self):
         """Handle WMS layer selection changes to update button states."""
