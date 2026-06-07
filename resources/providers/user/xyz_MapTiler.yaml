@@ -1,0 +1,106 @@
+xyz:
+  MapTiler:
+    icon: MapTiler.svg
+    token: ''
+    token_param: key
+    basemaps:
+    - name: MapTiler Base
+      url: https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png
+      tags:
+      - Streets
+    - name: MapTiler Backdrop
+      url: https://api.maptiler.com/maps/backdrop-v4/{z}/{x}/{y}.png
+      tags:
+      - Terrain
+    - name: MapTiler Dataviz
+      url: https://api.maptiler.com/maps/dataviz-v4/{z}/{x}/{y}.png
+      tags:
+      - Streets
+    - name: MapTiler Landscape
+      url: https://api.maptiler.com/maps/landscape-v4/{z}/{x}/{y}.png
+      tags:
+      - Terrain
+    - name: MapTiler Ocean
+      url: https://api.maptiler.com/maps/ocean-v4/{z}/{x}/{y}.png
+      tags:
+      - Terrain
+    - name: MapTiler Outdoor
+      url: https://api.maptiler.com/maps/outdoor-v4/{z}/{x}/{y}.png
+      tags:
+      - Terrain
+    - name: MapTiler Satellite Hybrid
+      url: https://api.maptiler.com/maps/hybrid-v4/{z}/{x}/{y}.jpg
+      tags:
+      - Satellite
+    - name: MapTiler Satellite Plain
+      url: https://api.maptiler.com/maps/satellite-v4/{z}/{x}/{y}.jpg
+      tags:
+      - Satellite
+    - name: MapTiler Streets
+      url: https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png
+      tags:
+      - Streets
+    - name: MapTiler Toner
+      url: https://api.maptiler.com/maps/toner-v2/{z}/{x}/{y}.png
+      tags:
+      - Streets
+    - name: MapTiler Topo
+      url: https://api.maptiler.com/maps/topo-v4/{z}/{x}/{y}.png
+      tags:
+      - Terrain
+    - name: MapTiler Winter
+      url: https://api.maptiler.com/maps/winter-v4/{z}/{x}/{y}.png
+      tags:
+      - Terrain
+    - name: MapTiler Satellite Mediumres 2018
+      url: https://api.maptiler.com/tiles/satellite-mediumres-2018/{z}/{x}/{y}.jpg
+      tags:
+      - Satellite
+    - name: MapTiler Satellite Mediumres 2016
+      url: https://api.maptiler.com/tiles/satellite-mediumres/{z}/{x}/{y}.jpg
+      tags:
+      - Satellite
+    - name: MapTiler Hand drawn hillshading
+      url: https://api.maptiler.com/tiles/hand-drawn-hillshade/{z}/{x}/{y}.webp
+      tags:
+      - Terrain
+    - name: MapTiler Hillshading
+      url: https://api.maptiler.com/tiles/hillshade/{z}/{x}/{y}.webp
+      tags:
+      - Terrain
+    - name: MapTiler Landcover
+      url: https://api.maptiler.com/tiles/landcover/{z}/{x}/{y}.pbf
+      tags:
+      - Thematic
+      style_url: https://api.maptiler.com/tiles/landcover/tiles.json
+      tile_type: vector
+    - name: MapTiler Ocean RGB
+      url: https://api.maptiler.com/tiles/ocean-rgb/{z}/{x}/{y}.webp
+      tags:
+      - Terrain
+    - name: MapTiler Countries
+      url: https://api.maptiler.com/tiles/countries/{z}/{x}/{y}.pbf
+      tags:
+      - Thematic
+      tile_type: vector
+    - name: MapTiler Landform
+      url: https://api.maptiler.com/tiles/landform/{z}/{x}/{y}.pbf
+      tags:
+      - Thematic
+      tile_type: vector
+    - name: MapTiler Outdoor Vector
+      url: https://api.maptiler.com/tiles/outdoor/{z}/{x}/{y}.pbf
+      tags:
+      - Thematic
+      tile_type: vector
+    - name: MapTiler Planet v4
+      url: https://api.maptiler.com/tiles/v4/{z}/{x}/{y}.pbf
+      tags:
+      - Thematic
+      style_url: https://api.maptiler.com/tiles/v4/tiles.json
+      tile_type: vector
+    - name: MapTiler Satellite Night
+      url: https://api.maptiler.com/tiles/satellite-night/{z}/{x}/{y}.png
+      tags:
+      - Satellite
+      tile_type: raster

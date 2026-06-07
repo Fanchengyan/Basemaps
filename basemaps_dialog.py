@@ -14,15 +14,27 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlencode
 
-from qgis.core import QgsApplication, QgsDataSourceUri, QgsProject, QgsRasterLayer
+import os
+import tempfile
+
+import requests
+from qgis.core import (
+    QgsApplication,
+    QgsDataSourceUri,
+    QgsProject,
+    QgsRasterLayer,
+    QgsTask,
+    QgsVectorTileLayer,
+)
 from qgis.PyQt.QtCore import (
     QT_VERSION_STR,
     QCoreApplication,
+    QModelIndex,
+    QSettings,
     QSize,
     Qt,
-    QUrl,
-    pyqtSignal,
 )
 from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import (
@@ -39,10 +51,9 @@ from qgis.PyQt.QtWidgets import (
     QListWidget,
     QMenu,
     QPushButton,
+    QRadioButton,
     QTreeWidgetItem,
-    QTreeWidget,
     QVBoxLayout,
-    QApplication,
 )
 
 from . import config_loader
@@ -85,6 +96,119 @@ user_separator = {
     "type": "separator",
 }
 
+OVERLAY_TAG = "Overlay"
+OVERLAY_TAG_PREFIX = f"{OVERLAY_TAG}/"
+
+TAG_SORT_ORDER = [
+    "Satellite",
+    "Streets",
+    "Terrain",
+    "Thematic",
+    "Overlay/Labels",
+    "Overlay/Boundaries",
+    "Overlay/Transportation",
+    "Overlay/Hydrography",
+    OVERLAY_TAG,
+]
+
+AVAILABLE_TAGS = [
+    "All",
+    "Satellite",
+    "Streets",
+    "Terrain",
+    "Thematic",
+    OVERLAY_TAG,
+    "Overlay/Hydrography",
+    "Overlay/Transportation",
+    "Overlay/Labels",
+    "Overlay/Boundaries",
+]
+
+ASSIGNABLE_TAGS = [
+    "Satellite",
+    "Streets",
+    "Terrain",
+    "Thematic",
+    OVERLAY_TAG,
+    "Overlay/Hydrography",
+    "Overlay/Transportation",
+    "Overlay/Labels",
+    "Overlay/Boundaries",
+]
+
+TOKEN_PARAM_OPTIONS = ["apikey", "key", "api_key", "access_token", "token", "tk"]
+DEFAULT_TOKEN_PARAM = "apikey"
+
+WELL_KNOWN_XYZ_PROVIDERS = {
+    "MapTiler": {"icon": "MapTiler.svg", "token_param": "key"},
+    "Mapbox": {"icon": "", "token_param": "access_token"},
+    "Thunderforest": {"icon": "", "token_param": "apikey"},
+    "Stadia Maps": {"icon": "", "token_param": "api_key"},
+    "Jawg": {"icon": "", "token_param": "access-token"},
+    "TomTom": {"icon": "", "token_param": "key"},
+    "HERE": {"icon": "", "token_param": "apiKey"},
+    "OpenRouteService": {"icon": "", "token_param": "api_key"},
+}
+
+
+class VectorTileLoadTask(QgsTask):
+    """Background task for loading a vector tile layer with a remote style URL.
+
+    Downloads the style JSON in a background thread so the UI stays
+    responsive, then creates and styles the layer on the main thread.
+    """
+
+    def __init__(self, encoded_uri: str, name: str, style_url: str) -> None:
+        super().__init__(
+            QCoreApplication.translate(
+                "BasemapsDialog", "Loading vector tile basemap..."
+            ),
+            QgsTask.CanCancel,
+        )
+        self.encoded_uri = encoded_uri
+        self.name = name
+        self.style_url = style_url
+        self.temp_style_path: str | None = None
+
+    def run(self) -> bool:
+        if not self.style_url:
+            return True
+        try:
+            resp = requests.get(self.style_url, timeout=30)
+            resp.raise_for_status()
+            fd, self.temp_style_path = tempfile.mkstemp(suffix=".json")
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(resp.text)
+        except Exception:
+            # Style download failed — layer will still load without it
+            pass
+        return True
+
+    def finished(self, result: bool) -> None:
+        uri = self.encoded_uri
+        if self.temp_style_path:
+            uri += f"&styleUrl=file://{self.temp_style_path}"
+        else:
+            # Ensure styleUrl is present so QGIS loads the style during rendering
+            if self.style_url:
+                uri += f"&styleUrl={self.style_url}"
+
+        layer = QgsVectorTileLayer(uri, self.name)
+        if layer.isValid():
+            if self.temp_style_path:
+                # Style was pre-downloaded — loadDefaultStyle reads from
+                # the local file:// URL and returns quickly
+                layer.loadDefaultStyle()
+            QgsProject.instance().addMapLayer(layer)
+        else:
+            MessageBox.critical(
+                QCoreApplication.translate(
+                    "BasemapsDialog", "Failed to load vector tile layer: {}"
+                ).format(self.name),
+                QCoreApplication.translate("BasemapsDialog", "Error"),
+                None,
+            )
+
 
 class BasemapsDialog(QDialog, UIBasemapsBase):
     def __init__(self, iface, parent=None):
@@ -98,6 +222,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Task management for async WMS/WMTS fetching
         self._current_fetch_task: WMSFetchTask | None = None
         self._pending_fetch_context: dict | None = None
+
+        # Hold references to vector tile load tasks to prevent GC
+        self._vector_tile_tasks: list[VectorTileLoadTask] = []
 
         # set all list to multiple selection mode
 
@@ -113,18 +240,22 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.preview_manager.preview_readied.connect(self._on_preview_ready)
 
         # Set up Grid Views
-        self.basemap_delegate = BasemapCardDelegate(self)
-        for grid_view in [self.listBasemapsGrid, self.listWmsLayersGrid]:
-            grid_view.setItemDelegate(self.basemap_delegate)
+        self.xyz_grid_delegate = BasemapCardDelegate(self)
+        self.wms_grid_delegate = BasemapCardDelegate(self)
+        for grid_view, delegate in [
+            (self.listBasemapsGrid, self.xyz_grid_delegate),
+            (self.listWmsLayersGrid, self.wms_grid_delegate),
+        ]:
+            grid_view.setItemDelegate(delegate)
             grid_view.setViewMode(QListWidget.IconMode)
             grid_view.setResizeMode(QListWidget.Adjust)
             grid_view.setWrapping(True)
             grid_view.setSpacing(10)
             grid_view.setWordWrap(True)
-            # Ensure cards are centered
             grid_view.setMovement(QListWidget.Static)
-            # Enable hover effects
             grid_view.setMouseTracking(True)
+        self.xyz_grid_delegate.tagBadgeClicked.connect(self._on_xyz_badge_clicked)
+        self.wms_grid_delegate.tagBadgeClicked.connect(self._on_wms_badge_clicked)
 
         # set right click menu
         self.listProviders.setContextMenuPolicy(custom_context_menu)
@@ -148,6 +279,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         # XYZ connections
         self.btnAddProvider.clicked.connect(self.add_xyz_provider)
+        self.btnEditProvider.clicked.connect(self.edit_xyz_provider)
         self.btnRemoveProvider.clicked.connect(self.remove_xyz_provider)
         self.btnAddBasemap.clicked.connect(self.add_xyz_basemap)
         self.btnEditBasemap.clicked.connect(self.edit_xyz_basemap)
@@ -163,8 +295,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         # WMS connections
         self.btnAddWmsProvider.clicked.connect(self.add_wms_provider)
+        self.btnEditWmsProvider.clicked.connect(self.edit_wms_provider)
         self.btnRemoveWmsProvider.clicked.connect(self.remove_wms_provider)
         self.btnRefreshWmsLayers.clicked.connect(self.refresh_wms_layers)
+        self.btnEditWmsLayer.setVisible(False)
         self.btnLoadWmsLayer.clicked.connect(self.load_wms_layer)
         self.listWmsProviders.itemSelectionChanged.connect(self.on_wms_provider_changed)
         self.treeWmsLayers.itemSelectionChanged.connect(
@@ -174,17 +308,290 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.on_wms_layer_grid_selection_changed
         )
 
-        # Sync List/Grid view between XYZ and WMS/WMTS tabs
+        # WMS layer context menus
+        self.treeWmsLayers.setContextMenuPolicy(custom_context_menu)
+        self.treeWmsLayers.customContextMenuRequested.connect(
+            self.show_wms_layer_context_menu
+        )
+        self.listWmsLayersGrid.setContextMenuPolicy(custom_context_menu)
+        self.listWmsLayersGrid.customContextMenuRequested.connect(
+            self.show_wms_layer_grid_context_menu
+        )
+
+        # Sync Text/Gallery view between XYZ and WMS/WMTS tabs
         self.tabBasemapsView.currentChanged.connect(self._on_xyz_view_changed)
         self.tabWmsView.currentChanged.connect(self._on_wms_view_changed)
+
+        # Tag filter state
+        self._active_tag: str = "All"
+
+        # Search filter state
+        self._search_text_xyz: str = ""
+        self._search_text_wms: str = ""
+
+        # Setup tag filter combo — store English tag values as item data
+        for tag in AVAILABLE_TAGS:
+            display = self.tr(tag)
+            self.tagFilterCombo.addItem(display, tag)
+        self.tagFilterCombo.setCurrentIndex(0)
+        self.tagFilterCombo.currentTextChanged.connect(self._on_tag_changed)
+
+        # Connect search boxes
+        self.searchBasemaps.textChanged.connect(self._on_xyz_search_changed)
+        self.searchWmsLayers.textChanged.connect(self._on_wms_search_changed)
 
         # Load configurations
         self.load_default_basemaps()
         self.load_user_basemaps()
 
+        # Apply persisted tag overrides for default-provider items
+        self._tag_overrides = config_loader.load_tag_overrides(self.resources_dir)
+        config_loader.apply_tag_overrides(self.providers_data, self._tag_overrides)
+
+        # Select first selectable provider by default in both tabs
+        for i in range(self.listProviders.count()):
+            if self.listProviders.item(i).flags() & item_selectable:
+                self.listProviders.setCurrentRow(i)
+                break
+        for i in range(self.listWmsProviders.count()):
+            if self.listWmsProviders.item(i).flags() & item_selectable:
+                self.listWmsProviders.setCurrentRow(i)
+                break
+
+        # Select Gallery view by default for both XYZ and WMS/WMTS tabs
+        self.tabBasemapsView.setCurrentIndex(1)
+        self.tabWmsView.setCurrentIndex(1)
+
     def tr(self, message):
         """Get the translation for a string using Qt translation API."""
         return QCoreApplication.translate("BasemapsDialog", message)
+
+    def _on_tag_changed(self, tag_name: str) -> None:
+        """Handle tag filter combo change."""
+        self._active_tag = self.tagFilterCombo.currentData(user_role) or tag_name
+        self._apply_tag_filter()
+
+    def _tag_matches(self, item_data: dict | None, tag: str) -> bool:
+        """Check if item data has a matching tag.
+
+        Parameters
+        ----------
+        item_data : dict | None
+            Basemap or layer data dictionary.
+        tag : str
+            Tag to check against.
+
+        Returns
+        -------
+        bool
+            True if item matches the tag filter.
+        """
+        if tag == "All":
+            return True
+        if not item_data or not isinstance(item_data, dict):
+            return False
+        item_tags = item_data.get("tags", [])
+        return self._tag_list_matches(item_tags, tag)
+
+    def _tag_list_matches(self, item_tags: list[str] | None, active_tag: str) -> bool:
+        """Check whether a tag list matches the active filter.
+
+        Parameters
+        ----------
+        item_tags : list[str] | None
+            Tags assigned to a basemap or layer.
+        active_tag : str
+            Active filter value from the tag combo box.
+
+        Returns
+        -------
+        bool
+            True when the item should remain visible for the active tag.
+
+        Notes
+        -----
+        Selecting ``Overlay`` matches both the root overlay tag and all
+        ``Overlay/...`` subcategories. Other tags require an exact match.
+        """
+        if active_tag == "All":
+            return True
+
+        normalized_tags = [tag for tag in (item_tags or []) if isinstance(tag, str)]
+        if not normalized_tags:
+            return False
+
+        if active_tag == OVERLAY_TAG:
+            return any(
+                tag == OVERLAY_TAG or tag.startswith(OVERLAY_TAG_PREFIX)
+                for tag in normalized_tags
+            )
+
+        return active_tag in normalized_tags
+
+    @staticmethod
+    def _sort_key_by_tag(item: dict) -> int:
+        """Return sort key for a basemap/layer based on its tags.
+
+        Items are ordered by the first matching tag in TAG_SORT_ORDER.
+        Items without a recognized tag are placed at the end.
+        """
+        if not isinstance(item, dict):
+            return len(TAG_SORT_ORDER)
+        item_tags = item.get("tags", [])
+        if not item_tags:
+            return len(TAG_SORT_ORDER)
+        for tag in item_tags:
+            if tag in TAG_SORT_ORDER:
+                return TAG_SORT_ORDER.index(tag)
+        return len(TAG_SORT_ORDER)
+
+    def _tree_item_hidden_by_tag(self, tree_item: QTreeWidgetItem, tag: str) -> bool:
+        """Check if a tree item should be hidden based on tag filtering.
+
+        Recursively checks children. Returns True if item and all
+        descendants should be hidden.
+
+        Parameters
+        ----------
+        tree_item : QTreeWidgetItem
+            The tree item to check.
+        tag : str
+            Active tag filter.
+
+        Returns
+        -------
+        bool
+            True if the item should be hidden.
+        """
+        if tag == "All":
+            for i in range(tree_item.childCount()):
+                tree_item.child(i).setHidden(False)
+            return False
+
+        item_data = tree_item.data(0, user_role)
+        if item_data and isinstance(item_data, dict):
+            item_tags = item_data.get("tags", [])
+            if self._tag_list_matches(item_tags, tag):
+                for i in range(tree_item.childCount()):
+                    tree_item.child(i).setHidden(False)
+                return False
+
+        all_hidden = True
+        for i in range(tree_item.childCount()):
+            child = tree_item.child(i)
+            child_hidden = self._tree_item_hidden_by_tag(child, tag)
+            child.setHidden(child_hidden)
+            if not child_hidden:
+                all_hidden = False
+
+        return all_hidden
+
+    def _search_matches(self, text: str, search_text: str) -> bool:
+        """Check if item text matches the search filter.
+
+        Parameters
+        ----------
+        text : str
+            Item display text.
+        search_text : str
+            Lowercase search text (empty = no filter).
+
+        Returns
+        -------
+        bool
+            True if item passes the search filter.
+        """
+        if not search_text:
+            return True
+        return search_text in text.lower()
+
+    def _on_xyz_search_changed(self, text: str) -> None:
+        """Handle XYZ search box text changes."""
+        self._search_text_xyz = text
+        self._apply_tag_filter()
+
+    def _on_wms_search_changed(self, text: str) -> None:
+        """Handle WMS search box text changes."""
+        self._search_text_wms = text
+        self._apply_tag_filter()
+
+    def _provider_has_matching_items(self, provider: dict, active_tag: str) -> bool:
+        """Check if a provider has any basemaps/layers matching the active tag.
+
+        Parameters
+        ----------
+        provider : dict
+            Provider data dictionary.
+        active_tag : str
+            The active tag filter.
+
+        Returns
+        -------
+        bool
+            True if at least one item matches or tag is "All".
+        """
+        if active_tag == "All":
+            return True
+        items = provider.get("basemaps", []) or provider.get("layers", [])
+        return any(
+            self._tag_list_matches(item.get("tags", []), active_tag) for item in items
+        )
+
+    def _apply_tag_filter(self) -> None:
+        """Filter displayed basemaps/layers/providers based on active tag and search."""
+        active_tag = self._active_tag
+        search_xyz = (self._search_text_xyz or "").lower()
+        search_wms = (self._search_text_wms or "").lower()
+
+        # Filter XYZ providers
+        for i in range(self.listProviders.count()):
+            item = self.listProviders.item(i)
+            item_data = item.data(user_role)
+            if item_data and "data" in item_data:
+                provider = item_data["data"]
+                has_match = self._provider_has_matching_items(provider, active_tag)
+                item.setHidden(not has_match)
+
+        # Filter XYZ basemaps (list + grid)
+        for widget in [self.listBasemaps, self.listBasemapsGrid]:
+            for i in range(widget.count()):
+                item = widget.item(i)
+                data = item.data(user_role)
+                item.setHidden(
+                    not (
+                        self._tag_matches(data, active_tag)
+                        and self._search_matches(item.text(), search_xyz)
+                    )
+                )
+
+        # Filter WMS providers
+        for i in range(self.listWmsProviders.count()):
+            item = self.listWmsProviders.item(i)
+            item_data = item.data(user_role)
+            if item_data and "data" in item_data:
+                provider = item_data["data"]
+                has_match = self._provider_has_matching_items(provider, active_tag)
+                item.setHidden(not has_match)
+
+        # Filter WMS layers (tree + grid)
+        for i in range(self.treeWmsLayers.topLevelItemCount()):
+            top_item = self.treeWmsLayers.topLevelItem(i)
+            hidden = self._tree_item_hidden_by_tag(top_item, active_tag)
+            if not hidden and search_wms:
+                item_text = top_item.text(0).lower() if top_item.text(0) else ""
+                if search_wms not in item_text:
+                    hidden = True
+            top_item.setHidden(hidden)
+
+        for i in range(self.listWmsLayersGrid.count()):
+            item = self.listWmsLayersGrid.item(i)
+            data = item.data(user_role)
+            item.setHidden(
+                not (
+                    self._tag_matches(data, active_tag)
+                    and self._search_matches(item.text(), search_wms)
+                )
+            )
 
     def _get_user_separator_index(self) -> int:
         """Get the index of User separator in providers_data.
@@ -244,7 +651,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         super().closeEvent(event)
 
     def _duplicate_provider_as_user(
-        self, provider: dict[str, Any], suffix: str = " (Custom)"
+        self, provider: dict[str, Any], suffix: str | None = None
     ) -> dict[str, Any]:
         """Create user copy of a provider.
 
@@ -252,8 +659,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         ----------
         provider : dict[str, Any]
             Source provider to duplicate
-        suffix : str
-            Suffix to add to name (default: " (Custom)")
+        suffix : str | None
+            Suffix to add to name (default: " (Custom)"). If None, uses the
+            translated fallback.
 
         Returns
         -------
@@ -267,6 +675,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         - Modifies name to avoid conflicts
         - Does NOT save to disk (caller must call save_user_config)
         """
+        if suffix is None:
+            suffix = " " + QCoreApplication.translate("BasemapsDialog", "(Custom)")
         import copy
         import time
 
@@ -378,7 +788,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     if yaml_files:
                         config_file = yaml_files[0]
                     else:
-                        raise Exception("No YAML configuration file found in ZIP")
+                        raise Exception(
+                            QCoreApplication.translate(
+                                "BasemapsDialog",
+                                "No YAML configuration file found in ZIP",
+                            )
+                        )
 
                     # Load config data using unified loader
                     data = config_loader.load_config_file(config_file)
@@ -424,7 +839,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return
 
         # Set default filename
-        default_filename = "providers.zip"
+        default_filename = QCoreApplication.translate("BasemapsDialog", "providers.zip")
         if len(selected_xyz_items) + len(selected_wms_items) == 1:
             # If only one provider is selected, use its name as filename
             if selected_xyz_items:
@@ -540,7 +955,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 if provider["name"] in existing_providers:
                     # If builtin provider, create a new user-defined version
                     if existing_providers[provider["name"]].get("builtin", False):
-                        provider["name"] = f"{provider['name']} (Custom)"
+                        provider["name"] = "{} {}".format(
+                            provider["name"],
+                            QCoreApplication.translate("BasemapsDialog", "(Custom)"),
+                        )
                         self.providers_data.append(provider)
                     else:
                         # Update existing user provider's basemaps
@@ -619,7 +1037,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # If separator, add non-selectable separator item
             if provider.get("type") == "separator":
                 for list_widget in [self.listProviders, self.listWmsProviders]:
-                    item = QListWidgetItem(provider["name"])
+                    item = QListWidgetItem(self.tr(provider["name"]))
                     item.setFlags(item.flags() & ~item_enabled & ~item_selectable)
                     list_widget.addItem(item)
                 continue
@@ -646,6 +1064,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 item.setIcon(provider_icon)
                 item.setData(user_role, {"index": i, "data": provider})
                 self.listProviders.addItem(item)
+
+        # Ensure button states reflect initial (no selection) state
+        self.on_basemap_selection_changed()
 
     def add_provider(self):
         dialog = ProviderInputDialog(self)
@@ -854,29 +1275,73 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not selected_items:
             return
 
+        current_provider = self.listProviders.currentItem()
+        token = ""
+        token_param = DEFAULT_TOKEN_PARAM
+        if current_provider:
+            provider_data = current_provider.data(user_role)
+            if provider_data:
+                provider = provider_data.get("data", {})
+                token = provider.get("token", "")
+                token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
+                # Warn if authentication is enabled but token is not set
+                if "token" in provider and not token:
+                    MessageBox.warning(
+                        self.tr("Missing API token. Edit the provider to set it."),
+                        self.tr("Authentication Required"),
+                        self,
+                    )
+                    return
+
         for item in selected_items:
             basemap = item.data(user_role)
             if not basemap:
                 continue
 
             try:
-                url = basemap["url"]
                 name = basemap["name"]
+                tile_type = basemap.get("tile_type", "raster")
 
-                # Create XYZ layer
-                uri = QgsDataSourceUri()
-                uri.setParam("type", "xyz")
-                uri.setParam("url", url)
-                layer = QgsRasterLayer(str(uri.encodedUri(), "utf-8"), name, "wms")
-
-                if layer.isValid():
-                    QgsProject.instance().addMapLayer(layer)
-                else:
-                    MessageBox.critical(
-                        self.tr("Failed to load basemap: {}").format(name),
-                        self.tr("Error"),
-                        self,
+                if tile_type == "vector":
+                    source_url = self._append_token(
+                        basemap.get("url", ""), token, token_param
                     )
+                    style_url = self._append_token(
+                        basemap.get("style_url", ""), token, token_param
+                    )
+                    uri = QgsDataSourceUri()
+                    uri.setParam("type", "xyz")
+                    if source_url:
+                        uri.setParam("url", source_url)
+                    encoded_uri = str(uri.encodedUri(), "utf-8")
+                    task = VectorTileLoadTask(encoded_uri, name, style_url)
+                    # Hold reference to prevent garbage collection
+                    self._vector_tile_tasks.append(task)
+                    task.taskCompleted.connect(
+                        lambda t=task: self._vector_tile_tasks.remove(t)
+                        if t in self._vector_tile_tasks
+                        else None
+                    )
+                    task.taskTerminated.connect(
+                        lambda t=task: self._vector_tile_tasks.remove(t)
+                        if t in self._vector_tile_tasks
+                        else None
+                    )
+                    QgsApplication.taskManager().addTask(task)
+                else:
+                    url = self._append_token(basemap["url"], token, token_param)
+                    uri = QgsDataSourceUri()
+                    uri.setParam("type", "xyz")
+                    uri.setParam("url", url)
+                    layer = QgsRasterLayer(str(uri.encodedUri(), "utf-8"), name, "wms")
+                    if layer.isValid():
+                        QgsProject.instance().addMapLayer(layer)
+                    else:
+                        MessageBox.critical(
+                            self.tr("Failed to load basemap: {}").format(name),
+                            self.tr("Error"),
+                            self,
+                        )
             except (KeyError, TypeError) as e:
                 MessageBox.critical(
                     self.tr("Invalid basemap data: {}").format(str(e)),
@@ -886,80 +1351,124 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def on_provider_changed(self):
         """update basemap list and disable edit/remove buttons for default providers"""
+        from qgis.PyQt.QtCore import QTimer
+
         current_item = self.listProviders.currentItem()
         if not current_item:
             self.listBasemaps.clear()
             self.listBasemapsGrid.clear()
             self.btnEditBasemap.setEnabled(False)
             self.btnRemoveBasemap.setEnabled(False)
+            self.btnEditProvider.setEnabled(False)
             self.btnRemoveProvider.setEnabled(False)
             return
 
-        # Cancel any pending preview requests from previous provider
-        self.preview_manager.cleanup()
-        
         provider_data = current_item.data(user_role)
         if not provider_data or "data" not in provider_data:
             return
 
-        # Set basemap list icon size
-        self.listBasemaps.setIconSize(QSize(15, 15))
+        # Clear immediately so old content disappears; populate deferred
+        self.listBasemaps.clear()
+        self.listBasemapsGrid.clear()
+        self.btnEditBasemap.setEnabled(False)
+        self.btnRemoveBasemap.setEnabled(False)
 
-        # Get provider icon
+        # Capture everything needed for deferred population
         provider = provider_data["data"]
+        provider_name = provider["name"]
+        token = provider.get("token", "")
+        token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
+        is_default_provider = self._is_default_provider(provider)
+        provider_icon = IconBasemaps
         if "icon" in provider:
             icon_file = self.icons_dir / provider["icon"]
             if icon_file.exists():
                 provider_icon = QIcon(str(icon_file))
-            else:
-                provider_icon = IconBasemaps
-        else:
-            provider_icon = IconBasemaps
 
-        # Update basemap list and grid
-        self.listBasemaps.clear()
-        self.listBasemapsGrid.clear()
-        for basemap in provider_data["data"].get("basemaps", []):
-            if isinstance(basemap, dict) and "name" in basemap and "url" in basemap:
-                # List item
+        basemaps = [
+            bm
+            for bm in sorted(
+                provider_data["data"].get("basemaps", []), key=self._sort_key_by_tag
+            )
+            if isinstance(bm, dict)
+            and "name" in bm
+            and ("url" in bm or bm.get("tile_type") == "vector")
+        ]
+
+        CHUNK = 15
+        self._xyz_version = getattr(self, "_xyz_version", 0) + 1
+        version = self._xyz_version
+
+        def process_chunk(start: int):
+            if self._xyz_version != version:
+                return
+            end = min(start + CHUNK, len(basemaps))
+            for i in range(start, end):
+                basemap = basemaps[i]
+                tile_type = basemap.get("tile_type", "raster")
+                protocol = "vector" if tile_type == "vector" else "xyz"
+
                 item = QListWidgetItem(basemap["name"])
                 item.setIcon(provider_icon)
                 item.setData(user_role, basemap)
                 self.listBasemaps.addItem(item)
-                
-                # Grid item
+
                 grid_item = QListWidgetItem(basemap["name"])
                 grid_item.setData(user_role, basemap)
                 grid_item.setData(Qt.UserRole + 10, provider_icon)
-                grid_item.setToolTip(basemap["name"])  # Show full name on hover
+                grid_item.setData(Qt.UserRole + 12, protocol)
+                grid_item.setToolTip(basemap["name"])
+                bm_tags = basemap.get("tags", [])
+                grid_item.setData(Qt.UserRole + 11, bm_tags[0] if bm_tags else None)
                 self.listBasemapsGrid.addItem(grid_item)
-                
-                # Request preview
-                is_default = self._is_default_provider(provider)
-                self.preview_manager.request_preview(
-                    provider["name"], basemap["name"], basemap["url"], "xyz", None, is_default
-                )
 
-        # Disable edit/remove/add basemap buttons for default providers
-        # Disable remove provider button for default providers
-        is_default = self._is_default_provider(provider)
-        self.btnEditBasemap.setEnabled(not is_default)
-        self.btnRemoveBasemap.setEnabled(not is_default)
-        self.btnAddBasemap.setEnabled(not is_default)
-        self.btnRemoveProvider.setEnabled(not is_default)
+                # Issue preview inline (same as WMS)
+                if tile_type == "vector":
+                    preview_url = self._append_token(
+                        basemap.get("url", ""), token, token_param
+                    )
+                    preview_style_url = self._append_token(
+                        basemap.get("style_url", ""), token, token_param
+                    )
+                    if preview_url:
+                        self.preview_manager.request_vector_preview(
+                            provider_name,
+                            basemap["name"],
+                            preview_url,
+                            preview_style_url,
+                            is_default_provider,
+                        )
+                else:
+                    preview_url = self._append_token(basemap["url"], token, token_param)
+                    self.preview_manager.request_preview(
+                        provider_name,
+                        basemap["name"],
+                        preview_url,
+                        "xyz",
+                        None,
+                        is_default_provider,
+                    )
+
+            if end < len(basemaps):
+                QCoreApplication.processEvents()
+                QTimer.singleShot(5, lambda s=end: process_chunk(s))
+            else:
+                self.btnAddBasemap.setEnabled(not is_default_provider)
+                self.btnEditProvider.setEnabled(not is_default_provider)
+                self.btnRemoveProvider.setEnabled(not is_default_provider)
+                self._apply_tag_filter()
+
+        QTimer.singleShot(0, lambda: process_chunk(0))
 
     def on_wms_provider_changed(self):
-        """
-        Update layer tree when WMS provider changed.
+        """Update layer tree when WMS provider changed (chunked to keep UI responsive)."""
+        from qgis.PyQt.QtCore import QTimer
 
-        Build hierarchical tree structure showing:
-        - Layer name (top level)
-          - CRS options (second level)
-            - Format options (third level)
-        """
         current_item = self.listWmsProviders.currentItem()
         if not current_item:
             self.treeWmsLayers.clear()
+            self.listWmsLayersGrid.clear()
+            self.btnEditWmsProvider.setEnabled(False)
             self.btnRemoveWmsProvider.setEnabled(False)
             return
 
@@ -967,107 +1476,95 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not provider_data:
             return
 
-        # Set tree icon size
-        self.treeWmsLayers.setIconSize(QSize(15, 15))
+        # Clear immediately so old content disappears; populate deferred
+        self.treeWmsLayers.clear()
+        self.listWmsLayersGrid.clear()
+        self.btnEditWmsProvider.setEnabled(False)
+        self.btnRemoveWmsProvider.setEnabled(False)
 
-        # Get provider icon
         provider = provider_data["data"]
+        provider_name = provider["name"]
+        token = provider.get("token", "")
+        token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
+        is_default = self._is_default_provider(provider)
         provider_icon = IconBasemaps
         if "icon" in provider:
             icon_file = self.icons_dir / provider["icon"]
             if icon_file.exists():
                 provider_icon = QIcon(str(icon_file))
+        preview_url_base = self._append_token(provider["url"], token, token_param)
+        provider_service_type = provider.get("service_type", "wms")
 
-        # Update layer tree with hierarchical structure
-        self.treeWmsLayers.clear()
-        self.listWmsLayersGrid.clear()
-        for layer in provider_data["data"].get("layers", []):
-            # Use layer_title as display name, if not available use layer_name
-            display_name = layer.get(
-                "layer_title", layer.get("layer_name", "Unknown Layer")
-            )
+        layers = sorted(
+            provider_data["data"].get("layers", []), key=self._sort_key_by_tag
+        )
 
-            # Create top-level item for layer
-            layer_item = QTreeWidgetItem([display_name])
-            layer_item.setIcon(0, provider_icon)
-            self.treeWmsLayers.addTopLevelItem(layer_item)
+        CHUNK = 15
+        self._wms_version = getattr(self, "_wms_version", 0) + 1
+        version = self._wms_version
 
-            # Grid item
-            grid_item = QListWidgetItem(display_name)
-            grid_item.setData(user_role, layer)
-            grid_item.setData(Qt.UserRole + 10, provider_icon)
-            grid_item.setToolTip(display_name)  # Show full name on hover
-            self.listWmsLayersGrid.addItem(grid_item)
-            
-            # Request preview for WMS layer (using queue system to prevent overload)
-            service_type = provider.get("service_type", "wms")
-            is_default = self._is_default_provider(provider)
-            self.preview_manager.request_preview(
-                provider["name"], display_name, provider["url"], service_type, layer, is_default
-            )
+        def process_chunk(start: int):
+            if self._wms_version != version:
+                return
+            end = min(start + CHUNK, len(layers))
+            for i in range(start, end):
+                layer = layers[i]
+                display_name = layer.get(
+                    "layer_title",
+                    layer.get("layer_name", self.tr("Unknown Layer")),
+                )
+                service_type = layer.get("service_type", provider_service_type)
 
-            # Get available CRS, formats, and styles
-            crs_list = layer.get("crs", [])
-            format_list = layer.get("format", [])
-            style_list = layer.get("styles", [""])
+                layer_item = QTreeWidgetItem([display_name])
+                layer_item.setIcon(0, provider_icon)
+                self.treeWmsLayers.addTopLevelItem(layer_item)
 
-            # If only one option for each parameter, create leaf item directly
-            if len(crs_list) <= 1 and len(format_list) <= 1:
-                # Store complete layer data in the layer item itself
-                layer_item.setData(0, user_role, layer)
-                continue
-
-            # For multi-parameter layers, store default config in parent node
-            # This allows loading by clicking the parent node (uses first CRS)
-            # Note: service_type is at provider level, not layer level
-            provider_service_type = provider.get("service_type", "wms")
-            default_config = {
-                "layer_name": layer.get("layer_name"),
-                "layer_title": layer.get("layer_title"),
-                "crs": [crs_list[0]] if crs_list else [],
-                "format": format_list if format_list else [],
-                "styles": style_list,
-                "service_type": provider_service_type,
-            }
-            layer_item.setData(0, user_role, default_config)
-
-            # Create second-level items for CRS options
-            for crs in crs_list:
-                crs_item = QTreeWidgetItem([crs])
-                layer_item.addChild(crs_item)
-
-                # If multiple formats available, create third level
-                if len(format_list) > 1:
-                    for fmt in format_list:
-                        # Create format item with all layer data
-                        format_item = QTreeWidgetItem([fmt])
-
-                        # Store complete layer configuration
-                        layer_config = {
-                            "layer_name": layer.get("layer_name"),
-                            "layer_title": layer.get("layer_title"),
-                            "crs": [crs],
-                            "format": [fmt],
-                            "styles": style_list,
-                            "service_type": provider_service_type,
-                        }
-                        format_item.setData(0, user_role, layer_config)
-                        crs_item.addChild(format_item)
+                crs_list = layer.get("crs", [])
+                format_list = layer.get("format", [])
+                if len(crs_list) <= 1 and len(format_list) <= 1:
+                    layer_item.setData(0, user_role, layer)
                 else:
-                    # Only one format, store data in CRS item
-                    layer_config = {
+                    layer_tags = layer.get("tags", [])
+                    default_config = {
                         "layer_name": layer.get("layer_name"),
                         "layer_title": layer.get("layer_title"),
-                        "crs": [crs],
-                        "format": format_list,
-                        "styles": style_list,
+                        "crs": [crs_list[0]] if crs_list else [],
+                        "format": format_list if format_list else [],
+                        "styles": layer.get("styles", [""]),
                         "service_type": provider_service_type,
+                        "tags": layer_tags,
                     }
-                    crs_item.setData(0, user_role, layer_config)
+                    layer_item.setData(0, user_role, default_config)
 
-        # Disable remove provider button for default providers
-        is_default = self._is_default_provider(provider)
-        self.btnRemoveWmsProvider.setEnabled(not is_default)
+                grid_item = QListWidgetItem(display_name)
+                grid_item.setData(user_role, layer)
+                grid_item.setData(Qt.UserRole + 10, provider_icon)
+                grid_item.setData(Qt.UserRole + 12, service_type)
+                grid_item.setToolTip(display_name)
+                layer_tags = layer.get("tags", [])
+                grid_item.setData(
+                    Qt.UserRole + 11, layer_tags[0] if layer_tags else None
+                )
+                self.listWmsLayersGrid.addItem(grid_item)
+
+                self.preview_manager.request_preview(
+                    provider_name,
+                    display_name,
+                    preview_url_base,
+                    service_type,
+                    layer,
+                    is_default,
+                )
+
+            if end < len(layers):
+                QCoreApplication.processEvents()
+                QTimer.singleShot(5, lambda s=end: process_chunk(s))
+            else:
+                self.btnEditWmsProvider.setEnabled(not is_default)
+                self.btnRemoveWmsProvider.setEnabled(not is_default)
+                self._apply_tag_filter()
+
+        QTimer.singleShot(0, lambda: process_chunk(0))
 
     def on_wms_layer_selection_changed(self):
         """Handle WMS layer selection changes to update button states."""
@@ -1167,11 +1664,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return
 
             # Initialize XYZ provider data
-            provider_data.update({
-                "type": "xyz",
-                "basemaps": [],  # Initialize empty basemap list
-                "created_at": __import__("time").time(),  # Add creation timestamp
-            })
+            provider_data.update(
+                {
+                    "type": "xyz",
+                    "basemaps": [],
+                    "created_at": __import__("time").time(),
+                }
+            )
 
             # Add to data list
             self.providers_data.append(provider_data)
@@ -1285,10 +1784,156 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     break
             self.save_user_config()
 
+    def _save_tag_overrides(self, provider: dict[str, Any]) -> None:
+        """Persist tag edits to the tag overrides file (works for all providers)."""
+        provider_type = provider.get("type")
+        provider_name = provider.get("name")
+        if not provider_type or not provider_name:
+            return
+
+        entry: dict[str, dict[str, list[str]]] = {}
+        if provider_type == "xyz":
+            for bm in provider.get("basemaps", []):
+                tags = bm.get("tags", [])
+                if tags:
+                    entry[bm["name"]] = {"tags": list(tags)}
+        elif provider_type == "wms":
+            for layer in provider.get("layers", []):
+                tags = layer.get("tags", [])
+                if tags:
+                    entry[layer.get("layer_name", "")] = {"tags": list(tags)}
+
+        # Prune removed tags: if an item no longer has tags, remove its entry
+        self._tag_overrides.setdefault(provider_type, {})
+        existing = self._tag_overrides[provider_type].get(provider_name, {})
+        merged = {}
+        for item_name, override in entry.items():
+            merged[item_name] = override
+        # Keep entries for items not in the current provider (they may be from
+        # other providers with the same name – play it safe and only overwrite
+        # what we just edited)
+        for item_name, override in existing.items():
+            if item_name not in merged:
+                # Check if this item still exists in the provider and has tags
+                still_exists = False
+                if provider_type == "xyz":
+                    still_exists = any(
+                        bm.get("name") == item_name and bm.get("tags")
+                        for bm in provider.get("basemaps", [])
+                    )
+                elif provider_type == "wms":
+                    still_exists = any(
+                        layer.get("layer_name") == item_name and layer.get("tags")
+                        for layer in provider.get("layers", [])
+                    )
+                if still_exists:
+                    merged[item_name] = override
+
+        if merged:
+            self._tag_overrides[provider_type][provider_name] = merged
+        else:
+            self._tag_overrides[provider_type].pop(provider_name, None)
+
+        config_loader.save_tag_overrides(self.resources_dir, self._tag_overrides)
+
+    def _save_to_provider_file(self, provider: dict[str, Any]) -> None:
+        """Persist tag edits directly to the provider's config file.
+
+        Also clears any stale overrides for this provider so that
+        ``apply_tag_overrides`` does not overwrite the direct save on next load.
+        """
+        source_file = provider.get("source_file")
+        if source_file:
+            config_loader.save_provider_to_path(Path(source_file), provider)
+        else:
+            prefix = "default" if self._is_default_provider(provider) else "user"
+            config_loader.save_provider_to_yaml(
+                self.resources_dir, provider, prefix=prefix
+            )
+
+        # Remove any existing overrides for this provider — the config file is
+        # now the source of truth, and we must not let stale overrides win.
+        provider_type = provider.get("type")
+        provider_name = provider.get("name")
+        if provider_type and provider_name:
+            type_overrides = self._tag_overrides.get(provider_type)
+            if type_overrides and provider_name in type_overrides:
+                del type_overrides[provider_name]
+                config_loader.save_tag_overrides(
+                    self.resources_dir,
+                    self._tag_overrides,
+                )
+
+    def _edit_xyz_basemap_tags(self, basemap_data: dict) -> None:
+        """Open tag-only editor for an XYZ basemap (from grid badge click)."""
+        current_provider = self.listProviders.currentItem()
+        if not current_provider:
+            return
+        provider_data = current_provider.data(user_role)
+        if not provider_data:
+            return
+        basemap_name = basemap_data.get("name", "Unknown")
+
+        dialog = TagEditDialog(self, basemap_name, basemap_data)
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result != dialog_accepted:
+            return
+        new_tags = dialog.get_tags()
+        save_mode = dialog.get_save_mode()
+        QSettings("Basemaps", "Basemaps").setValue("tag_save_preference", save_mode)
+
+        # Update in providers_data (use name match, not identity — same as WMS)
+        provider_index = provider_data["index"]
+        found = None
+        for bm in self.providers_data[provider_index].get("basemaps", []):
+            if isinstance(bm, dict) and bm.get("name") == basemap_name:
+                found = bm
+                break
+        if found is not None:
+            found["tags"] = new_tags
+
+        # Update list and grid items in-place
+        # Use dict() copy so Qt detects the change and emits dataChanged
+        # Match by name (not identity) so repeated edits work correctly
+        updated_data = dict(found) if found is not None else dict(basemap_data)
+        for widget in [self.listBasemaps, self.listBasemapsGrid]:
+            for i in range(widget.count()):
+                item = widget.item(i)
+                item_data = item.data(user_role)
+                if (
+                    isinstance(item_data, dict)
+                    and item_data.get("name") == basemap_name
+                ):
+                    item.setData(user_role, updated_data)
+                    item.setData(Qt.UserRole + 11, new_tags[0] if new_tags else None)
+                    break
+
+        self._apply_tag_filter()
+        self.listBasemapsGrid.viewport().update()
+        # Use self.providers_data reference directly — the 'provider' variable
+        # from QListWidgetItem.data() may be a stale QVariant copy
+        canonical = self.providers_data[provider_index]
+        if save_mode == "overrides":
+            self._save_tag_overrides(canonical)
+        else:
+            self._save_to_provider_file(canonical)
+
     def edit_xyz_basemap(self):
         """edit XYZ basemap"""
         current_provider = self.listProviders.currentItem()
         current_basemap = self.listBasemaps.currentItem()
+
+        # Fallback: try grid selection if list has no current item
+        if not current_basemap:
+            grid_selected = self.listBasemapsGrid.selectedItems()
+            if grid_selected:
+                for i in range(self.listBasemaps.count()):
+                    item = self.listBasemaps.item(i)
+                    if item and item.text() == grid_selected[0].text():
+                        self.listBasemaps.setCurrentItem(item)
+                        current_basemap = item
+                        break
+
         if not current_provider or not current_basemap:
             MessageBox.warning(
                 self.tr("Please select a basemap to edit."),
@@ -1306,12 +1951,19 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Get edited data
             new_data = dialog.get_data()
 
+            Logger.info(f"Edit basemap: new_data = {new_data}")
+
             # Update data
             provider_index = provider_data["index"]
             basemap_index = self.providers_data[provider_index]["basemaps"].index(
                 basemap
             )
             self.providers_data[provider_index]["basemaps"][basemap_index] = new_data
+
+            Logger.info(
+                f"Updated providers_data[{provider_index}]['basemaps'][{basemap_index}]"
+                f" = {self.providers_data[provider_index]['basemaps'][basemap_index]}"
+            )
 
             # Update interface display
             self.update_providers_list()
@@ -1389,11 +2041,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return
 
             # Initialize WMS provider data
-            provider_data.update({
-                "type": "wms",
-                "layers": [],  # Initialize empty layer list
-                "created_at": __import__("time").time(),  # Add creation timestamp
-            })
+            provider_data.update(
+                {
+                    "type": "wms",
+                    "layers": [],  # Initialize empty layer list
+                    "created_at": __import__("time").time(),  # Add creation timestamp
+                }
+            )
 
             # Add to data list
             self.providers_data.append(provider_data)
@@ -1473,8 +2127,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 layers = provider.get("layers", [])
                 service_type = provider.get("service_type", "wms")
                 self.preview_manager.delete_provider_previews(
-                    provider["name"], layers, service_type, is_default=False,
-                    url=provider.get("url", "")
+                    provider["name"],
+                    layers,
+                    service_type,
+                    is_default=False,
+                    url=provider.get("url", ""),
                 )
 
             # Delete provider from data
@@ -1570,7 +2227,21 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         provider_data = current_provider.data(user_role)
-        url = provider_data["data"]["url"]
+        provider = provider_data["data"]
+        url = provider["url"].strip()
+        token = provider.get("token", "")
+        token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
+
+        # Warn if authentication is enabled but token is not set
+        if "token" in provider and not token:
+            MessageBox.warning(
+                self.tr("Missing API token. Edit the provider to set it."),
+                self.tr("Authentication Required"),
+                self,
+            )
+            return
+
+        url = self._append_token(url, token, token_param)
         # Check if this is a WMTS service
         service_type = provider_data["data"].get("service_type", "wms")
 
@@ -1591,8 +2262,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 self._load_wms_layer(url, layer_data)
 
     def _load_wms_layer(self, url: str, layer_data: dict) -> None:
-        """
-        Load a WMS layer to QGIS.
+        """Load a WMS layer to QGIS.
 
         Parameters
         ----------
@@ -1601,7 +2271,6 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         layer_data : dict
             Layer information dictionary.
         """
-        # Build WMS parameters
         params = {
             "url": url,
             "layers": layer_data["layer_name"],
@@ -1610,12 +2279,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             "styles": layer_data["styles"][0] if layer_data["styles"] else "",
         }
 
-        # Build URI using QgsDataSourceUri
         uri = QgsDataSourceUri()
         for key, value in params.items():
             uri.setParam(key, value)
 
-        # Create layer
         layer = QgsRasterLayer(
             str(uri.encodedUri(), "utf-8"), layer_data["layer_title"], "wms"
         )
@@ -1636,8 +2303,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             )
 
     def _load_wmts_layer(self, url: str, layer_data: dict) -> None:
-        """
-        Load a WMTS layer to QGIS.
+        """Load a WMTS layer to QGIS.
 
         Parameters
         ----------
@@ -1646,37 +2312,29 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         layer_data : dict
             Layer information dictionary.
         """
-        # Build WMTS URI
-        # QGIS uses a specific format for WMTS connections
         uri = QgsDataSourceUri()
         uri.setParam("url", url)
         uri.setParam("layers", layer_data["layer_name"])
 
-        # Set tile matrix set (CRS)
         if layer_data.get("crs"):
             uri.setParam("tileMatrixSet", layer_data["crs"][0])
 
-        # Set format
         if layer_data.get("format"):
             uri.setParam("format", layer_data["format"][0])
 
-        # Set style
         if layer_data.get("styles"):
             uri.setParam("styles", layer_data["styles"][0])
         else:
             uri.setParam("styles", "")
 
-        # Log the URI for debugging
         encoded_uri = str(uri.encodedUri(), "utf-8")
         Logger.info(f"Loading WMTS layer with URI: {encoded_uri}")
 
-        # Create layer with 'wms' provider (QGIS uses wms provider for WMTS too)
         layer = QgsRasterLayer(encoded_uri, layer_data["layer_title"], "wms")
 
         if layer.isValid():
             QgsProject.instance().addMapLayer(layer)
         else:
-            # Get detailed error info from the layer
             error_msg = layer.error().message() if layer.error() else "Unknown error"
             Logger.critical(
                 f"Failed to load WMTS layer: {layer_data['layer_title']} - {error_msg}"
@@ -1710,7 +2368,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         provider_data = current_provider.data(user_role)
-        url = provider_data["data"]["url"]
+        provider = provider_data["data"]
+        url = provider["url"]
+        token = provider.get("token", "")
+        token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
+        fetch_url = self._append_token(url, token, token_param)
         provider_index = provider_data["index"]
 
         # Store context for callback
@@ -1721,7 +2383,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         }
 
         # Create and configure task
-        task = WMSFetchTask(url, timeout=30)
+        task = WMSFetchTask(fetch_url, timeout=30)
         task.signals.finished.connect(self._on_wms_fetch_complete)
 
         self._current_fetch_task = task
@@ -1766,7 +2428,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Get context
         context = self._pending_fetch_context
         if not context:
-            Logger.warning("Fetch completed but context was lost")
+            Logger.warning(
+                QCoreApplication.translate(
+                    "BasemapsDialog", "Fetch completed but context was lost"
+                )
+            )
             return
 
         provider_index = context["provider_index"]
@@ -1782,24 +2448,28 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if is_default_provider:
             # Create user copy with refreshed layers
             new_provider = self._duplicate_provider_as_user(provider)
-            new_provider.update({
-                "icon": provider.get("icon", "ui/icon.svg"),
-                "type": "wms",
-                "service_type": detected_type,
-                "url": url,
-                "layers": result.layers,
-            })
+            new_provider.update(
+                {
+                    "icon": provider.get("icon", "ui/icon.svg"),
+                    "type": "wms",
+                    "service_type": detected_type,
+                    "url": url,
+                    "layers": result.layers,
+                }
+            )
             self.providers_data.append(new_provider)
             selected_provider_name = new_provider["name"]
         else:
             # Update existing user provider
-            self.providers_data[provider_index].update({
-                "icon": provider.get("icon", "ui/icon.svg"),
-                "type": "wms",
-                "service_type": detected_type,
-                "url": url,
-                "layers": result.layers,
-            })
+            self.providers_data[provider_index].update(
+                {
+                    "icon": provider.get("icon", "ui/icon.svg"),
+                    "type": "wms",
+                    "service_type": detected_type,
+                    "url": url,
+                    "layers": result.layers,
+                }
+            )
             selected_provider_name = provider["name"]
 
         # Update interface display
@@ -1835,29 +2505,26 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         provider_data = current_item.data(user_role)
         provider = provider_data.get("data")
 
-        menu = QMenu()
-        edit_action = None
-        duplicate_action = None
+        # Only show context menu for default providers (Duplicate)
+        if not provider or not self._is_default_provider(provider):
+            return
 
-        # Show different options based on provider type
-        if provider and self._is_default_provider(provider):
-            # Default providers: only allow duplicate
-            duplicate_action = menu.addAction("Duplicate as User Provider")
-        else:
-            # User providers: only allow edit
-            edit_action = menu.addAction("Edit")
+        menu = QMenu()
+        duplicate_action = menu.addAction(self.tr("Duplicate as User Provider"))
 
         exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
         action = exec(self.listProviders.mapToGlobal(position))
 
-        if action == edit_action:
-            self.edit_xyz_provider()
-        elif action == duplicate_action:
+        if action == duplicate_action:
             self.duplicate_xyz_provider()
 
     def show_xyz_basemap_context_menu(self, position):
+        current_item = self.listBasemaps.currentItem()
+        if not current_item:
+            return
+
         menu = QMenu()
-        edit_action = menu.addAction("Edit")
+        edit_action = menu.addAction(self.tr("Edit"))
 
         exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
         action = exec(self.listBasemaps.mapToGlobal(position))
@@ -1873,47 +2540,257 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         provider_data = current_item.data(user_role)
         provider = provider_data.get("data")
 
-        menu = QMenu()
-        edit_action = None
-        duplicate_action = None
+        # Only show context menu for default providers (Duplicate)
+        if not provider or not self._is_default_provider(provider):
+            return
 
-        # Show different options based on provider type
-        if provider and self._is_default_provider(provider):
-            # Default providers: only allow duplicate
-            duplicate_action = menu.addAction("Duplicate as User Provider")
-        else:
-            # User providers: only allow edit
-            edit_action = menu.addAction("Edit")
+        menu = QMenu()
+        duplicate_action = menu.addAction(self.tr("Duplicate as User Provider"))
 
         exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
         action = exec(self.listWmsProviders.mapToGlobal(position))
 
-        if action == edit_action:
-            if not current_item:
-                MessageBox.warning(
-                    self.tr("Please select a WMS provider to edit."),
-                    self.tr("Warning"),
-                    self,
-                )
+        if action == duplicate_action:
+            self.duplicate_wms_provider()
+
+    def _get_selected_wms_layer(self) -> dict | None:
+        """Get the currently selected WMS/WMTS layer data from tree or grid.
+
+        Returns
+        -------
+        dict | None
+            Layer data dictionary, or None if nothing selected.
+        """
+        # Try tree selection first
+        selected = self.treeWmsLayers.selectedItems()
+        if selected:
+            item = selected[0]
+            data = item.data(0, user_role)
+            if data and "layer_name" in data:
+                return data
+            # Try to find leaf data
+            if item.childCount() > 0:
+                leaf = item.child(0)
+                leaf_data = leaf.data(0, user_role)
+                if leaf_data and "layer_name" in leaf_data:
+                    return leaf_data
+                if leaf.childCount() > 0:
+                    leaf2 = leaf.child(0)
+                    return leaf2.data(0, user_role)
+
+        # Fall back to grid selection
+        selected = self.listWmsLayersGrid.selectedItems()
+        if selected:
+            return selected[0].data(user_role)
+
+        return None
+
+    def _update_wms_tree_layer_tags(
+        self, item: QTreeWidgetItem, layer_name: str, tags: list[str]
+    ) -> bool:
+        """Update stored tags for a WMS/WMTS tree item and descendants.
+
+        Parameters
+        ----------
+        item : QTreeWidgetItem
+            Tree item to inspect.
+        layer_name : str
+            Layer identifier to update.
+        tags : list[str]
+            New tag values.
+
+        Returns
+        -------
+        bool
+            True if the item or one of its descendants was updated.
+        """
+        updated = False
+        item_data = item.data(0, user_role)
+        if isinstance(item_data, dict) and item_data.get("layer_name") == layer_name:
+            item_data = dict(item_data)
+            item_data["tags"] = list(tags)
+            item.setData(0, user_role, item_data)
+            updated = True
+
+        for child_index in range(item.childCount()):
+            child = item.child(child_index)
+            if self._update_wms_tree_layer_tags(child, layer_name, tags):
+                updated = True
+
+        return updated
+
+    def _update_wms_layer_tags_in_views(self, layer_name: str, tags: list[str]) -> None:
+        """Update cached WMS/WMTS layer tags in tree and gallery views.
+
+        Parameters
+        ----------
+        layer_name : str
+            Layer identifier to update.
+        tags : list[str]
+            New tag values.
+        """
+        for item_index in range(self.treeWmsLayers.topLevelItemCount()):
+            item = self.treeWmsLayers.topLevelItem(item_index)
+            self._update_wms_tree_layer_tags(item, layer_name, tags)
+
+        for item_index in range(self.listWmsLayersGrid.count()):
+            grid_item = self.listWmsLayersGrid.item(item_index)
+            grid_data = grid_item.data(user_role)
+            if (
+                isinstance(grid_data, dict)
+                and grid_data.get("layer_name") == layer_name
+            ):
+                grid_data = dict(grid_data)
+                grid_data["tags"] = list(tags)
+                grid_item.setData(user_role, grid_data)
+                grid_item.setData(Qt.UserRole + 11, tags[0] if tags else None)
+
+    def edit_wms_layer_tags(self) -> None:
+        """Edit tags for the selected WMS/WMTS layer."""
+        layer = self._get_selected_wms_layer()
+        if not layer:
+            MessageBox.warning(
+                self.tr("Please select a WMS/WMTS layer first."),
+                self.tr("Warning"),
+                self,
+            )
+            return
+
+        current_provider = self.listWmsProviders.currentItem()
+        if not current_provider:
+            return
+
+        provider_data = current_provider.data(user_role)
+        if not provider_data:
+            return
+
+        layer_name = layer.get("layer_name")
+        if not layer_name:
+            Logger.critical("EDIT_LAYER: Selected layer is missing layer_name")
+            return
+
+        layer_title = layer.get("layer_title", layer.get("layer_name", "Unknown"))
+        dialog = TagEditDialog(self, layer_title, layer)
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
+            new_tags = dialog.get_tags()
+            save_mode = dialog.get_save_mode()
+            QSettings("Basemaps", "Basemaps").setValue("tag_save_preference", save_mode)
+
+            # Find the exact layer in providers_data by name
+            provider_index = provider_data["index"]
+            layers = self.providers_data[provider_index].get("layers", [])
+            found_lyr = None
+            for lyr in layers:
+                if lyr.get("layer_name") == layer_name:
+                    found_lyr = lyr
+                    break
+            Logger.info(
+                f"EDIT_LAYER: name={layer_name}, "
+                f"dialog_tags={new_tags}, "
+                f"old_layer_tags={found_lyr.get('tags') if found_lyr else 'NOT FOUND'}"
+            )
+
+            if found_lyr is None:
+                Logger.critical("EDIT_LAYER: Could not find layer in providers_data!")
                 return
 
-            provider_data = current_item.data(user_role)
-            dialog = ProviderInputDialog(
-                self, provider_data["data"], provider_type="wms"
-            )
-            exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
-            if exec_result == dialog_accepted:
-                new_data = dialog.get_data()
-                new_data["type"] = "wms"
-                new_data["layers"] = provider_data["data"].get("layers", [])
-                new_data["url"] = dialog.url_edit.text()
+            # Update tags in providers_data
+            found_lyr["tags"] = new_tags
+            current_provider.setData(user_role, provider_data)
 
-                # Update data
-                self.providers_data[provider_data["index"]] = new_data
-                self.update_providers_list()
-                self.save_user_config()
-        elif action == duplicate_action:
-            self.duplicate_wms_provider()
+            # Also update the layer dict from tree/grid
+            layer["tags"] = new_tags
+
+            Logger.info(
+                f"EDIT_LAYER: after update, "
+                f"providers_data[{provider_index}].layers "
+                f"[name={found_lyr['layer_name']}] tags = {found_lyr['tags']}"
+            )
+
+            # Update all cached tree/gallery item payloads so the next edit dialog
+            # opens with the just-saved tag without requiring a plugin reload.
+            self._update_wms_layer_tags_in_views(layer_name, new_tags)
+
+            # Re-apply the tag filter to reflect changes
+            self._apply_tag_filter()
+            self.listWmsLayersGrid.viewport().update()
+            self.treeWmsLayers.viewport().update()
+
+            # Persist tag edits
+            # Use self.providers_data reference directly — 'provider' from
+            # QListWidgetItem.data() may be a stale QVariant copy
+            canonical = self.providers_data[provider_index]
+            if save_mode == "overrides":
+                self._save_tag_overrides(canonical)
+            else:
+                self._save_to_provider_file(canonical)
+
+    def _on_xyz_badge_clicked(self, index: QModelIndex) -> None:
+        """Handle click on tag badge in XYZ grid — open tag-only editor."""
+        grid_item = self.listBasemapsGrid.itemFromIndex(index)
+        if not grid_item:
+            return
+        basemap_data = grid_item.data(user_role)
+        if not basemap_data:
+            return
+        self._edit_xyz_basemap_tags(basemap_data)
+
+    def _on_wms_badge_clicked(self, index: QModelIndex) -> None:
+        """Handle click on tag badge in WMS grid."""
+        item = self.listWmsLayersGrid.itemFromIndex(index)
+        if not item:
+            return
+        # editorEvent consumed the event, so selection wasn't updated
+        self.listWmsLayersGrid.setCurrentItem(item)
+        item.setSelected(True)
+        self.edit_wms_layer_tags()
+
+    def show_wms_layer_context_menu(self, position):
+        """Show right-click context menu for WMS tree layers."""
+        current_item = self.treeWmsLayers.currentItem()
+        if not current_item:
+            return
+
+        # Get layer data
+        data = current_item.data(0, user_role)
+        if not data or "layer_name" not in data:
+            # If parent node, try to find a child with data
+            if current_item.childCount() > 0:
+                child = current_item.child(0)
+                data = child.data(0, user_role)
+                if not data and child.childCount() > 0:
+                    data = child.child(0).data(0, user_role)
+            if not data:
+                return
+
+        menu = QMenu()
+        edit_action = menu.addAction(self.tr("Edit"))
+
+        exec_menu = menu.exec_ if hasattr(menu, "exec_") else menu.exec
+        action = exec_menu(self.treeWmsLayers.mapToGlobal(position))
+
+        if action == edit_action:
+            self.edit_wms_layer_tags()
+
+    def show_wms_layer_grid_context_menu(self, position):
+        """Show right-click context menu for WMS grid layers."""
+        current_item = self.listWmsLayersGrid.currentItem()
+        if not current_item:
+            return
+
+        data = current_item.data(user_role)
+        if not data:
+            return
+
+        menu = QMenu()
+        edit_action = menu.addAction(self.tr("Edit"))
+
+        exec_menu = menu.exec_ if hasattr(menu, "exec_") else menu.exec
+        action = exec_menu(self.listWmsLayersGrid.mapToGlobal(position))
+
+        if action == edit_action:
+            self.edit_wms_layer_tags()
 
     def edit_xyz_provider(self):
         """Edit selected XYZ provider"""
@@ -1949,6 +2826,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             new_data = dialog.get_data()
             new_data["type"] = "xyz"
             new_data["basemaps"] = provider.get("basemaps", [])
+            # Preserve source_file so renames can clean up the old file
+            if "source_file" in provider:
+                new_data["source_file"] = provider["source_file"]
 
             # Update data
             self.providers_data[provider_data["index"]] = new_data
@@ -1965,6 +2845,64 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     and item.data(user_role)["index"] == provider_data["index"]
                 ):
                     self.listProviders.setCurrentItem(item)
+                    break
+
+            # Save config
+            self.save_user_config()
+
+    def edit_wms_provider(self):
+        """Edit selected WMS/WMTS provider"""
+        current_item = self.listWmsProviders.currentItem()
+        if not current_item:
+            MessageBox.warning(
+                self.tr("Please select a WMS provider to edit."),
+                self.tr("Warning"),
+                self,
+            )
+            return
+
+        provider_data = current_item.data(user_role)
+        if not provider_data:
+            return
+
+        provider = provider_data["data"]
+
+        # Check if it's a default provider
+        if self._is_default_provider(provider):
+            MessageBox.warning(
+                self.tr("Default providers cannot be edited."),
+                self.tr("Warning"),
+                self,
+            )
+            return
+
+        # Open edit dialog
+        dialog = ProviderInputDialog(self, provider, provider_type="wms")
+        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        if exec_result == dialog_accepted:
+            new_data = dialog.get_data()
+            new_data["type"] = "wms"
+            new_data["layers"] = provider.get("layers", [])
+            new_data["url"] = dialog.url_edit.text()
+            # Preserve source_file so renames can clean up the old file
+            if "source_file" in provider:
+                new_data["source_file"] = provider["source_file"]
+
+            # Update data
+            self.providers_data[provider_data["index"]] = new_data
+
+            # Update interface display
+            self.update_providers_list()
+
+            # Re-select current provider
+            for i in range(self.listWmsProviders.count()):
+                item = self.listWmsProviders.item(i)
+                if (
+                    item
+                    and item.data(user_role)
+                    and item.data(user_role)["index"] == provider_data["index"]
+                ):
+                    self.listWmsProviders.setCurrentItem(item)
                     break
 
             # Save config
@@ -2071,7 +3009,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         for grid_view in [self.listBasemapsGrid, self.listWmsLayersGrid]:
             for i in range(grid_view.count()):
                 item = grid_view.item(i)
-                current_item_key = f"{self._get_current_provider_name(grid_view)}_{item.text()}"
+                current_item_key = (
+                    f"{self._get_current_provider_name(grid_view)}_{item.text()}"
+                )
                 if current_item_key == key:
                     pixmap = QPixmap(image_path)
                     item.setData(Qt.DecorationRole, pixmap)
@@ -2083,7 +3023,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             provider_list = self.listProviders
         else:
             provider_list = self.listWmsProviders
-        
+
         current_provider = provider_list.currentItem()
         return current_provider.text() if current_provider else ""
 
@@ -2091,7 +3031,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         """Helper to synchronize selection between list/tree and grid."""
         target.blockSignals(True)
         target.clearSelection()
-        
+
         if isinstance(source, QListWidget):
             selected_items = source.selectedItems()
             selected_texts = [item.text() for item in selected_items]
@@ -2110,7 +3050,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         tree.blockSignals(True)
         tree.clearSelection()
         selected_texts = [item.text() for item in grid.selectedItems()]
-        
+
         # Traverse tree to find matching items
         for i in range(tree.topLevelItemCount()):
             item = tree.topLevelItem(i)
@@ -2120,11 +3060,45 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def on_basemap_grid_selection_changed(self):
         self._sync_list_selections(self.listBasemapsGrid, self.listBasemaps)
+        # Sync current item from grid to list
+        grid_current = self.listBasemapsGrid.currentItem()
+        if grid_current:
+            for i in range(self.listBasemaps.count()):
+                item = self.listBasemaps.item(i)
+                if item and item.text() == grid_current.text():
+                    self.listBasemaps.setCurrentItem(item)
+                    break
         self.on_basemap_selection_changed()
 
     def on_wms_layer_grid_selection_changed(self):
         self._sync_tree_selection_from_grid(self.listWmsLayersGrid, self.treeWmsLayers)
         self.on_wms_layer_selection_changed()
+
+    @staticmethod
+    def _append_token(
+        url: str, token: str, token_param: str = DEFAULT_TOKEN_PARAM
+    ) -> str:
+        """Append token as query parameter to URL.
+
+        Parameters
+        ----------
+        url : str
+            The base URL.
+        token : str
+            The API token/key to append.
+        token_param : str
+            Query parameter name used by the provider.
+
+        Returns
+        -------
+        str
+            URL with token appended.
+        """
+        if not url or not token:
+            return url
+        param_name = token_param.strip() or DEFAULT_TOKEN_PARAM
+        separator = "&" if "?" in url else "?"
+        return f"{url}{separator}{urlencode({param_name: token})}"
 
     def _on_xyz_view_changed(self, index: int) -> None:
         """Sync WMS/WMTS view when XYZ view changes.
@@ -2132,7 +3106,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         Parameters
         ----------
         index : int
-            The new tab index (0=List, 1=Grid).
+            The new tab index (0=Text, 1=Gallery).
         """
         # Block signals to prevent infinite loop
         self.tabWmsView.blockSignals(True)
@@ -2145,7 +3119,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         Parameters
         ----------
         index : int
-            The new tab index (0=Tree, 1=Grid).
+            The new tab index (0=Text, 1=Gallery).
         """
         # Block signals to prevent infinite loop
         self.tabBasemapsView.blockSignals(True)
@@ -2153,10 +3127,22 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.tabBasemapsView.blockSignals(False)
 
 
+def _translate_button_box(button_box: QDialogButtonBox) -> None:
+    """Set translated text on standard buttons using plugin translations."""
+    standard_map = {
+        button_ok: "OK",
+        button_cancel: "Cancel",
+    }
+    for btn_id, text_key in standard_map.items():
+        btn = button_box.button(btn_id)
+        if btn:
+            btn.setText(QCoreApplication.translate("BasemapsDialog", text_key))
+
+
 class ProviderInputDialog(QDialog):
     def __init__(self, parent=None, provider=None, provider_type="xyz"):
         super().__init__(parent)
-        self.setWindowTitle("Add Provider")
+        self.setWindowTitle(self.tr("Add/Edit Provider"))
         self.plugin_dir = Path(__file__).parent
         self.provider_type = provider_type
 
@@ -2164,7 +3150,7 @@ class ProviderInputDialog(QDialog):
 
         # Name input
         name_layout = QHBoxLayout()
-        name_label = QLabel("Name:")
+        name_label = QLabel(self.tr("Name:"))
         self.name_edit = QLineEdit()
         if provider:
             self.name_edit.setText(provider["name"])
@@ -2174,11 +3160,11 @@ class ProviderInputDialog(QDialog):
 
         # Icon input
         icon_layout = QHBoxLayout()
-        icon_label = QLabel("Icon:")
+        icon_label = QLabel(self.tr("Icon:"))
         self.icon_edit = QLineEdit()
         if provider:
             self.icon_edit.setText(provider.get("icon", ""))
-        self.icon_button = QPushButton("Browse...")
+        self.icon_button = QPushButton(self.tr("Browse..."))
         self.icon_button.clicked.connect(self.browse_icon)
         icon_layout.addWidget(icon_label)
         icon_layout.addWidget(self.icon_edit)
@@ -2188,7 +3174,7 @@ class ProviderInputDialog(QDialog):
         # URL input (only show when WMS type)
         if provider_type == "wms":
             url_layout = QHBoxLayout()
-            url_label = QLabel("URL:")
+            url_label = QLabel(self.tr("URL:"))
             self.url_edit = QLineEdit()
             if provider:
                 self.url_edit.setText(provider.get("url", ""))
@@ -2196,21 +3182,32 @@ class ProviderInputDialog(QDialog):
             url_layout.addWidget(self.url_edit)
             layout.addLayout(url_layout)
 
+        self.token_auth_widget = TokenAuthWidget(self, provider)
+        layout.addWidget(self.token_auth_widget)
+
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
-        button_box.accepted.connect(self.accept)
+        _translate_button_box(button_box)
+        button_box.accepted.connect(self._validate_and_accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
 
     def browse_icon(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Select Icon File",
+            self.tr("Select Icon File"),
             "",
-            "Image Files (*.png *.jpg *.svg *.ico);;All Files (*)",
+            self.tr("Image Files (*.png *.jpg *.svg *.ico);;All Files (*)"),
         )
         if file_path:
             self.icon_edit.setText(file_path)
+
+    def _validate_and_accept(self):
+        """Warn if authentication is enabled but token is not set, then accept."""
+        warning = self.token_auth_widget.get_warning()
+        if warning:
+            MessageBox.warning(warning, self.tr("Authentication"), self)
+        self.accept()
 
     def get_data(self):
         data = {
@@ -2218,16 +3215,123 @@ class ProviderInputDialog(QDialog):
             "icon": self.icon_edit.text() or "ui/icon.svg",
         }
 
+        # Token
+        data.update(self.token_auth_widget.get_data())
+
         if self.provider_type == "wms":
             data["url"] = self.url_edit.text()
 
         return data
 
 
+class TokenAuthWidget(QGroupBox):
+    """Provider token and token-parameter input widget (checkable)."""
+
+    def __init__(self, parent: QDialog | None = None, provider: dict | None = None):
+        super().__init__(parent)
+        self.setTitle(self.tr("Authentication"))
+        self.setCheckable(True)
+        self.setChecked(False)
+
+        provider_data = provider or {}
+        # Auth was enabled if the provider has a "token" key at all
+        # (may be empty string when user checked auth but hasn't set the key yet)
+        has_token = "token" in provider_data
+
+        layout = QVBoxLayout(self)
+
+        # Well-known provider selector
+        wk_layout = QHBoxLayout()
+        wk_label = QLabel(self.tr("Provider:"))
+        self.wk_combo = QComboBox()
+        self.wk_combo.addItem("")
+        for name in WELL_KNOWN_XYZ_PROVIDERS:
+            self.wk_combo.addItem(name)
+        self.wk_combo.currentTextChanged.connect(self._on_well_known_changed)
+        wk_layout.addWidget(wk_label)
+        wk_layout.addWidget(self.wk_combo, 1)
+        layout.addLayout(wk_layout)
+
+        token_layout = QHBoxLayout()
+        token_label = QLabel(self.tr("Token:"))
+        self.token_edit = QLineEdit()
+        self.token_edit.setPlaceholderText(self.tr("API token / key"))
+        self.token_edit.setText(provider_data.get("token", ""))
+        token_layout.addWidget(token_label)
+        token_layout.addWidget(self.token_edit)
+        layout.addLayout(token_layout)
+
+        token_param_layout = QHBoxLayout()
+        token_param_label = QLabel(self.tr("Token Parameter:"))
+        self.token_param_combo = QComboBox()
+        self.token_param_combo.setEditable(True)
+        self.token_param_combo.addItems(TOKEN_PARAM_OPTIONS)
+        self.token_param_combo.setCurrentText(
+            provider_data.get("token_param", DEFAULT_TOKEN_PARAM)
+        )
+        token_param_layout.addWidget(token_param_label)
+        token_param_layout.addWidget(self.token_param_combo)
+        layout.addLayout(token_param_layout)
+
+        # Enable/disable fields based on check state
+        self.wk_combo.setEnabled(False)
+        self.token_edit.setEnabled(False)
+        self.token_param_combo.setEnabled(False)
+        self.toggled.connect(self._on_toggled)
+
+        # If editing a provider that already has a token, check it
+        if has_token:
+            self.setChecked(True)
+
+    def _on_well_known_changed(self, name: str) -> None:
+        """Set token parameter when a well-known provider is selected."""
+        wk = WELL_KNOWN_XYZ_PROVIDERS.get(name)
+        if not wk:
+            return
+        self.token_param_combo.setCurrentText(wk["token_param"])
+
+    def _on_toggled(self, checked: bool) -> None:
+        self.wk_combo.setEnabled(checked)
+        self.token_edit.setEnabled(checked)
+        self.token_param_combo.setEnabled(checked)
+
+    def is_auth_enabled(self) -> bool:
+        """Return True if the authentication checkbox is checked."""
+        return self.isChecked()
+
+    def get_data(self) -> dict[str, str]:
+        """Return token-related provider fields.
+
+        Returns an empty dict only when the checkbox is unchecked.
+        When checked, always returns token/token_param (even if empty) so
+        the authentication intent is preserved across edits.
+        """
+        if not self.isChecked():
+            return {}
+        token = self.token_edit.text().strip()
+        token_param = self.token_param_combo.currentText().strip()
+        return {
+            "token": token,
+            "token_param": token_param or DEFAULT_TOKEN_PARAM,
+        }
+
+    def get_warning(self) -> str:
+        """Return a warning message if auth is enabled but token is missing."""
+        if not self.isChecked():
+            return ""
+        token = self.token_edit.text().strip()
+        if not token:
+            return self.tr(
+                "Authentication is enabled but no API token/key is set. "
+                "Please click the Edit button on the provider to set it."
+            )
+        return ""
+
+
 class BasemapInputDialog(QDialog):
     def __init__(self, parent=None, basemap=None, provider_type=None):
         super().__init__(parent)
-        self.setWindowTitle("Add Basemap")
+        self.setWindowTitle(self.tr("Add/Edit Basemap"))
         self.provider_type = provider_type
         self.basemap = basemap
 
@@ -2235,7 +3339,7 @@ class BasemapInputDialog(QDialog):
 
         # Name input
         name_layout = QHBoxLayout()
-        name_label = QLabel("Name:")
+        name_label = QLabel(self.tr("Name:"))
         self.name_edit = QLineEdit()
         if self.basemap:
             self.name_edit.setText(self.basemap["name"])
@@ -2243,24 +3347,52 @@ class BasemapInputDialog(QDialog):
         name_layout.addWidget(self.name_edit)
         layout.addLayout(name_layout)
 
-        # URL input
+        # Tile Type (only for non-WMS providers)
+        is_vector = bool(self.basemap and self.basemap.get("tile_type") == "vector")
+        if provider_type != "wms":
+            tile_type_layout = QHBoxLayout()
+            tile_type_label = QLabel(self.tr("Tile Type:"))
+            self.tile_type_combo = QComboBox()
+            self.tile_type_combo.addItems([self.tr("Raster (XYZ)"), self.tr("Vector")])
+            if is_vector:
+                self.tile_type_combo.setCurrentIndex(1)
+            self.tile_type_combo.currentIndexChanged.connect(self._on_tile_type_changed)
+            tile_type_layout.addWidget(tile_type_label)
+            tile_type_layout.addWidget(self.tile_type_combo, 1)
+            layout.addLayout(tile_type_layout)
+
+        # Source URL input
         url_layout = QHBoxLayout()
-        url_label = QLabel("URL:")
+        self.url_label = QLabel(
+            self.tr("Source URL:") if is_vector else self.tr("URL:")
+        )
         self.url_edit = QLineEdit()
         if self.basemap:
-            self.url_edit.setText(self.basemap["url"])
-        url_layout.addWidget(url_label)
+            self.url_edit.setText(self.basemap.get("url", ""))
+        url_layout.addWidget(self.url_label)
         url_layout.addWidget(self.url_edit)
         layout.addLayout(url_layout)
 
+        # Style URL input (only for vector tiles)
+        self.style_url_layout = QHBoxLayout()
+        style_url_label = QLabel(self.tr("Style URL:"))
+        self.style_url_edit = QLineEdit()
+        if self.basemap:
+            self.style_url_edit.setText(self.basemap.get("style_url", ""))
+        self.style_url_layout.addWidget(style_url_label)
+        self.style_url_layout.addWidget(self.style_url_edit)
+        layout.addLayout(self.style_url_layout)
+        if not is_vector:
+            self._set_style_url_visible(False)
+
         # Layer settings (only show when WMS type)
         if provider_type == "wms":
-            layer_group = QGroupBox("Layer Settings")
+            layer_group = QGroupBox(self.tr("Layer Settings"))
             layer_layout = QVBoxLayout()
 
             # Layer name
             layer_name_layout = QHBoxLayout()
-            layer_name_label = QLabel("Layer Name:")
+            layer_name_label = QLabel(self.tr("Layer Name:"))
             self.layer_name_edit = QLineEdit()
             if self.basemap:
                 self.layer_name_edit.setText(self.basemap.get("layer_name", ""))
@@ -2270,7 +3402,7 @@ class BasemapInputDialog(QDialog):
 
             # Layer title
             layer_title_layout = QHBoxLayout()
-            layer_title_label = QLabel("Layer Title:")
+            layer_title_label = QLabel(self.tr("Layer Title:"))
             self.layer_title_edit = QLineEdit()
             if self.basemap:
                 self.layer_title_edit.setText(self.basemap.get("layer_title", ""))
@@ -2280,9 +3412,9 @@ class BasemapInputDialog(QDialog):
 
             # CRS
             crs_layout = QHBoxLayout()
-            crs_label = QLabel("CRS:")
+            crs_label = QLabel(self.tr("CRS:"))
             self.crs_edit = QLineEdit()
-            self.crs_edit.setText("EPSG:4326")  # Default value
+            self.crs_edit.setText(self.tr("EPSG:4326"))  # Default value
             if self.basemap:
                 self.crs_edit.setText(self.basemap.get("crs", "EPSG:4326"))
             crs_layout.addWidget(crs_label)
@@ -2291,9 +3423,15 @@ class BasemapInputDialog(QDialog):
 
             # Format
             format_layout = QHBoxLayout()
-            format_label = QLabel("Format:")
+            format_label = QLabel(self.tr("Format:"))
             self.format_combo = QComboBox()
-            self.format_combo.addItems(["image/png", "image/jpeg", "image/tiff"])
+            self.format_combo.addItems(
+                [
+                    self.tr("image/png"),
+                    self.tr("image/jpeg"),
+                    self.tr("image/tiff"),
+                ]
+            )
             if self.basemap:
                 self.format_combo.setCurrentText(
                     self.basemap.get("format", "image/png")
@@ -2305,13 +3443,46 @@ class BasemapInputDialog(QDialog):
             layer_group.setLayout(layer_layout)
             layout.addWidget(layer_group)
 
+        # Tag — store English tag values as item data
+        tag_layout = QHBoxLayout()
+        tag_layout.setSpacing(4)
+        tag_label = QLabel(self.tr("Tag:"))
+        self.tag_combo = QComboBox()
+        self.tag_combo.addItem("", "")
+        for tag in ASSIGNABLE_TAGS:
+            self.tag_combo.addItem(QCoreApplication.translate("BasemapsDialog", tag), tag)
+        existing_tags = self.basemap.get("tags", []) if self.basemap else []
+        if existing_tags:
+            self.tag_combo.setCurrentText(
+                QCoreApplication.translate("BasemapsDialog", existing_tags[0])
+            )
+        tag_layout.addWidget(tag_label)
+        tag_layout.addWidget(self.tag_combo, 1)
+        layout.addLayout(tag_layout)
+
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
+        _translate_button_box(button_box)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
 
+    def _on_tile_type_changed(self, index: int) -> None:
+        """Toggle visibility of style URL field based on tile type selection."""
+        is_vector = index == 1
+        self.url_label.setText(self.tr("Source URL:") if is_vector else self.tr("URL:"))
+        self._set_style_url_visible(is_vector)
+
+    def _set_style_url_visible(self, visible: bool) -> None:
+        """Show or hide the style URL input row."""
+        for i in range(self.style_url_layout.count()):
+            widget = self.style_url_layout.itemAt(i).widget()
+            if widget:
+                widget.setVisible(visible)
+
     def get_data(self):
+        selected = self.tag_combo.currentData(user_role) or ""
+        tags = [selected] if selected else []
         if self.provider_type == "wms":
             return {
                 "name": self.name_edit.text(),
@@ -2320,6 +3491,99 @@ class BasemapInputDialog(QDialog):
                 "layer_title": self.layer_title_edit.text(),
                 "crs": self.crs_edit.text(),
                 "format": self.format_combo.currentText(),
+                "tags": tags,
             }
         else:
-            return {"name": self.name_edit.text(), "url": self.url_edit.text()}
+            is_vector = (
+                hasattr(self, "tile_type_combo")
+                and self.tile_type_combo.currentIndex() == 1
+            )
+            data = {
+                "name": self.name_edit.text(),
+                "tile_type": "vector" if is_vector else "raster",
+                "url": self.url_edit.text(),
+                "tags": tags,
+            }
+            if is_vector and hasattr(self, "style_url_edit"):
+                style_url = self.style_url_edit.text().strip()
+                if style_url:
+                    data["style_url"] = style_url
+            return data
+
+
+class TagEditDialog(QDialog):
+    """Simple dialog for editing tags on a basemap or WMS/WMTS layer."""
+
+    def __init__(self, parent=None, layer_title: str = "", layer: dict | None = None):
+        super().__init__(parent)
+        self.setWindowTitle(self.tr("Edit Tags"))
+        self.setMinimumWidth(320)
+        self.layer = layer or {}
+        existing_tags = self.layer.get("tags", [])
+
+        layout = QVBoxLayout(self)
+
+        # Layer name label
+        name_label = QLabel(f"<b>{layer_title}</b>")
+        name_label.setWordWrap(True)
+        layout.addWidget(name_label)
+
+        # Tag row
+        tag_row = QHBoxLayout()
+        tag_row.setSpacing(4)
+        tag_row.addWidget(QLabel(self.tr("Tag:")))
+
+        self.tag_combo = QComboBox()
+        self.tag_combo.addItem("", "")
+        for tag in ASSIGNABLE_TAGS:
+            self.tag_combo.addItem(
+                QCoreApplication.translate("BasemapsDialog", tag), tag
+            )
+        if existing_tags:
+            self.tag_combo.setCurrentText(
+                QCoreApplication.translate("BasemapsDialog", existing_tags[0])
+            )
+        tag_row.addWidget(self.tag_combo, 1)
+        layout.addLayout(tag_row)
+
+        # Save mode radio group
+        save_group = QGroupBox(self.tr("Save tags to"))
+        save_layout = QVBoxLayout(save_group)
+        self.btn_overrides = QRadioButton(
+            self.tr("Separate file (recommended, safer for updates)")
+        )
+        self.btn_direct = QRadioButton(self.tr("Original provider file"))
+        self.btn_direct.setToolTip(
+            self.tr(
+                "Warning: edits in provider config files "
+                "will be lost when the plugin is updated."
+            )
+        )
+        save_layout.addWidget(self.btn_overrides)
+        save_layout.addWidget(self.btn_direct)
+        layout.addWidget(save_group)
+
+        # Restore last-used preference
+        last_mode = QSettings("Basemaps", "Basemaps").value(
+            "tag_save_preference", "overrides"
+        )
+        if last_mode == "direct":
+            self.btn_direct.setChecked(True)
+        else:
+            self.btn_overrides.setChecked(True)
+
+        # Buttons
+        button_box = QDialogButtonBox(button_ok | button_cancel)
+        _translate_button_box(button_box)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+
+    def get_tags(self) -> list[str]:
+        """Return the list of selected tags."""
+        selected = self.tag_combo.currentData(user_role) or ""
+        return [selected] if selected else []
+
+    def get_save_mode(self) -> str:
+        """Return the selected save mode: 'overrides' or 'direct'."""
+        return "direct" if self.btn_direct.isChecked() else "overrides"

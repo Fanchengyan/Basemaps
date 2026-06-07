@@ -5,5 +5,9 @@ xyz:
     basemaps:
     - name: Yandex Satellite
       url: https://core-sat.maps.yandex.net/tiles?l=sat&x={x}&y={y}&z={z}
+      tags:
+      - Satellite
     - name: Yandex Map
       url: https://core-renderer-tiles.maps.yandex.net/tiles?l=map&x={x}&y={y}&z={z}
+      tags:
+      - Streets

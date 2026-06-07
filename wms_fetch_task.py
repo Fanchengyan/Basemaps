@@ -27,7 +27,7 @@ import requests
 from owslib.wms import WebMapService
 from owslib.wmts import WebMapTileService
 from qgis.core import QgsTask
-from qgis.PyQt.QtCore import QObject, pyqtSignal
+from qgis.PyQt.QtCore import QCoreApplication, QObject, pyqtSignal
 
 from . import wmts_parser
 from .messageTool import Logger
@@ -124,7 +124,12 @@ class WMSFetchTask(QgsTask):
         service_type_hint: Literal["wms", "wmts", "auto"] = "auto",
         timeout: int = 30,
     ) -> None:
-        super().__init__(f"Fetching layers from {url}", QgsTask.CanCancel)
+        super().__init__(
+            QCoreApplication.translate(
+                "BasemapsPlugin", "Fetching layers from {}"
+            ).format(url),
+            QgsTask.CanCancel,
+        )
         self.url = url
         self.service_type_hint = service_type_hint
         self.timeout = timeout
@@ -239,7 +244,9 @@ class WMSFetchTask(QgsTask):
                 success=False,
                 layers=[],
                 service_type=ServiceType.UNKNOWN,
-                error_message="Task was cancelled or failed unexpectedly",
+                error_message=QCoreApplication.translate(
+                    "BasemapsPlugin", "Task was cancelled or failed unexpectedly"
+                ),
                 url=self.url,
             )
 
@@ -346,7 +353,9 @@ class WMSFetchTask(QgsTask):
             layer_info = {
                 "layer_name": layer_name,
                 "layer_title": (
-                    layer.title if hasattr(layer, "title") and layer.title else layer_name
+                    layer.title
+                    if hasattr(layer, "title") and layer.title
+                    else layer_name
                 ),
                 "crs": tile_matrix_sets,
                 "format": formats,
@@ -417,9 +426,15 @@ class WMSFetchTask(QgsTask):
         """
         replacements = [
             ('xmlns="https://www.opengis.net/', 'xmlns="http://www.opengis.net/'),
-            ('xmlns:ows="https://www.opengis.net/', 'xmlns:ows="http://www.opengis.net/'),
+            (
+                'xmlns:ows="https://www.opengis.net/',
+                'xmlns:ows="http://www.opengis.net/',
+            ),
             ('xmlns:xlink="https://www.w3.org/', 'xmlns:xlink="http://www.w3.org/'),
-            ('xmlns:gml="https://www.opengis.net/', 'xmlns:gml="http://www.opengis.net/'),
+            (
+                'xmlns:gml="https://www.opengis.net/',
+                'xmlns:gml="http://www.opengis.net/',
+            ),
             (
                 'xsi:schemaLocation="https://www.opengis.net/',
                 'xsi:schemaLocation="http://www.opengis.net/',
