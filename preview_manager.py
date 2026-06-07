@@ -1,3 +1,5 @@
+"""Preview thumbnail fetching, compression, caching, and rendering."""
+
 from __future__ import annotations
 
 import json
@@ -19,7 +21,16 @@ from qgis.core import (
     QgsTask,
     QgsVectorTileLayer,
 )
-from qgis.PyQt.QtCore import QCoreApplication, QObject, QSize, pyqtSignal, QUrl, Qt
+from qgis.PyQt.QtCore import (
+    QBuffer,
+    QCoreApplication,
+    QIODevice,
+    QObject,
+    QSize,
+    pyqtSignal,
+    QUrl,
+    Qt,
+)
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.PyQt.QtGui import QColor, QImage, QPainter, QPen, QPixmap
 
@@ -119,7 +130,7 @@ class VectorPreviewTask(QgsTask):
 
             self.setProgress(85)
             self.preview_path.parent.mkdir(parents=True, exist_ok=True)
-            if not image.save(str(self.preview_path)):
+            if not PreviewManager._save_preview_image(image, self.preview_path):
                 self._result = VectorPreviewResult(
                     False,
                     self.key,
@@ -165,6 +176,19 @@ class PreviewManager(QObject):
 
     # Wayback uses same imagery across all time layers
     WAYBACK_SHARED_LAYER = "WorldImagery"
+    PREVIEW_MAX_BYTES = 10 * 1024
+    PREVIEW_JPEG_QUALITIES = (85, 75, 65, 55, 45, 35, 25, 15, 8, 4, 1)
+    PREVIEW_SCALE_FACTORS = (
+        1.0,
+        0.875,
+        0.75,
+        0.625,
+        0.5,
+        0.375,
+        0.25,
+        0.1875,
+        0.125,
+    )
 
     def __init__(self, resources_dir: Path):
         super().__init__()
@@ -387,6 +411,7 @@ class PreviewManager(QObject):
         key = f"{provider_name}_{layer_name}"
 
         if preview_path.exists():
+            self._ensure_preview_cache_size(preview_path)
             self.preview_readied.emit(key, str(preview_path))
             return
 
@@ -444,6 +469,7 @@ class PreviewManager(QObject):
         key = f"{provider_name}_{layer_name}"
 
         if preview_path.exists():
+            self._ensure_preview_cache_size(preview_path)
             self.preview_readied.emit(key, str(preview_path))
             return
 
@@ -1448,6 +1474,208 @@ class PreviewManager(QObject):
             )
         )
 
+    @staticmethod
+    def _write_only_mode() -> object:
+        """Return the Qt write-only mode for both Qt5 and Qt6."""
+        if hasattr(QIODevice, "OpenModeFlag"):
+            return QIODevice.OpenModeFlag.WriteOnly
+        return QIODevice.WriteOnly
+
+    @staticmethod
+    def _flatten_preview_image(image: QImage) -> QImage:
+        """Convert a preview image to an opaque RGB image.
+
+        Parameters
+        ----------
+        image : QImage
+            Source preview image.
+
+        Returns
+        -------
+        QImage
+            Opaque RGB image suitable for compact JPEG encoding.
+        """
+        flattened = QImage(image.size(), QImage.Format_RGB32)
+        flattened.fill(QColor(255, 255, 255))
+
+        painter = QPainter(flattened)
+        painter.drawImage(0, 0, image)
+        painter.end()
+        return flattened
+
+    @staticmethod
+    def _encode_preview_image(
+        image: QImage,
+        image_format: str,
+        quality: int = -1,
+    ) -> bytes:
+        """Encode a preview image into memory.
+
+        Parameters
+        ----------
+        image : QImage
+            Source image to encode.
+        image_format : str
+            Qt image format name, for example ``"PNG"`` or ``"JPEG"``.
+        quality : int, default=-1
+            Encoder quality setting.
+
+        Returns
+        -------
+        bytes
+            Encoded image bytes, or empty bytes when encoding fails.
+        """
+        buffer = QBuffer()
+        if not buffer.open(PreviewManager._write_only_mode()):
+            Logger.warning("Failed to open memory buffer for preview compression")
+            return b""
+
+        try:
+            if not image.save(buffer, image_format, quality):
+                Logger.warning(f"Failed to encode preview as {image_format}")
+                return b""
+            return bytes(buffer.data())
+        finally:
+            buffer.close()
+
+    @staticmethod
+    def _scaled_preview_image(image: QImage, scale_factor: float) -> QImage:
+        """Scale a preview image by a factor.
+
+        Parameters
+        ----------
+        image : QImage
+            Source image.
+        scale_factor : float
+            Scale factor applied to width and height.
+
+        Returns
+        -------
+        QImage
+            Scaled image.
+        """
+        if scale_factor >= 1.0:
+            return image
+
+        width = max(1, int(image.width() * scale_factor))
+        height = max(1, int(image.height() * scale_factor))
+        return image.scaled(
+            width,
+            height,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+
+    @staticmethod
+    def _write_preview_bytes(path: Path, image_bytes: bytes) -> bool:
+        """Write encoded preview bytes to disk.
+
+        Parameters
+        ----------
+        path : Path
+            Target cache path.
+        image_bytes : bytes
+            Encoded preview bytes.
+
+        Returns
+        -------
+        bool
+            ``True`` when the bytes were written successfully.
+        """
+        try:
+            path.write_bytes(image_bytes)
+            return True
+        except OSError as exc:
+            Logger.warning(f"Failed to write compressed preview {path}: {exc}")
+            return False
+
+    @staticmethod
+    def _save_preview_image(
+        image: QImage,
+        path: Path,
+        max_bytes: int = PREVIEW_MAX_BYTES,
+    ) -> bool:
+        """Save a preview image within the configured size budget.
+
+        Parameters
+        ----------
+        image : QImage
+            Preview image to save.
+        path : Path
+            Target cache path.
+        max_bytes : int, default=PREVIEW_MAX_BYTES
+            Maximum encoded file size in bytes.
+
+        Returns
+        -------
+        bool
+            ``True`` when a preview file was written successfully.
+        """
+        if image.isNull():
+            Logger.warning(f"Cannot save null preview image to {path}")
+            return False
+
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            Logger.warning(
+                f"Failed to create preview cache directory {path.parent}: {exc}"
+            )
+            return False
+
+        png_bytes = PreviewManager._encode_preview_image(image, "PNG")
+        if png_bytes and len(png_bytes) <= max_bytes:
+            return PreviewManager._write_preview_bytes(path, png_bytes)
+
+        rgb_image = PreviewManager._flatten_preview_image(image)
+
+        for scale_factor in PreviewManager.PREVIEW_SCALE_FACTORS:
+            scaled_image = PreviewManager._scaled_preview_image(rgb_image, scale_factor)
+            for quality in PreviewManager.PREVIEW_JPEG_QUALITIES:
+                jpeg_bytes = PreviewManager._encode_preview_image(
+                    scaled_image, "JPEG", quality
+                )
+                if not jpeg_bytes:
+                    continue
+                if len(jpeg_bytes) <= max_bytes:
+                    return PreviewManager._write_preview_bytes(path, jpeg_bytes)
+
+        Logger.warning(f"Failed to compress preview below {max_bytes} bytes: {path}")
+        return False
+
+    @staticmethod
+    def _ensure_preview_cache_size(
+        preview_path: Path,
+        max_bytes: int = PREVIEW_MAX_BYTES,
+    ) -> None:
+        """Compress an existing preview cache file when it exceeds the budget.
+
+        Parameters
+        ----------
+        preview_path : Path
+            Existing preview cache file.
+        max_bytes : int, default=PREVIEW_MAX_BYTES
+            Maximum allowed cache size in bytes.
+        """
+        try:
+            if preview_path.stat().st_size <= max_bytes:
+                return
+        except OSError as exc:
+            Logger.warning(f"Failed to inspect preview cache {preview_path}: {exc}")
+            return
+
+        image = QImage(str(preview_path))
+        if image.isNull():
+            Logger.warning(f"Cannot recompress unreadable preview cache {preview_path}")
+            return
+
+        if PreviewManager._save_preview_image(image, preview_path, max_bytes):
+            Logger.info(
+                f"Compressed preview cache to <= {max_bytes} bytes: {preview_path}"
+            )
+        else:
+            Logger.warning(f"Failed to recompress preview cache {preview_path}")
+
     def _on_reply_finished(
         self, reply, req_id: str, task: dict, composite_idx: int
     ) -> None:
@@ -1483,7 +1711,6 @@ class PreviewManager(QObject):
             if content and error_code == 0:
                 try:
                     payload = json.loads(bytes(content))
-                    style_url = task.get("style_url", "")
                     if self._looks_like_mapbox_style(payload):
                         payload = self._strip_symbol_layers(payload)
                         resolved_path = self._write_temp_json(payload)
@@ -1631,7 +1858,10 @@ class PreviewManager(QObject):
         painter.end()
 
         final_img = canvas.scaled(
-            256, 256, Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation
+            256,
+            256,
+            Qt.AspectRatioMode.IgnoreAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
         )
 
         key = task["key"]
@@ -1639,7 +1869,7 @@ class PreviewManager(QObject):
         is_wayback = task.get("is_wayback", False)
         provider_name = task.get("provider", "")
 
-        if final_img.save(str(path)):
+        if self._save_preview_image(final_img, path):
             self._pending_tasks.discard(key)
             if is_wayback:
                 shared_key = f"{provider_name}_{self.WAYBACK_SHARED_LAYER}"
@@ -1663,7 +1893,7 @@ class PreviewManager(QObject):
         is_wayback = task.get("is_wayback", False)
         provider_name = task.get("provider", "")
 
-        if image.save(str(path)):
+        if self._save_preview_image(image, path):
             self._pending_tasks.discard(key)
             if is_wayback:
                 shared_key = f"{provider_name}_{self.WAYBACK_SHARED_LAYER}"
