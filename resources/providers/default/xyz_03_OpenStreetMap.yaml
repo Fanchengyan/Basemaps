@@ -10,3 +10,7 @@ xyz:
         url: https://tile.opentopomap.org/{z}/{x}/{y}.png
         tags:
           - Terrain
+      - name: Open Topo Map (by Top-O-Map)
+        url: https://tile.top-o-map.com/relief/{z}/{x}/{y}.png
+        tags:
+          - Terrain
