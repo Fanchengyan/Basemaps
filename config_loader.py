@@ -392,6 +392,15 @@ def save_provider_to_yaml(
     filename = f"{provider_type}_{safe_name}.yaml"
     filepath = providers_dir / filename
 
+    # If the provider was renamed, delete the old file
+    old_source = provider.get("source_file")
+    if old_source and Path(old_source).resolve() != filepath.resolve():
+        try:
+            Path(old_source).unlink(missing_ok=True)
+            Logger.info(f"Removed old provider file: {old_source}")
+        except OSError as e:
+            Logger.warning(f"Failed to remove old provider file '{old_source}': {e}")
+
     yaml_data = _build_provider_yaml_data(provider)
     _write_provider_yaml(filepath, yaml_data)
 

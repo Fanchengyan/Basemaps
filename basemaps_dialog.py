@@ -2800,6 +2800,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             new_data = dialog.get_data()
             new_data["type"] = "xyz"
             new_data["basemaps"] = provider.get("basemaps", [])
+            # Preserve source_file so renames can clean up the old file
+            if "source_file" in provider:
+                new_data["source_file"] = provider["source_file"]
 
             # Update data
             self.providers_data[provider_data["index"]] = new_data
@@ -2855,6 +2858,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             new_data["type"] = "wms"
             new_data["layers"] = provider.get("layers", [])
             new_data["url"] = dialog.url_edit.text()
+            # Preserve source_file so renames can clean up the old file
+            if "source_file" in provider:
+                new_data["source_file"] = provider["source_file"]
 
             # Update data
             self.providers_data[provider_data["index"]] = new_data
