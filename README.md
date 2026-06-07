@@ -1,12 +1,12 @@
 # Basemaps (Plugin for QGIS)
 
-A QGIS plugin with 12 providers and 1500+ basemaps — XYZ tiles, vector tiles, WMS, and WMTS — in 11 languages. Just click and load.
+A QGIS plugin with 12 providers and 1500+ basemaps — XYZ tiles, vector tiles, WMS, and WMTS — in 12 languages. Just click and load.
 
 ## Features
 
-- **12 providers with 1500+ basemaps** — XYZ tiles, Vector tiles, WMS, and WMTS, including Esri, Google Maps, Bing Maps, OpenStreetMap, Sentinel-2 Cloudless, and more.
+- **12 providers with 1500+ basemaps** — XYZ tiles, Vector tiles, WMS, and WMTS, including Esri, Google Maps, Bing Maps, OpenStreetMap, Sentinel-2 Cloudless, NASA, USGS, and more.
 - **QGIS 3.x and 4.x** compatible.
-- **11 languages**: English, 中文, 日本語, 한국어, Français, Deutsch, Русский, العربية, Español, Português, हिन्दी, বাংলা.
+- **12 languages**: English, 中文, 日本語, 한국어, Français, Deutsch, Русский, العربية, Español, Português, हिन्दी, বাংলা.
 - **Add, edit, remove**, and **import/export** custom basemaps — share configs with colleagues or back up your settings.
 - **Clean and fast** — carefully crafted to keep the interface intuitive and loading responsive for a seamless experience.
 
@@ -46,10 +46,10 @@ A QGIS plugin with 12 providers and 1500+ basemaps — XYZ tiles, vector tiles, 
 
 ## Screenshots
 
-- **XYZ Services:**
+- **XYZ/Vector Services:**
 ![Basemaps Plugin](docs/imgs/Basemaps_xyz.png)
 
-- **WMS Services:**
+- **WMS/WMTS Services:**
 ![Basemaps Plugin](docs/imgs/Basemaps_wms.png)
 
 ## Contributing
