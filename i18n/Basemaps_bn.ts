@@ -346,7 +346,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="2548" />
         <source>Duplicate as User Provider</source>
-        <translation>ব্যবহারকারী প্রদানকারী হিসাবে নকল করুন</translation>
+        <translation>ব্যবহারকারী প্রদাতা হিসাবে নকল করুন</translation>
         </message>
 <message><source>All</source>
         <translation>সব</translation>
@@ -369,9 +369,9 @@ Error: {}</source>
     </message><message><source>Overlay/Boundaries</source>
         <translation>ওভারলে/সীমানা</translation>
     </message><message><source>Default Providers ────────────────</source>
-        <translation>ডিফল্ট প্রদানকারী ────────────────</translation>
+        <translation>ডিফল্ট প্রদাতা ────────────────</translation>
     </message><message><source>User Providers ─────────────────</source>
-        <translation>ব্যবহারকারী প্রদানকারী ─────────────────</translation>
+        <translation>ব্যবহারকারী প্রদাতা ─────────────────</translation>
     </message><message><location filename="../basemaps_dialog.py" line="" /><source>OK</source><translation>ঠিক আছে</translation></message><message><location filename="../basemaps_dialog.py" line="" /><source>Cancel</source><translation>বাতিল</translation></message></context>
 <context>
     <name>BasemapsDialogBase</name>
@@ -481,7 +481,7 @@ Error: {}</source>
     <message>
         <location filename="../wmts_parser.py" line="60" />
         <source>No layers found in WMTS capabilities</source>
-        <translation>WMTS ক্ষমতায় কোনো লেয়ার পাওয়া যায়নি</translation>
+        <translation>WMTS পরিষেবায় কোনো লেয়ার পাওয়া যায়নি</translation>
         </message>
     <message>
         <location filename="../preview_manager.py" line="1098" />
@@ -519,7 +519,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3133" />
         <source>Add/Edit Provider</source>
-        <translation>প্রদানকারী যোগ/সম্পাদনা</translation>
+        <translation>প্রদাতা যোগ/সম্পাদনা</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3141" />
@@ -600,7 +600,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3231" />
         <source>Provider:</source>
-        <translation>প্রদানকারী:</translation>
+        <translation>প্রদাতা:</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3242" />
@@ -620,7 +620,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3310" />
         <source>Authentication is enabled but no API token/key is set. Please click the Edit button on the provider to set it.</source>
-        <translation>প্রমাণীকরণ সক্রিয় কিন্তু কোনো API টোকেন/কী সেট করা নেই। এটি সেট করতে প্রদানকারীর সম্পাদনা বোতামে ক্লিক করুন।</translation>
+        <translation>প্রমাণীকরণ সক্রিয় কিন্তু কোনো API টোকেন/কী সেট করা নেই। এটি সেট করতে প্রদাতার সম্পাদনা বোতামে ক্লিক করুন।</translation>
         </message>
 </context>
 </TS>

@@ -5,7 +5,7 @@
     <message>
         <location filename="../basemaps_dialog.py" line="3320" />
         <source>Add/Edit Basemap</source>
-        <translation>배경 지도 추가/편집</translation>
+        <translation>베이스맵 추가/편집</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3328" />
@@ -321,7 +321,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="162" />
         <source>Loading vector tile basemap...</source>
-        <translation>벡터 타일 배경 지도 로딩 중...</translation>
+        <translation>벡터 타일 베이스맵 로딩 중...</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="958" />
@@ -481,7 +481,7 @@ Error: {}</source>
     <message>
         <location filename="../wmts_parser.py" line="60" />
         <source>No layers found in WMTS capabilities</source>
-        <translation>WMTS 기능에서 레이어를 찾을 수 없습니다</translation>
+        <translation>WMTS 서비스에서 레이어를 찾을 수 없습니다</translation>
         </message>
     <message>
         <location filename="../preview_manager.py" line="1098" />

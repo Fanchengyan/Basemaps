@@ -296,7 +296,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="2972" />
         <source>Only default providers can be duplicated.</source>
-        <translation>يمكن تكرار الموفرين الافتراضيين فقط.</translation>
+        <translation>يمكن نسخ الموفرين الافتراضيين فقط.</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2972" />
@@ -306,7 +306,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="2999" />
         <source>Provider duplicated as '{}'</source>
-        <translation>تم تكرار الموفر كـ '{}'</translation>
+        <translation>تم نسخ الموفر كـ '{}'</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="204" />
@@ -346,7 +346,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="2548" />
         <source>Duplicate as User Provider</source>
-        <translation>نسخ كمزود مستخدم</translation>
+        <translation>نسخ كموفر مستخدم</translation>
         </message>
 <message><source>All</source>
         <translation>الكل</translation>
@@ -369,9 +369,9 @@ Error: {}</source>
     </message><message><source>Overlay/Boundaries</source>
         <translation>تراكب/الحدود</translation>
     </message><message><source>Default Providers ────────────────</source>
-        <translation>المزودون الافتراضيون ────────────────</translation>
+        <translation>الموفرون الافتراضيون ────────────────</translation>
     </message><message><source>User Providers ─────────────────</source>
-        <translation>المزودون المستخدمون ─────────────────</translation>
+        <translation>الموفرون المستخدمون ─────────────────</translation>
     </message><message><location filename="../basemaps_dialog.py" line="" /><source>OK</source><translation>موافق</translation></message><message><location filename="../basemaps_dialog.py" line="" /><source>Cancel</source><translation>إلغاء</translation></message></context>
 <context>
     <name>BasemapsDialogBase</name>
@@ -481,7 +481,7 @@ Error: {}</source>
     <message>
         <location filename="../wmts_parser.py" line="60" />
         <source>No layers found in WMTS capabilities</source>
-        <translation>لم يتم العثور على طبقات في قدرات WMTS</translation>
+        <translation>لم يتم العثور على طبقات في خدمة WMTS</translation>
         </message>
     <message>
         <location filename="../preview_manager.py" line="1098" />
@@ -519,7 +519,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3133" />
         <source>Add/Edit Provider</source>
-        <translation>إضافة/تحرير المزود</translation>
+        <translation>إضافة/تحرير الموفر</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3141" />
@@ -600,7 +600,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3231" />
         <source>Provider:</source>
-        <translation>المزود:</translation>
+        <translation>الموفر:</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3242" />
@@ -620,7 +620,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3310" />
         <source>Authentication is enabled but no API token/key is set. Please click the Edit button on the provider to set it.</source>
-        <translation>المصادقة مفعلة ولكن لم يتم تعيين رمز/مفتاح API. يرجى النقر على زر تحرير المزود لتعيينه.</translation>
+        <translation>المصادقة مفعلة ولكن لم يتم تعيين رمز/مفتاح API. يرجى النقر على زر تحرير الموفر لتعيينه.</translation>
         </message>
 </context>
 </TS>

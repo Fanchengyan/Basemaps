@@ -30,7 +30,7 @@
     <message>
         <location filename="../basemaps_dialog.py" line="3456" />
         <source>Source URL:</source>
-        <translation>来源 URL：</translation>
+        <translation>源地址：</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3456" />
@@ -40,7 +40,7 @@
     <message>
         <location filename="../basemaps_dialog.py" line="3364" />
         <source>Style URL:</source>
-        <translation>样式 URL：</translation>
+        <translation>样式地址：</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3376" />
@@ -128,7 +128,7 @@
     <message>
         <location filename="../basemaps_dialog.py" line="831" />
         <source>No providers selected. Do you want to export all user-defined providers?</source>
-        <translation>未选择提供者。是否要导出所有用户定义的提供者？</translation>
+        <translation>未选中提供商，确定导出所有用户提供商吗？</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="831" />
@@ -168,7 +168,7 @@
     <message>
         <location filename="../basemaps_dialog.py" line="2034" />
         <source>Provider '{}' already exists.</source>
-        <translation>提供者 '{}' 已存在。</translation>
+        <translation>提供商 '{}' 已存在。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2872" />
@@ -178,12 +178,12 @@
     <message>
         <location filename="../basemaps_dialog.py" line="2090" />
         <source>Default providers cannot be removed.</source>
-        <translation>默认提供者不能被删除。</translation>
+        <translation>默认提供商不可删除。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2100" />
         <source>Are you sure you want to remove providers: "{}"?</source>
-        <translation>确定要删除提供者："{}" 吗？</translation>
+        <translation>确定要删除提供商："{}" 吗？</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2100" />
@@ -193,7 +193,7 @@
     <message>
         <location filename="../basemaps_dialog.py" line="1759" />
         <source>Please select a provider first.</source>
-        <translation>请先选择一个提供者。</translation>
+        <translation>请先选择一个提供商。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="1999" />
@@ -203,7 +203,7 @@
     <message>
         <location filename="../basemaps_dialog.py" line="2237" />
         <source>Missing API token. Edit the provider to set it.</source>
-        <translation>缺少 API 令牌。请编辑提供者以设置。</translation>
+        <translation>缺少 API 令牌，请编辑提供商进行设置。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2237" />
@@ -223,7 +223,7 @@
     <message>
         <location filename="../basemaps_dialog.py" line="2076" />
         <source>Please select providers to remove.</source>
-        <translation>请选择要删除的提供者。</translation>
+        <translation>请选择要删除的提供商。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="1938" />
@@ -238,7 +238,7 @@
     <message>
         <location filename="../basemaps_dialog.py" line="2363" />
         <source>Please select a WMS provider first.</source>
-        <translation>请先选择一个 WMS 提供者。</translation>
+        <translation>请先选择一个 WMS 提供商。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2297" />
@@ -281,22 +281,22 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="2799" />
         <source>Please select a provider to edit.</source>
-        <translation>请选择要编辑的提供者。</translation>
+        <translation>请选择要编辑的提供商。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2872" />
         <source>Default providers cannot be edited.</source>
-        <translation>默认提供者不能被编辑。</translation>
+        <translation>默认提供商不可编辑。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2857" />
         <source>Please select a WMS provider to edit.</source>
-        <translation>请选择要编辑的 WMS 提供者。</translation>
+        <translation>请选择要编辑的 WMS 提供商。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2972" />
         <source>Only default providers can be duplicated.</source>
-        <translation>只有默认提供者可以被复制。</translation>
+        <translation>仅默认提供商可复制。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2972" />
@@ -306,7 +306,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="2999" />
         <source>Provider duplicated as '{}'</source>
-        <translation>提供者已复制为 '{}'</translation>
+        <translation>提供商已复制为 '{}'</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="204" />
@@ -341,12 +341,12 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="2431" />
         <source>Fetch completed but context was lost</source>
-        <translation>获取已完成但上下文已丢失</translation>
+        <translation>操作已完成但状态丢失</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2548" />
         <source>Duplicate as User Provider</source>
-        <translation>复制为用户提供者</translation>
+        <translation>复制为用户提供商</translation>
         </message>
 <message><source>All</source>
         <translation>全部</translation>
@@ -361,17 +361,17 @@ Error: {}</source>
     </message><message><source>Overlay</source>
         <translation>叠加层</translation>
     </message><message><source>Overlay/Hydrography</source>
-        <translation>叠加层/水文</translation>
+        <translation>叠加层/水系</translation>
     </message><message><source>Overlay/Transportation</source>
         <translation>叠加层/交通</translation>
     </message><message><source>Overlay/Labels</source>
-        <translation>叠加层/标签</translation>
+        <translation>叠加层/标注</translation>
     </message><message><source>Overlay/Boundaries</source>
         <translation>叠加层/边界</translation>
     </message><message><source>Default Providers ────────────────</source>
-        <translation>默认提供者 ────────────────</translation>
+        <translation>默认提供商 ────────────────</translation>
     </message><message><source>User Providers ─────────────────</source>
-        <translation>用户提供者 ─────────────────</translation>
+        <translation>用户提供商 ─────────────────</translation>
     </message><message><location filename="../basemaps_dialog.py" line="" /><source>OK</source><translation>确定</translation></message><message><location filename="../basemaps_dialog.py" line="" /><source>Cancel</source><translation>取消</translation></message></context>
 <context>
     <name>BasemapsDialogBase</name>
@@ -398,7 +398,7 @@ Error: {}</source>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="281" />
         <source>Providers:</source>
-        <translation>提供者：</translation>
+        <translation>提供商：</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="303" />
@@ -481,7 +481,7 @@ Error: {}</source>
     <message>
         <location filename="../wmts_parser.py" line="60" />
         <source>No layers found in WMTS capabilities</source>
-        <translation>在 WMTS 能力中未找到图层</translation>
+        <translation>未在 WMTS 服务中找到图层</translation>
         </message>
     <message>
         <location filename="../preview_manager.py" line="1098" />
@@ -519,7 +519,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3133" />
         <source>Add/Edit Provider</source>
-        <translation>添加/编辑提供者</translation>
+        <translation>添加/编辑提供商</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3141" />
@@ -582,12 +582,12 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3534" />
         <source>Original provider file</source>
-        <translation>原始提供者文件</translation>
+        <translation>原始提供商文件</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3535" />
         <source>Warning: edits in provider config files will be lost when the plugin is updated.</source>
-        <translation>警告：插件更新时，对提供者配置文件的编辑将丢失。</translation>
+        <translation>注意：插件更新时会覆盖配置文件中的修改。</translation>
     </message>
 </context>
 <context>
@@ -600,7 +600,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3231" />
         <source>Provider:</source>
-        <translation>提供者：</translation>
+        <translation>提供商：</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3242" />
@@ -620,7 +620,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="3310" />
         <source>Authentication is enabled but no API token/key is set. Please click the Edit button on the provider to set it.</source>
-        <translation>身份验证已启用但未设置 API 令牌/密钥。请点击提供者的编辑按钮进行设置。</translation>
+        <translation>身份验证已启用但未设置 API 令牌/密钥。请点击提供商的编辑按钮进行设置。</translation>
         </message>
 </context>
 </TS>

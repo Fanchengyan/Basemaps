@@ -481,7 +481,7 @@ Error: {}</source>
     <message>
         <location filename="../wmts_parser.py" line="60" />
         <source>No layers found in WMTS capabilities</source>
-        <translation>Слои не найдены в возможностях WMTS</translation>
+        <translation>Слои не найдены в службе WMTS</translation>
         </message>
     <message>
         <location filename="../preview_manager.py" line="1098" />

@@ -311,7 +311,7 @@ Error: {}</translation>
     <message>
         <location filename="../basemaps_dialog.py" line="204" />
         <source>Failed to load vector tile layer: {}</source>
-        <translation>Error al cargar la capa de mosaicos vectoriales: {}</translation>
+        <translation>Error al cargar la capa de teselas vectoriales: {}</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2787" />
@@ -393,7 +393,7 @@ Error: {}</translation>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="65" />
         <source>XYZ/Vector Tiles</source>
-        <translation>Mosaicos XYZ/Vectoriales</translation>
+        <translation>Teselas XYZ/Vectoriales</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="281" />

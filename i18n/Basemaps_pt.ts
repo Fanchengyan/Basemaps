@@ -346,7 +346,7 @@ Erro: {}</translation>
     <message>
         <location filename="../basemaps_dialog.py" line="2548" />
         <source>Duplicate as User Provider</source>
-        <translation>Duplicar como fornecedor de utilizador</translation>
+        <translation>Duplicar como provedor de usuário</translation>
         </message>
 <message><source>All</source>
         <translation>Todos</translation>
@@ -369,9 +369,9 @@ Erro: {}</translation>
     </message><message><source>Overlay/Boundaries</source>
         <translation>Sobreposição/Limites</translation>
     </message><message><source>Default Providers ────────────────</source>
-        <translation>Fornecedores predefinidos ────────────────</translation>
+        <translation>Provedores padrão ────────────────</translation>
     </message><message><source>User Providers ─────────────────</source>
-        <translation>Fornecedores de utilizador ─────────────────</translation>
+        <translation>Provedores de usuário ─────────────────</translation>
     </message><message><location filename="../basemaps_dialog.py" line="" /><source>OK</source><translation>OK</translation></message><message><location filename="../basemaps_dialog.py" line="" /><source>Cancel</source><translation>Cancelar</translation></message></context>
 <context>
     <name>BasemapsDialogBase</name>
@@ -471,7 +471,7 @@ Erro: {}</translation>
     <message>
         <location filename="../wms_fetch_task.py" line="127" />
         <source>Fetching layers from {}</source>
-        <translation>A obter camadas de {}</translation>
+        <translation>Obtendo camadas de {}</translation>
         </message>
     <message>
         <location filename="../wms_fetch_task.py" line="243" />
@@ -519,7 +519,7 @@ Erro: {}</translation>
     <message>
         <location filename="../basemaps_dialog.py" line="3133" />
         <source>Add/Edit Provider</source>
-        <translation>Adicionar/Editar fornecedor</translation>
+        <translation>Adicionar/Editar provedor</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3141" />
@@ -544,12 +544,12 @@ Erro: {}</translation>
     <message>
         <location filename="../basemaps_dialog.py" line="3183" />
         <source>Select Icon File</source>
-        <translation>Selecionar ficheiro de ícone</translation>
+        <translation>Selecionar arquivo de ícone</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3183" />
         <source>Image Files (*.png *.jpg *.svg *.ico);;All Files (*)</source>
-        <translation>Ficheiros de imagem (*.png *.jpg *.svg *.ico);;Todos os ficheiros (*)</translation>
+        <translation>Arquivos de imagem (*.png *.jpg *.svg *.ico);;Todos os arquivos (*)</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3196" />
@@ -600,7 +600,7 @@ Erro: {}</translation>
     <message>
         <location filename="../basemaps_dialog.py" line="3231" />
         <source>Provider:</source>
-        <translation>Fornecedor:</translation>
+        <translation>Provedor:</translation>
         </message>
     <message>
         <location filename="../basemaps_dialog.py" line="3242" />
@@ -620,7 +620,7 @@ Erro: {}</translation>
     <message>
         <location filename="../basemaps_dialog.py" line="3310" />
         <source>Authentication is enabled but no API token/key is set. Please click the Edit button on the provider to set it.</source>
-        <translation>A autenticação está ativada mas não foi definido qualquer token/chave API. Clique no botão Editar do fornecedor para o definir.</translation>
+        <translation>A autenticação está ativada mas não foi definido qualquer token/chave API. Clique no botão Editar do provedor para defini-lo.</translation>
         </message>
 </context>
 </TS>

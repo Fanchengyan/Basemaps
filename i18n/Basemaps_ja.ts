@@ -235,7 +235,7 @@
         <source>Failed to load WMS layer: {}
 
 Error: {}</source>
-        <translation>WMSレイヤーの読み込みに失敗しました: {}
+        <translation>WMSレイヤの読み込みに失敗しました: {}
 
 エラー: {}</translation>
     </message>
@@ -244,24 +244,24 @@ Error: {}</source>
         <source>Failed to load WMTS layer: {}
 
 Error: {}</source>
-        <translation>WMTSレイヤーの読み込みに失敗しました: {}
+        <translation>WMTSレイヤの読み込みに失敗しました: {}
 
 エラー: {}</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2394" />
         <source>Fetching layers in background...</source>
-        <translation>バックグラウンドでレイヤーを取得中...</translation>
+        <translation>バックグラウンドでレイヤを取得中...</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2421" />
         <source>Failed to fetch layers: {}</source>
-        <translation>レイヤーの取得に失敗しました: {}</translation>
+        <translation>レイヤの取得に失敗しました: {}</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2494" />
         <source>Successfully refreshed {} layers.</source>
-        <translation>{}個のレイヤーを正常に更新しました。</translation>
+        <translation>{}個のレイヤを正常に更新しました。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2857" />
@@ -296,7 +296,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="204" />
         <source>Failed to load vector tile layer: {}</source>
-        <translation>ベクタタイルレイヤーの読み込みに失敗しました: {}</translation>
+        <translation>ベクタタイルレイヤの読み込みに失敗しました: {}</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2237" />
@@ -311,7 +311,7 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="2652" />
         <source>Please select a WMS/WMTS layer first.</source>
-        <translation>最初にWMS/WMTSレイヤーを選択してください。</translation>
+        <translation>最初にWMS/WMTSレイヤを選択してください。</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="2787" />
@@ -423,7 +423,7 @@ Error: {}</source>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="344" />
         <source>Layers:</source>
-        <translation>レイヤー:</translation>
+        <translation>レイヤ:</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="444" />
@@ -443,7 +443,7 @@ Error: {}</source>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="351" />
         <source>Search layers…</source>
-        <translation>レイヤーを検索…</translation>
+        <translation>レイヤを検索…</translation>
     </message>
     <message>
         <location filename="../ui/basemaps_dialog_base.ui" line="367" />
@@ -481,7 +481,7 @@ Error: {}</source>
     <message>
         <location filename="../wmts_parser.py" line="60" />
         <source>No layers found in WMTS capabilities</source>
-        <translation>WMTS 機能にレイヤが見つかりません</translation>
+        <translation>WMTS サービスにレイヤが見つかりません</translation>
         </message>
     <message>
         <location filename="../preview_manager.py" line="1098" />
