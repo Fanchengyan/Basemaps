@@ -19,7 +19,7 @@ from qgis.core import (
     QgsTask,
     QgsVectorTileLayer,
 )
-from qgis.PyQt.QtCore import QObject, QSize, pyqtSignal, QUrl, Qt
+from qgis.PyQt.QtCore import QCoreApplication, QObject, QSize, pyqtSignal, QUrl, Qt
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.PyQt.QtGui import QColor, QImage, QPainter, QPen, QPixmap
 
@@ -614,7 +614,9 @@ class PreviewManager(QObject):
                     continue
                 req_id = f"{key}_vector_style"
                 self._start_request(
-                    style_url, req_id, task,
+                    style_url,
+                    req_id,
+                    task,
                     extra_headers={"Accept": "application/json, text/plain, */*"},
                 )
 
@@ -671,7 +673,11 @@ class PreviewManager(QObject):
                     self._handle_composite_complete(key, task)
 
     def _start_request(
-        self, url: str, req_id: str, task: dict, composite_idx: int = -1,
+        self,
+        url: str,
+        req_id: str,
+        task: dict,
+        composite_idx: int = -1,
         extra_headers: dict | None = None,
     ) -> None:
         nam = QgsNetworkAccessManager.instance()
@@ -840,9 +846,7 @@ class PreviewManager(QObject):
             if not image_formats:
                 return None
             img_format = (
-                "image/jpeg"
-                if "image/jpeg" in image_formats
-                else image_formats[0]
+                "image/jpeg" if "image/jpeg" in image_formats else image_formats[0]
             )
             styles = layer_data.get("styles", ["default"])
             style = styles[0] if styles else "default"
@@ -1091,14 +1095,16 @@ class PreviewManager(QObject):
             self.preview_readied.emit(result.key, result.image_path)
             return
 
+        _unknown = QCoreApplication.translate("BasemapsPlugin", "unknown error")
         Logger.warning(
-            f"Vector preview failed for {result.key}: {result.error_message or 'unknown error'}"
+            "Vector preview failed for {}: {}".format(
+                result.key,
+                result.error_message or _unknown,
+            )
         )
         self.preview_readied.emit(result.key, str(self.failed_icon_path))
 
-    def _start_vector_render(
-        self, task: dict, resolved_style_path: str | None
-    ) -> None:
+    def _start_vector_render(self, task: dict, resolved_style_path: str | None) -> None:
         """Create and submit a VectorPreviewTask for rendering.
 
         Called after the style JSON has been fetched (or determined to be
@@ -1176,7 +1182,10 @@ class PreviewManager(QObject):
         if cls._looks_like_mapbox_style(payload):
             # ArcGIS/Esri styles reference server-side sprites & glyphs;
             # let QGIS load them directly via remote URL instead of file://
-            if "arcgis" in style_metadata_url.lower() or "esri" in style_metadata_url.lower():
+            if (
+                "arcgis" in style_metadata_url.lower()
+                or "esri" in style_metadata_url.lower()
+            ):
                 return None
             return cls._write_temp_json(payload)
 
@@ -1445,7 +1454,10 @@ class PreviewManager(QObject):
                     payload = json.loads(bytes(content))
                     style_url = task.get("style_url", "")
                     if self._looks_like_mapbox_style(payload):
-                        if "arcgis" not in style_url.lower() and "esri" not in style_url.lower():
+                        if (
+                            "arcgis" not in style_url.lower()
+                            and "esri" not in style_url.lower()
+                        ):
                             resolved_path = self._write_temp_json(payload)
                     elif self._looks_like_tilejson(payload):
                         generated = self._build_generic_vector_style(
@@ -1454,9 +1466,7 @@ class PreviewManager(QObject):
                         if generated:
                             resolved_path = self._write_temp_json(generated)
                 except Exception as exc:
-                    Logger.warning(
-                        f"Failed to parse vector style for {key}: {exc}"
-                    )
+                    Logger.warning(f"Failed to parse vector style for {key}: {exc}")
             self._start_vector_render(task, resolved_path)
             self._process_queue()
 

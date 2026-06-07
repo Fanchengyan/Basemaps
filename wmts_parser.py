@@ -21,6 +21,8 @@ from __future__ import annotations
 import xml.etree.ElementTree as ET
 from typing import Optional
 
+from qgis.PyQt.QtCore import QCoreApplication
+
 
 def parse_wmts_capabilities(xml_content: bytes | str) -> list[dict]:
     """
@@ -55,7 +57,11 @@ def parse_wmts_capabilities(xml_content: bytes | str) -> list[dict]:
                 layers.append(layer_info)
 
     if not layers:
-        raise ValueError("No layers found in WMTS capabilities")
+        raise ValueError(
+            QCoreApplication.translate(
+                "BasemapsPlugin", "No layers found in WMTS capabilities"
+            )
+        )
 
     return layers
 

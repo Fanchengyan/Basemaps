@@ -308,6 +308,7 @@ def _build_provider_yaml_data(provider: dict[str, Any]) -> dict[str, Any]:
 
 def _write_provider_yaml(filepath: Path, yaml_data: dict[str, Any]) -> None:
     """Write provider YAML data to a file, preserving OrderedDict order."""
+
     class OrderedDumper(yaml.SafeDumper):
         pass
 

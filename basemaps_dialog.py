@@ -159,7 +159,12 @@ class VectorTileLoadTask(QgsTask):
     """
 
     def __init__(self, encoded_uri: str, name: str, style_url: str) -> None:
-        super().__init__("Loading vector tile basemap...", QgsTask.CanCancel)
+        super().__init__(
+            QCoreApplication.translate(
+                "BasemapsDialog", "Loading vector tile basemap..."
+            ),
+            QgsTask.CanCancel,
+        )
         self.encoded_uri = encoded_uri
         self.name = name
         self.style_url = style_url
@@ -324,8 +329,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self._search_text_xyz: str = ""
         self._search_text_wms: str = ""
 
-        # Setup tag filter combo
-        self.tagFilterCombo.addItems(AVAILABLE_TAGS)
+        # Setup tag filter combo — store English tag values as item data
+        for tag in AVAILABLE_TAGS:
+            display = self.tr(tag)
+            self.tagFilterCombo.addItem(display, tag)
         self.tagFilterCombo.setCurrentIndex(0)
         self.tagFilterCombo.currentTextChanged.connect(self._on_tag_changed)
 
@@ -361,7 +368,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def _on_tag_changed(self, tag_name: str) -> None:
         """Handle tag filter combo change."""
-        self._active_tag = tag_name
+        self._active_tag = self.tagFilterCombo.currentData(user_role) or tag_name
         self._apply_tag_filter()
 
     def _tag_matches(self, item_data: dict | None, tag: str) -> bool:
@@ -644,7 +651,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         super().closeEvent(event)
 
     def _duplicate_provider_as_user(
-        self, provider: dict[str, Any], suffix: str = " (Custom)"
+        self, provider: dict[str, Any], suffix: str | None = None
     ) -> dict[str, Any]:
         """Create user copy of a provider.
 
@@ -652,8 +659,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         ----------
         provider : dict[str, Any]
             Source provider to duplicate
-        suffix : str
-            Suffix to add to name (default: " (Custom)")
+        suffix : str | None
+            Suffix to add to name (default: " (Custom)"). If None, uses the
+            translated fallback.
 
         Returns
         -------
@@ -667,6 +675,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         - Modifies name to avoid conflicts
         - Does NOT save to disk (caller must call save_user_config)
         """
+        if suffix is None:
+            suffix = " " + QCoreApplication.translate("BasemapsDialog", "(Custom)")
         import copy
         import time
 
@@ -778,7 +788,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     if yaml_files:
                         config_file = yaml_files[0]
                     else:
-                        raise Exception("No YAML configuration file found in ZIP")
+                        raise Exception(
+                            QCoreApplication.translate(
+                                "BasemapsDialog",
+                                "No YAML configuration file found in ZIP",
+                            )
+                        )
 
                     # Load config data using unified loader
                     data = config_loader.load_config_file(config_file)
@@ -824,7 +839,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return
 
         # Set default filename
-        default_filename = "providers.zip"
+        default_filename = QCoreApplication.translate("BasemapsDialog", "providers.zip")
         if len(selected_xyz_items) + len(selected_wms_items) == 1:
             # If only one provider is selected, use its name as filename
             if selected_xyz_items:
@@ -940,7 +955,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 if provider["name"] in existing_providers:
                     # If builtin provider, create a new user-defined version
                     if existing_providers[provider["name"]].get("builtin", False):
-                        provider["name"] = f"{provider['name']} (Custom)"
+                        provider["name"] = "{} {}".format(
+                            provider["name"],
+                            QCoreApplication.translate("BasemapsDialog", "(Custom)"),
+                        )
                         self.providers_data.append(provider)
                     else:
                         # Update existing user provider's basemaps
@@ -1019,7 +1037,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # If separator, add non-selectable separator item
             if provider.get("type") == "separator":
                 for list_widget in [self.listProviders, self.listWmsProviders]:
-                    item = QListWidgetItem(provider["name"])
+                    item = QListWidgetItem(self.tr(provider["name"]))
                     item.setFlags(item.flags() & ~item_enabled & ~item_selectable)
                     list_widget.addItem(item)
                 continue
@@ -1269,9 +1287,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 # Warn if authentication is enabled but token is not set
                 if "token" in provider and not token:
                     MessageBox.warning(
-                        self.tr(
-                            "Missing API token. Edit the provider to set it."
-                        ),
+                        self.tr("Missing API token. Edit the provider to set it."),
                         self.tr("Authentication Required"),
                         self,
                     )
@@ -1370,10 +1386,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 provider_icon = QIcon(str(icon_file))
 
         basemaps = [
-            bm for bm in sorted(
+            bm
+            for bm in sorted(
                 provider_data["data"].get("basemaps", []), key=self._sort_key_by_tag
             )
-            if isinstance(bm, dict) and "name" in bm
+            if isinstance(bm, dict)
+            and "name" in bm
             and ("url" in bm or bm.get("tile_type") == "vector")
         ]
 
@@ -1414,14 +1432,21 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     )
                     if preview_url:
                         self.preview_manager.request_vector_preview(
-                            provider_name, basemap["name"],
-                            preview_url, preview_style_url, is_default_provider,
+                            provider_name,
+                            basemap["name"],
+                            preview_url,
+                            preview_style_url,
+                            is_default_provider,
                         )
                 else:
                     preview_url = self._append_token(basemap["url"], token, token_param)
                     self.preview_manager.request_preview(
-                        provider_name, basemap["name"],
-                        preview_url, "xyz", None, is_default_provider,
+                        provider_name,
+                        basemap["name"],
+                        preview_url,
+                        "xyz",
+                        None,
+                        is_default_provider,
                     )
 
             if end < len(basemaps):
@@ -1485,11 +1510,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             for i in range(start, end):
                 layer = layers[i]
                 display_name = layer.get(
-                    "layer_title", layer.get("layer_name", "Unknown Layer")
+                    "layer_title",
+                    layer.get("layer_name", self.tr("Unknown Layer")),
                 )
-                service_type = layer.get(
-                    "service_type", provider_service_type
-                )
+                service_type = layer.get("service_type", provider_service_type)
 
                 layer_item = QTreeWidgetItem([display_name])
                 layer_item.setIcon(0, provider_icon)
@@ -1518,7 +1542,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 grid_item.setData(Qt.UserRole + 12, service_type)
                 grid_item.setToolTip(display_name)
                 layer_tags = layer.get("tags", [])
-                grid_item.setData(Qt.UserRole + 11, layer_tags[0] if layer_tags else None)
+                grid_item.setData(
+                    Qt.UserRole + 11, layer_tags[0] if layer_tags else None
+                )
                 self.listWmsLayersGrid.addItem(grid_item)
 
                 self.preview_manager.request_preview(
@@ -2209,9 +2235,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Warn if authentication is enabled but token is not set
         if "token" in provider and not token:
             MessageBox.warning(
-                self.tr(
-                    "Missing API token. Edit the provider to set it."
-                ),
+                self.tr("Missing API token. Edit the provider to set it."),
                 self.tr("Authentication Required"),
                 self,
             )
@@ -2404,7 +2428,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Get context
         context = self._pending_fetch_context
         if not context:
-            Logger.warning("Fetch completed but context was lost")
+            Logger.warning(
+                QCoreApplication.translate(
+                    "BasemapsDialog", "Fetch completed but context was lost"
+                )
+            )
             return
 
         provider_index = context["provider_index"]
@@ -2482,7 +2510,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         menu = QMenu()
-        duplicate_action = menu.addAction("Duplicate as User Provider")
+        duplicate_action = menu.addAction(self.tr("Duplicate as User Provider"))
 
         exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
         action = exec(self.listProviders.mapToGlobal(position))
@@ -2496,7 +2524,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         menu = QMenu()
-        edit_action = menu.addAction("Edit")
+        edit_action = menu.addAction(self.tr("Edit"))
 
         exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
         action = exec(self.listBasemaps.mapToGlobal(position))
@@ -2517,7 +2545,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         menu = QMenu()
-        duplicate_action = menu.addAction("Duplicate as User Provider")
+        duplicate_action = menu.addAction(self.tr("Duplicate as User Provider"))
 
         exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
         action = exec(self.listWmsProviders.mapToGlobal(position))
@@ -3099,10 +3127,22 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.tabBasemapsView.blockSignals(False)
 
 
+def _translate_button_box(button_box: QDialogButtonBox) -> None:
+    """Set translated text on standard buttons using plugin translations."""
+    standard_map = {
+        button_ok: "OK",
+        button_cancel: "Cancel",
+    }
+    for btn_id, text_key in standard_map.items():
+        btn = button_box.button(btn_id)
+        if btn:
+            btn.setText(QCoreApplication.translate("BasemapsDialog", text_key))
+
+
 class ProviderInputDialog(QDialog):
     def __init__(self, parent=None, provider=None, provider_type="xyz"):
         super().__init__(parent)
-        self.setWindowTitle("Add/Edit Provider")
+        self.setWindowTitle(self.tr("Add/Edit Provider"))
         self.plugin_dir = Path(__file__).parent
         self.provider_type = provider_type
 
@@ -3110,7 +3150,7 @@ class ProviderInputDialog(QDialog):
 
         # Name input
         name_layout = QHBoxLayout()
-        name_label = QLabel("Name:")
+        name_label = QLabel(self.tr("Name:"))
         self.name_edit = QLineEdit()
         if provider:
             self.name_edit.setText(provider["name"])
@@ -3120,11 +3160,11 @@ class ProviderInputDialog(QDialog):
 
         # Icon input
         icon_layout = QHBoxLayout()
-        icon_label = QLabel("Icon:")
+        icon_label = QLabel(self.tr("Icon:"))
         self.icon_edit = QLineEdit()
         if provider:
             self.icon_edit.setText(provider.get("icon", ""))
-        self.icon_button = QPushButton("Browse...")
+        self.icon_button = QPushButton(self.tr("Browse..."))
         self.icon_button.clicked.connect(self.browse_icon)
         icon_layout.addWidget(icon_label)
         icon_layout.addWidget(self.icon_edit)
@@ -3134,7 +3174,7 @@ class ProviderInputDialog(QDialog):
         # URL input (only show when WMS type)
         if provider_type == "wms":
             url_layout = QHBoxLayout()
-            url_label = QLabel("URL:")
+            url_label = QLabel(self.tr("URL:"))
             self.url_edit = QLineEdit()
             if provider:
                 self.url_edit.setText(provider.get("url", ""))
@@ -3147,6 +3187,7 @@ class ProviderInputDialog(QDialog):
 
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
+        _translate_button_box(button_box)
         button_box.accepted.connect(self._validate_and_accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
@@ -3154,9 +3195,9 @@ class ProviderInputDialog(QDialog):
     def browse_icon(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Select Icon File",
+            self.tr("Select Icon File"),
             "",
-            "Image Files (*.png *.jpg *.svg *.ico);;All Files (*)",
+            self.tr("Image Files (*.png *.jpg *.svg *.ico);;All Files (*)"),
         )
         if file_path:
             self.icon_edit.setText(file_path)
@@ -3165,7 +3206,7 @@ class ProviderInputDialog(QDialog):
         """Warn if authentication is enabled but token is not set, then accept."""
         warning = self.token_auth_widget.get_warning()
         if warning:
-            MessageBox.warning(warning, "Authentication", self)
+            MessageBox.warning(warning, self.tr("Authentication"), self)
         self.accept()
 
     def get_data(self):
@@ -3187,7 +3228,8 @@ class TokenAuthWidget(QGroupBox):
     """Provider token and token-parameter input widget (checkable)."""
 
     def __init__(self, parent: QDialog | None = None, provider: dict | None = None):
-        super().__init__("Authentication", parent)
+        super().__init__(parent)
+        self.setTitle(self.tr("Authentication"))
         self.setCheckable(True)
         self.setChecked(False)
 
@@ -3200,7 +3242,7 @@ class TokenAuthWidget(QGroupBox):
 
         # Well-known provider selector
         wk_layout = QHBoxLayout()
-        wk_label = QLabel("Provider:")
+        wk_label = QLabel(self.tr("Provider:"))
         self.wk_combo = QComboBox()
         self.wk_combo.addItem("")
         for name in WELL_KNOWN_XYZ_PROVIDERS:
@@ -3211,16 +3253,16 @@ class TokenAuthWidget(QGroupBox):
         layout.addLayout(wk_layout)
 
         token_layout = QHBoxLayout()
-        token_label = QLabel("Token:")
+        token_label = QLabel(self.tr("Token:"))
         self.token_edit = QLineEdit()
-        self.token_edit.setPlaceholderText("API token / key")
+        self.token_edit.setPlaceholderText(self.tr("API token / key"))
         self.token_edit.setText(provider_data.get("token", ""))
         token_layout.addWidget(token_label)
         token_layout.addWidget(self.token_edit)
         layout.addLayout(token_layout)
 
         token_param_layout = QHBoxLayout()
-        token_param_label = QLabel("Token Parameter:")
+        token_param_label = QLabel(self.tr("Token Parameter:"))
         self.token_param_combo = QComboBox()
         self.token_param_combo.setEditable(True)
         self.token_param_combo.addItems(TOKEN_PARAM_OPTIONS)
@@ -3279,7 +3321,7 @@ class TokenAuthWidget(QGroupBox):
             return ""
         token = self.token_edit.text().strip()
         if not token:
-            return (
+            return self.tr(
                 "Authentication is enabled but no API token/key is set. "
                 "Please click the Edit button on the provider to set it."
             )
@@ -3289,7 +3331,7 @@ class TokenAuthWidget(QGroupBox):
 class BasemapInputDialog(QDialog):
     def __init__(self, parent=None, basemap=None, provider_type=None):
         super().__init__(parent)
-        self.setWindowTitle("Add/Edit Basemap")
+        self.setWindowTitle(self.tr("Add/Edit Basemap"))
         self.provider_type = provider_type
         self.basemap = basemap
 
@@ -3297,7 +3339,7 @@ class BasemapInputDialog(QDialog):
 
         # Name input
         name_layout = QHBoxLayout()
-        name_label = QLabel("Name:")
+        name_label = QLabel(self.tr("Name:"))
         self.name_edit = QLineEdit()
         if self.basemap:
             self.name_edit.setText(self.basemap["name"])
@@ -3309,9 +3351,9 @@ class BasemapInputDialog(QDialog):
         is_vector = bool(self.basemap and self.basemap.get("tile_type") == "vector")
         if provider_type != "wms":
             tile_type_layout = QHBoxLayout()
-            tile_type_label = QLabel("Tile Type:")
+            tile_type_label = QLabel(self.tr("Tile Type:"))
             self.tile_type_combo = QComboBox()
-            self.tile_type_combo.addItems(["Raster (XYZ)", "Vector"])
+            self.tile_type_combo.addItems([self.tr("Raster (XYZ)"), self.tr("Vector")])
             if is_vector:
                 self.tile_type_combo.setCurrentIndex(1)
             self.tile_type_combo.currentIndexChanged.connect(self._on_tile_type_changed)
@@ -3321,7 +3363,9 @@ class BasemapInputDialog(QDialog):
 
         # Source URL input
         url_layout = QHBoxLayout()
-        self.url_label = QLabel("Source URL:" if is_vector else "URL:")
+        self.url_label = QLabel(
+            self.tr("Source URL:") if is_vector else self.tr("URL:")
+        )
         self.url_edit = QLineEdit()
         if self.basemap:
             self.url_edit.setText(self.basemap.get("url", ""))
@@ -3331,7 +3375,7 @@ class BasemapInputDialog(QDialog):
 
         # Style URL input (only for vector tiles)
         self.style_url_layout = QHBoxLayout()
-        style_url_label = QLabel("Style URL:")
+        style_url_label = QLabel(self.tr("Style URL:"))
         self.style_url_edit = QLineEdit()
         if self.basemap:
             self.style_url_edit.setText(self.basemap.get("style_url", ""))
@@ -3343,12 +3387,12 @@ class BasemapInputDialog(QDialog):
 
         # Layer settings (only show when WMS type)
         if provider_type == "wms":
-            layer_group = QGroupBox("Layer Settings")
+            layer_group = QGroupBox(self.tr("Layer Settings"))
             layer_layout = QVBoxLayout()
 
             # Layer name
             layer_name_layout = QHBoxLayout()
-            layer_name_label = QLabel("Layer Name:")
+            layer_name_label = QLabel(self.tr("Layer Name:"))
             self.layer_name_edit = QLineEdit()
             if self.basemap:
                 self.layer_name_edit.setText(self.basemap.get("layer_name", ""))
@@ -3358,7 +3402,7 @@ class BasemapInputDialog(QDialog):
 
             # Layer title
             layer_title_layout = QHBoxLayout()
-            layer_title_label = QLabel("Layer Title:")
+            layer_title_label = QLabel(self.tr("Layer Title:"))
             self.layer_title_edit = QLineEdit()
             if self.basemap:
                 self.layer_title_edit.setText(self.basemap.get("layer_title", ""))
@@ -3368,9 +3412,9 @@ class BasemapInputDialog(QDialog):
 
             # CRS
             crs_layout = QHBoxLayout()
-            crs_label = QLabel("CRS:")
+            crs_label = QLabel(self.tr("CRS:"))
             self.crs_edit = QLineEdit()
-            self.crs_edit.setText("EPSG:4326")  # Default value
+            self.crs_edit.setText(self.tr("EPSG:4326"))  # Default value
             if self.basemap:
                 self.crs_edit.setText(self.basemap.get("crs", "EPSG:4326"))
             crs_layout.addWidget(crs_label)
@@ -3379,9 +3423,15 @@ class BasemapInputDialog(QDialog):
 
             # Format
             format_layout = QHBoxLayout()
-            format_label = QLabel("Format:")
+            format_label = QLabel(self.tr("Format:"))
             self.format_combo = QComboBox()
-            self.format_combo.addItems(["image/png", "image/jpeg", "image/tiff"])
+            self.format_combo.addItems(
+                [
+                    self.tr("image/png"),
+                    self.tr("image/jpeg"),
+                    self.tr("image/tiff"),
+                ]
+            )
             if self.basemap:
                 self.format_combo.setCurrentText(
                     self.basemap.get("format", "image/png")
@@ -3393,23 +3443,26 @@ class BasemapInputDialog(QDialog):
             layer_group.setLayout(layer_layout)
             layout.addWidget(layer_group)
 
-        # Tag
+        # Tag — store English tag values as item data
         tag_layout = QHBoxLayout()
         tag_layout.setSpacing(4)
-        tag_label = QLabel("Tag:")
+        tag_label = QLabel(self.tr("Tag:"))
         self.tag_combo = QComboBox()
-        self.tag_combo.addItem("")
+        self.tag_combo.addItem("", "")
         for tag in ASSIGNABLE_TAGS:
-            self.tag_combo.addItem(tag)
+            self.tag_combo.addItem(QCoreApplication.translate("BasemapsDialog", tag), tag)
         existing_tags = self.basemap.get("tags", []) if self.basemap else []
         if existing_tags:
-            self.tag_combo.setCurrentText(existing_tags[0])
+            self.tag_combo.setCurrentText(
+                QCoreApplication.translate("BasemapsDialog", existing_tags[0])
+            )
         tag_layout.addWidget(tag_label)
         tag_layout.addWidget(self.tag_combo, 1)
         layout.addLayout(tag_layout)
 
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
+        _translate_button_box(button_box)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
@@ -3417,7 +3470,7 @@ class BasemapInputDialog(QDialog):
     def _on_tile_type_changed(self, index: int) -> None:
         """Toggle visibility of style URL field based on tile type selection."""
         is_vector = index == 1
-        self.url_label.setText("Source URL:" if is_vector else "URL:")
+        self.url_label.setText(self.tr("Source URL:") if is_vector else self.tr("URL:"))
         self._set_style_url_visible(is_vector)
 
     def _set_style_url_visible(self, visible: bool) -> None:
@@ -3428,7 +3481,7 @@ class BasemapInputDialog(QDialog):
                 widget.setVisible(visible)
 
     def get_data(self):
-        selected = self.tag_combo.currentText()
+        selected = self.tag_combo.currentData(user_role) or ""
         tags = [selected] if selected else []
         if self.provider_type == "wms":
             return {
@@ -3481,11 +3534,15 @@ class TagEditDialog(QDialog):
         tag_row.addWidget(QLabel(self.tr("Tag:")))
 
         self.tag_combo = QComboBox()
-        self.tag_combo.addItem("")
+        self.tag_combo.addItem("", "")
         for tag in ASSIGNABLE_TAGS:
-            self.tag_combo.addItem(tag)
+            self.tag_combo.addItem(
+                QCoreApplication.translate("BasemapsDialog", tag), tag
+            )
         if existing_tags:
-            self.tag_combo.setCurrentText(existing_tags[0])
+            self.tag_combo.setCurrentText(
+                QCoreApplication.translate("BasemapsDialog", existing_tags[0])
+            )
         tag_row.addWidget(self.tag_combo, 1)
         layout.addLayout(tag_row)
 
@@ -3517,13 +3574,14 @@ class TagEditDialog(QDialog):
 
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
+        _translate_button_box(button_box)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
 
     def get_tags(self) -> list[str]:
         """Return the list of selected tags."""
-        selected = self.tag_combo.currentText()
+        selected = self.tag_combo.currentData(user_role) or ""
         return [selected] if selected else []
 
     def get_save_mode(self) -> str:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from qgis.PyQt.QtCore import QEvent, QModelIndex, QRect, QRectF, QSize, Qt, pyqtSignal
+from qgis.PyQt.QtCore import QCoreApplication, QEvent, QModelIndex, QRect, QRectF, QSize, Qt, pyqtSignal
 from qgis.PyQt.QtGui import (
     QBrush,
     QColor,
@@ -79,7 +79,10 @@ class BasemapCardDelegate(QStyledItemDelegate):
         tag = index.data(Qt.UserRole + 11)
         if not tag:
             return None
-        return tag[tag.find("/") + 1 :] if "/" in tag else tag
+        # Translate the full tag (e.g. "Overlay/Hydrography" → "叠加层/水文")
+        translated = QCoreApplication.translate("BasemapsDialog", tag)
+        # Strip prefix after translation for compact badge display
+        return translated[translated.find("/") + 1 :] if "/" in translated else translated
 
     def editorEvent(self, event, model, option, index):
         if (
@@ -208,7 +211,7 @@ class BasemapCardDelegate(QStyledItemDelegate):
         if protocol and protocol == "vector":
             painter.save()
             proto_color = PROTOCOL_COLORS.get(protocol, QColor(0, 0, 0))
-            proto_label = protocol.upper()
+            proto_label = QCoreApplication.translate("BasemapInputDialog", protocol.capitalize())
             proto_font = painter.font()
             proto_font.setPointSize(7)
             proto_font.setBold(True)

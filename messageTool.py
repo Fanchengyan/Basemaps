@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from qgis.core import Qgis, QgsMessageLog
-from qgis.PyQt.QtCore import QT_VERSION_STR
+from qgis.PyQt.QtCore import QCoreApplication, QT_VERSION_STR
 from qgis.PyQt.QtWidgets import QMessageBox, QWidget
 from qgis.utils import iface
 
@@ -213,7 +213,12 @@ class Logger:
         """
         level_lower = level.lower()
         if level_lower not in _LEVELS:
-            Logger.critical(f"Invalid log level: {level}. Using 'info' instead.")
+            Logger.critical(
+                QCoreApplication.translate(
+                    "BasemapsPlugin",
+                    "Invalid log level: {}. Using 'info' instead.",
+                ).format(level),
+            )
             level_lower = "info"
 
         if notify_user == "auto":
@@ -291,7 +296,7 @@ class MessageBox:
     @staticmethod
     def ok(
         text: str,
-        title: str = "Info",
+        title: str | None = None,
         parent: QWidget | None = None,
     ) -> None:
         """Show a message box with an OK button.
@@ -300,7 +305,7 @@ class MessageBox:
         ----------
         text : str
             The message text.
-        title : str, optional
+        title : str | None, optional
             The title of the message box, by default "Info".
         parent : QWidget | None, optional
             The parent widget, by default None.
@@ -310,6 +315,8 @@ class MessageBox:
         >>> MessageBox.ok("Operation completed successfully")
         >>> MessageBox.ok("File saved", title="Success")
         """
+        if title is None:
+            title = QCoreApplication.translate("BasemapsPlugin", "Info")
         mb = QMessageBox(parent)
         mb.setText(text)
         mb.setStandardButtons(_BUTTON_OK)
@@ -319,7 +326,7 @@ class MessageBox:
     @staticmethod
     def ok_cancel(
         text: str,
-        title: str = "Warning",
+        title: str | None = None,
         parent: QWidget | None = None,
     ) -> int:
         """Show a message box with OK and Cancel buttons.
@@ -328,7 +335,7 @@ class MessageBox:
         ----------
         text : str
             The message text.
-        title : str, optional
+        title : str | None, optional
             The title of the message box, by default "Warning".
         parent : QWidget | None, optional
             The parent widget, by default None.
@@ -344,6 +351,8 @@ class MessageBox:
         >>> if result == MessageBox.OK:
         ...     print("User clicked OK")
         """
+        if title is None:
+            title = QCoreApplication.translate("BasemapsPlugin", "Warning")
         mb = QMessageBox(parent)
         mb.setText(text)
         mb.setStandardButtons(_BUTTON_OK | _BUTTON_CANCEL)
@@ -354,7 +363,7 @@ class MessageBox:
     @staticmethod
     def yes_no(
         text: str,
-        title: str = "Question",
+        title: str | None = None,
         parent: QWidget | None = None,
     ) -> int:
         """Show a message box with Yes and No buttons.
@@ -363,7 +372,7 @@ class MessageBox:
         ----------
         text : str
             The message text.
-        title : str, optional
+        title : str | None, optional
             The title of the message box, by default "Question".
         parent : QWidget | None, optional
             The parent widget, by default None.
@@ -379,6 +388,8 @@ class MessageBox:
         >>> if result == MessageBox.YES:
         ...     delete_item()
         """
+        if title is None:
+            title = QCoreApplication.translate("BasemapsPlugin", "Question")
         mb = QMessageBox(parent)
         mb.setText(text)
         mb.setStandardButtons(_BUTTON_YES | _BUTTON_NO)
@@ -389,7 +400,7 @@ class MessageBox:
     @staticmethod
     def warning(
         text: str,
-        title: str = "Warning",
+        title: str | None = None,
         parent: QWidget | None = None,
     ) -> None:
         """Show a warning message box with an OK button.
@@ -398,7 +409,7 @@ class MessageBox:
         ----------
         text : str
             The warning message text.
-        title : str, optional
+        title : str | None, optional
             The title of the message box, by default "Warning".
         parent : QWidget | None, optional
             The parent widget, by default None.
@@ -407,12 +418,14 @@ class MessageBox:
         --------
         >>> MessageBox.warning("Configuration file not found")
         """
+        if title is None:
+            title = QCoreApplication.translate("BasemapsPlugin", "Warning")
         QMessageBox.warning(parent, title, text)
 
     @staticmethod
     def critical(
         text: str,
-        title: str = "Error",
+        title: str | None = None,
         parent: QWidget | None = None,
     ) -> None:
         """Show a critical/error message box with an OK button.
@@ -421,7 +434,7 @@ class MessageBox:
         ----------
         text : str
             The error message text.
-        title : str, optional
+        title : str | None, optional
             The title of the message box, by default "Error".
         parent : QWidget | None, optional
             The parent widget, by default None.
@@ -430,12 +443,14 @@ class MessageBox:
         --------
         >>> MessageBox.critical("Failed to save file: permission denied")
         """
+        if title is None:
+            title = QCoreApplication.translate("BasemapsPlugin", "Error")
         QMessageBox.critical(parent, title, text)
 
     @staticmethod
     def information(
         text: str,
-        title: str = "Information",
+        title: str | None = None,
         parent: QWidget | None = None,
     ) -> None:
         """Show an information message box with an OK button.
@@ -444,7 +459,7 @@ class MessageBox:
         ----------
         text : str
             The information message text.
-        title : str, optional
+        title : str | None, optional
             The title of the message box, by default "Information".
         parent : QWidget | None, optional
             The parent widget, by default None.
@@ -453,12 +468,14 @@ class MessageBox:
         --------
         >>> MessageBox.information("Export completed successfully")
         """
+        if title is None:
+            title = QCoreApplication.translate("BasemapsPlugin", "Information")
         QMessageBox.information(parent, title, text)
 
     @staticmethod
     def question(
         text: str,
-        title: str = "Question",
+        title: str | None = None,
         parent: QWidget | None = None,
     ) -> int:
         """Show a question message box with Yes and No buttons.
@@ -469,7 +486,7 @@ class MessageBox:
         ----------
         text : str
             The question text.
-        title : str, optional
+        title : str | None, optional
             The title of the message box, by default "Question".
         parent : QWidget | None, optional
             The parent widget, by default None.
@@ -485,6 +502,8 @@ class MessageBox:
         >>> if result == MessageBox.YES:
         ...     save_changes()
         """
+        if title is None:
+            title = QCoreApplication.translate("BasemapsPlugin", "Question")
         return QMessageBox.question(
             parent,
             title,
