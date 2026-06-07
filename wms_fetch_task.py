@@ -128,7 +128,7 @@ class WMSFetchTask(QgsTask):
             QCoreApplication.translate(
                 "BasemapsPlugin", "Fetching layers from {}"
             ).format(url),
-            QgsTask.CanCancel,
+            QgsTask.Flag.CanCancel,
         )
         self.url = url
         self.service_type_hint = service_type_hint

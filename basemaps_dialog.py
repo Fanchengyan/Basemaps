@@ -47,6 +47,7 @@ from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QListView,
     QListWidgetItem,
     QListWidget,
     QMenu,
@@ -163,7 +164,7 @@ class VectorTileLoadTask(QgsTask):
             QCoreApplication.translate(
                 "BasemapsDialog", "Loading vector tile basemap..."
             ),
-            QgsTask.CanCancel,
+            QgsTask.Flag.CanCancel,
         )
         self.encoded_uri = encoded_uri
         self.name = name
@@ -247,12 +248,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             (self.listWmsLayersGrid, self.wms_grid_delegate),
         ]:
             grid_view.setItemDelegate(delegate)
-            grid_view.setViewMode(QListWidget.IconMode)
-            grid_view.setResizeMode(QListWidget.Adjust)
+            grid_view.setViewMode(QListView.ViewMode.IconMode)
+            grid_view.setResizeMode(QListView.ResizeMode.Adjust)
             grid_view.setWrapping(True)
             grid_view.setSpacing(10)
             grid_view.setWordWrap(True)
-            grid_view.setMovement(QListWidget.Static)
+            grid_view.setMovement(QListView.Movement.Static)
             grid_view.setMouseTracking(True)
         self.xyz_grid_delegate.tagBadgeClicked.connect(self._on_xyz_badge_clicked)
         self.wms_grid_delegate.tagBadgeClicked.connect(self._on_wms_badge_clicked)
@@ -1415,11 +1416,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
                 grid_item = QListWidgetItem(basemap["name"])
                 grid_item.setData(user_role, basemap)
-                grid_item.setData(Qt.UserRole + 10, provider_icon)
-                grid_item.setData(Qt.UserRole + 12, protocol)
+                grid_item.setData(user_role + 10, provider_icon)
+                grid_item.setData(user_role + 12, protocol)
                 grid_item.setToolTip(basemap["name"])
                 bm_tags = basemap.get("tags", [])
-                grid_item.setData(Qt.UserRole + 11, bm_tags[0] if bm_tags else None)
+                grid_item.setData(user_role + 11, bm_tags[0] if bm_tags else None)
                 self.listBasemapsGrid.addItem(grid_item)
 
                 # Issue preview inline (same as WMS)
@@ -1538,12 +1539,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
                 grid_item = QListWidgetItem(display_name)
                 grid_item.setData(user_role, layer)
-                grid_item.setData(Qt.UserRole + 10, provider_icon)
-                grid_item.setData(Qt.UserRole + 12, service_type)
+                grid_item.setData(user_role + 10, provider_icon)
+                grid_item.setData(user_role + 12, service_type)
                 grid_item.setToolTip(display_name)
                 layer_tags = layer.get("tags", [])
                 grid_item.setData(
-                    Qt.UserRole + 11, layer_tags[0] if layer_tags else None
+                    user_role + 11, layer_tags[0] if layer_tags else None
                 )
                 self.listWmsLayersGrid.addItem(grid_item)
 
@@ -1905,7 +1906,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     and item_data.get("name") == basemap_name
                 ):
                     item.setData(user_role, updated_data)
-                    item.setData(Qt.UserRole + 11, new_tags[0] if new_tags else None)
+                    item.setData(user_role + 11, new_tags[0] if new_tags else None)
                     break
 
         self._apply_tag_filter()
@@ -2643,7 +2644,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 grid_data = dict(grid_data)
                 grid_data["tags"] = list(tags)
                 grid_item.setData(user_role, grid_data)
-                grid_item.setData(Qt.UserRole + 11, tags[0] if tags else None)
+                grid_item.setData(user_role + 11, tags[0] if tags else None)
 
     def edit_wms_layer_tags(self) -> None:
         """Edit tags for the selected WMS/WMTS layer."""
@@ -3014,7 +3015,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 )
                 if current_item_key == key:
                     pixmap = QPixmap(image_path)
-                    item.setData(Qt.DecorationRole, pixmap)
+                    item.setData(Qt.ItemDataRole.DecorationRole, pixmap)
                     # Trigger repaint
                     grid_view.update()
 

@@ -50,7 +50,7 @@ class BasemapCardDelegate(QStyledItemDelegate):
         self.card_height = self.image_size.height() + self.text_height
 
     def _badge_rect(self, index, card_rect):
-        tag = index.data(Qt.UserRole + 11)
+        tag = index.data(Qt.ItemDataRole.UserRole + 11)
         if not tag:
             return None
         display_tag = tag[tag.find("/") + 1 :] if "/" in tag else tag
@@ -61,7 +61,7 @@ class BasemapCardDelegate(QStyledItemDelegate):
         text_w = (
             fm.horizontalAdvance(display_tag)
             if hasattr(fm, "horizontalAdvance")
-            else fm.width(display_tag)
+            else fm.boundingRect(display_tag).width()
         )
         badge_margin = 4
         badge_pad_h = 5
@@ -76,7 +76,7 @@ class BasemapCardDelegate(QStyledItemDelegate):
         )
 
     def _display_tag(self, index):
-        tag = index.data(Qt.UserRole + 11)
+        tag = index.data(Qt.ItemDataRole.UserRole + 11)
         if not tag:
             return None
         # Translate the full tag (e.g. "Overlay/Hydrography" → "叠加层/水文")
@@ -86,8 +86,8 @@ class BasemapCardDelegate(QStyledItemDelegate):
 
     def editorEvent(self, event, model, option, index):
         if (
-            event.type() == QEvent.MouseButtonRelease
-            and event.button() == Qt.LeftButton
+            event.type() == QEvent.Type.MouseButtonRelease
+            and event.button() == Qt.MouseButton.LeftButton
         ):
             rect = option.rect
             x_off = (rect.width() - self.card_width) // 2
@@ -106,8 +106,8 @@ class BasemapCardDelegate(QStyledItemDelegate):
 
     def paint(self, painter: QPainter, option, index):
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
 
         rect = option.rect
         x_off = (rect.width() - self.card_width) // 2
@@ -116,8 +116,8 @@ class BasemapCardDelegate(QStyledItemDelegate):
             rect.left() + x_off, rect.top() + y_off, self.card_width, self.card_height
         )
 
-        is_selected = option.state & QStyle.State_Selected
-        is_hovered = option.state & QStyle.State_MouseOver
+        is_selected = option.state & QStyle.StateFlag.State_Selected
+        is_hovered = option.state & QStyle.StateFlag.State_MouseOver
 
         bg_color = QColor(255, 255, 255)
         border_color = QColor(220, 230, 240)
@@ -139,10 +139,10 @@ class BasemapCardDelegate(QStyledItemDelegate):
         path.addRoundedRect(QRectF(card_rect), self.border_radius, self.border_radius)
         painter.setClipPath(path)
 
-        pixmap = index.data(Qt.DecorationRole)
+        pixmap = index.data(Qt.ItemDataRole.DecorationRole)
         if isinstance(pixmap, QPixmap) and not pixmap.isNull():
             scaled_pix = pixmap.scaled(
-                img_rect.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation
+                img_rect.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation
             )
             c_x = (scaled_pix.width() - img_rect.width()) // 2
             c_y = (scaled_pix.height() - img_rect.height()) // 2
@@ -153,14 +153,14 @@ class BasemapCardDelegate(QStyledItemDelegate):
             )
         else:
             painter.fillRect(img_rect, QColor(250, 250, 250))
-            icon = index.data(Qt.UserRole + 10)
+            icon = index.data(Qt.ItemDataRole.UserRole + 10)
             if isinstance(icon, QIcon):
                 icon_rect = QRect(
                     img_rect.center().x() - 12, img_rect.center().y() - 12, 24, 24
                 )
                 icon.paint(painter, icon_rect)
 
-        name = index.data(Qt.DisplayRole)
+        name = index.data(Qt.ItemDataRole.DisplayRole)
 
         painter.setPen(QColor(44, 62, 80))
         font = painter.font()
@@ -176,7 +176,7 @@ class BasemapCardDelegate(QStyledItemDelegate):
             self.text_height - 4,
         )
         bound_rect = painter.boundingRect(
-            normal_rect, Qt.AlignCenter | Qt.AlignVCenter | Qt.TextWordWrap, name
+            normal_rect, Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter | Qt.TextFlag.TextWordWrap, name
         )
         text_overflows = bound_rect.height() > normal_rect.height()
 
@@ -203,11 +203,11 @@ class BasemapCardDelegate(QStyledItemDelegate):
 
         display_text_rect = text_bg_rect.adjusted(margin, 2, -margin, -2)
         painter.drawText(
-            display_text_rect, Qt.AlignCenter | Qt.AlignVCenter | Qt.TextWordWrap, name
+            display_text_rect, Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter | Qt.TextFlag.TextWordWrap, name
         )
 
         # Protocol badge (top-left corner, only for vector tiles)
-        protocol = index.data(Qt.UserRole + 12)
+        protocol = index.data(Qt.ItemDataRole.UserRole + 12)
         if protocol and protocol == "vector":
             painter.save()
             proto_color = PROTOCOL_COLORS.get(protocol, QColor(0, 0, 0))
@@ -220,7 +220,7 @@ class BasemapCardDelegate(QStyledItemDelegate):
             proto_pad_v = 2
             proto_margin = 4
             proto_text_rect = painter.boundingRect(
-                QRect(0, 0, 0, 0), Qt.AlignLeft, proto_label
+                QRect(0, 0, 0, 0), Qt.AlignmentFlag.AlignLeft, proto_label
             )
             proto_w = proto_text_rect.width() + proto_pad_h * 2
             proto_h = proto_text_rect.height() + proto_pad_v * 2
@@ -230,16 +230,16 @@ class BasemapCardDelegate(QStyledItemDelegate):
                 proto_w,
                 proto_h,
             )
-            painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QBrush(proto_color))
             painter.drawRoundedRect(proto_rect, 3, 3)
             painter.setPen(QColor(255, 255, 255))
-            painter.drawText(proto_rect, Qt.AlignCenter, proto_label)
+            painter.drawText(proto_rect, Qt.AlignmentFlag.AlignCenter, proto_label)
             painter.restore()
 
         display_tag = self._display_tag(index)
         if display_tag:
-            tag = index.data(Qt.UserRole + 11)
+            tag = index.data(Qt.ItemDataRole.UserRole + 11)
             painter.save()
             badge_color = TAG_COLORS.get(tag, QColor(150, 150, 150))
             badge_font = painter.font()
@@ -250,7 +250,7 @@ class BasemapCardDelegate(QStyledItemDelegate):
             badge_pad_h = 5
             badge_pad_v = 2
             text_rect = painter.boundingRect(
-                QRect(0, 0, 0, 0), Qt.AlignLeft, display_tag
+                QRect(0, 0, 0, 0), Qt.AlignmentFlag.AlignLeft, display_tag
             )
             badge_w = text_rect.width() + badge_pad_h * 2
             badge_h = text_rect.height() + badge_pad_v * 2
@@ -260,11 +260,11 @@ class BasemapCardDelegate(QStyledItemDelegate):
                 badge_w,
                 badge_h,
             )
-            painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QBrush(badge_color))
             painter.drawRoundedRect(badge_rect, 3, 3)
             painter.setPen(QColor(255, 255, 255))
-            painter.drawText(badge_rect, Qt.AlignCenter, display_tag)
+            painter.drawText(badge_rect, Qt.AlignmentFlag.AlignCenter, display_tag)
             painter.restore()
 
         painter.restore()

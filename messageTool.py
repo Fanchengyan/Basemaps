@@ -28,12 +28,12 @@ else:
     _BUTTON_YES = QMessageBox.Yes
     _BUTTON_NO = QMessageBox.No
 
-# Level mapping
+# Level mapping (scoped for Qt5/Qt6 compatibility)
 _LEVELS: dict[str, QgisType.MessageLevel] = {
-    "info": Qgis.Info,
-    "warning": Qgis.Warning,
-    "critical": Qgis.Critical,
-    "success": Qgis.Success,
+    "info": Qgis.MessageLevel.Info,
+    "warning": Qgis.MessageLevel.Warning,
+    "critical": Qgis.MessageLevel.Critical,
+    "success": Qgis.MessageLevel.Success,
 }
 
 LogLevel = Literal["info", "warning", "critical", "success"]
@@ -109,7 +109,7 @@ class Logger:
         >>> Logger.info("Loading configuration...")
         >>> Logger.info("Connected to server", tag="Network")
         """
-        Logger._log(msg, Qgis.Info, tag, notify_user)
+        Logger._log(msg, Qgis.MessageLevel.Info, tag, notify_user)
 
     @staticmethod
     def warning(
@@ -132,7 +132,7 @@ class Logger:
         --------
         >>> Logger.warning("Configuration file not found, using defaults")
         """
-        Logger._log(msg, Qgis.Warning, tag, notify_user)
+        Logger._log(msg, Qgis.MessageLevel.Warning, tag, notify_user)
 
     @staticmethod
     def critical(
@@ -155,7 +155,7 @@ class Logger:
         --------
         >>> Logger.critical("Failed to save data: permission denied")
         """
-        Logger._log(msg, Qgis.Critical, tag, notify_user)
+        Logger._log(msg, Qgis.MessageLevel.Critical, tag, notify_user)
 
     @staticmethod
     def success(
@@ -178,7 +178,7 @@ class Logger:
         --------
         >>> Logger.success("Export completed successfully")
         """
-        Logger._log(msg, Qgis.Success, tag, notify_user)
+        Logger._log(msg, Qgis.MessageLevel.Success, tag, notify_user)
 
     @staticmethod
     def log(
@@ -243,7 +243,7 @@ class MessageBar:
     def show(
         title: str,
         text: str,
-        level: QgisType.MessageLevel = Qgis.Info,
+        level: QgisType.MessageLevel = Qgis.MessageLevel.Info,
         duration: int = 10,
     ) -> None:
         """Show a message in the QGIS message bar.

@@ -83,7 +83,7 @@ class VectorPreviewTask(QgsTask):
     ) -> None:
         super().__init__(
             f"Rendering vector preview for {provider_name} / {layer_name}",
-            QgsTask.CanCancel,
+            QgsTask.Flag.CanCancel,
         )
         self.provider_name = provider_name
         self.layer_name = layer_name
@@ -321,7 +321,7 @@ class PreviewManager(QObject):
             img.fill(QColor(235, 240, 248))
 
             painter = QPainter(img)
-            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
             # Grid lines
             painter.setPen(QPen(QColor(200, 212, 230), 0.5))
@@ -684,7 +684,7 @@ class PreviewManager(QObject):
         request = QNetworkRequest(QUrl(url))
 
         request.setHeader(
-            QNetworkRequest.UserAgentHeader,
+            QNetworkRequest.KnownHeaders.UserAgentHeader,
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Safari/537.36 QGIS/3.0.0",
         )
         if extra_headers:
@@ -1021,10 +1021,12 @@ class PreviewManager(QObject):
         uri.setParam("type", "xyz")
         uri.setParam("url", tile_url)
         encoded_uri = str(uri.encodedUri(), "utf-8")
+        # Only pass a local (stripped) style file to QGIS.  Never pass
+        # a remote style_url directly — QGIS would download and parse
+        # the full JSON including symbol layers, triggering the font
+        # download crash on thread-pool stacks.
         if resolved_style_path:
             encoded_uri += f"&styleUrl=file://{resolved_style_path}"
-        elif style_url:
-            encoded_uri += f"&styleUrl={style_url}"
 
         layer = QgsVectorTileLayer(encoded_uri, layer_name)
         if not layer.isValid():
@@ -1032,7 +1034,11 @@ class PreviewManager(QObject):
             cls._cleanup_temp_style_file(resolved_style_path)
             return None
 
-        if resolved_style_path or style_url:
+        if resolved_style_path:
+            # Symbol layers have been stripped from the local style file
+            # (see _strip_symbol_layers), so loadDefaultStyle only applies
+            # fill / line / circle / raster paint properties and does NOT
+            # trigger QgsFontManager font downloading.
             try:
                 layer.loadDefaultStyle()
             except Exception as exc:
@@ -1166,6 +1172,31 @@ class PreviewManager(QObject):
             return None
         return rendered_image
 
+    @staticmethod
+    def _strip_symbol_layers(style: dict) -> dict:
+        """Return a copy of *style* with ``type: "symbol"`` layers removed.
+
+        Symbol (text/icon) layers are the only layer type that triggers
+        ``QgsFontManager`` font downloading, which on Qt6/QGIS 4.0 can
+        overflow the thread-pool stack (544 KB) via ``QRegularExpression``
+        inside ``QgsFontDownloadDetails::standardizeFamily``.  Removing
+        them keeps fill, line, circle and raster layers intact so the
+        preview thumbnail still shows useful styling.
+        """
+        layers = style.get("layers")
+        if not isinstance(layers, list):
+            return style
+
+        filtered = [ly for ly in layers if ly.get("type") != "symbol"]
+        if len(filtered) == len(layers):
+            return style
+
+        import copy
+
+        safe = copy.deepcopy(style)
+        safe["layers"] = filtered
+        return safe
+
     @classmethod
     def _prepare_vector_style_file(
         cls, tile_url: str, style_url: str, layer_name: str
@@ -1180,13 +1211,13 @@ class PreviewManager(QObject):
             return None
 
         if cls._looks_like_mapbox_style(payload):
-            # ArcGIS/Esri styles reference server-side sprites & glyphs;
-            # let QGIS load them directly via remote URL instead of file://
-            if (
-                "arcgis" in style_metadata_url.lower()
-                or "esri" in style_metadata_url.lower()
-            ):
-                return None
+            # Strip symbol layers so loadDefaultStyle() does not trigger
+            # QgsFontManager font downloading, which overflows the
+            # thread-pool stack on Qt6/QGIS 4.0.  Symbol layers are the
+            # only consumers of external sprite/glyph resources, so
+            # removing them also makes local file:// loading safe for
+            # ArcGIS/Esri styles.
+            payload = cls._strip_symbol_layers(payload)
             return cls._write_temp_json(payload)
 
         if cls._looks_like_tilejson(payload):
@@ -1422,7 +1453,7 @@ class PreviewManager(QObject):
     ) -> None:
         content = reply.readAll()
         error_code = reply.error()
-        http_status = reply.attribute(QNetworkRequest.HttpStatusCodeAttribute)
+        http_status = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         reply.deleteLater()
         self._active_requests.pop(req_id, None)
 
@@ -1454,11 +1485,8 @@ class PreviewManager(QObject):
                     payload = json.loads(bytes(content))
                     style_url = task.get("style_url", "")
                     if self._looks_like_mapbox_style(payload):
-                        if (
-                            "arcgis" not in style_url.lower()
-                            and "esri" not in style_url.lower()
-                        ):
-                            resolved_path = self._write_temp_json(payload)
+                        payload = self._strip_symbol_layers(payload)
+                        resolved_path = self._write_temp_json(payload)
                     elif self._looks_like_tilejson(payload):
                         generated = self._build_generic_vector_style(
                             payload, task["layer"]
@@ -1603,7 +1631,7 @@ class PreviewManager(QObject):
         painter.end()
 
         final_img = canvas.scaled(
-            256, 256, Qt.IgnoreAspectRatio, Qt.SmoothTransformation
+            256, 256, Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation
         )
 
         key = task["key"]
@@ -1690,7 +1718,7 @@ class PreviewManager(QObject):
         nam = QgsNetworkAccessManager.instance()
         request = QNetworkRequest(QUrl(provider_url))
         request.setHeader(
-            QNetworkRequest.UserAgentHeader,
+            QNetworkRequest.KnownHeaders.UserAgentHeader,
             "Mozilla/5.0 QGIS/3.0.0 Basemaps Plugin",
         )
 
