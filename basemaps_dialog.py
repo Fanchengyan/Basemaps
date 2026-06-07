@@ -1270,8 +1270,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 if "token" in provider and not token:
                     MessageBox.warning(
                         self.tr(
-                            "This provider requires an API token/key but none is set. "
-                            "Please click the Edit button on the provider to set it."
+                            "Missing API token. Edit the provider to set it."
                         ),
                         self.tr("Authentication Required"),
                         self,
@@ -2211,8 +2210,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if "token" in provider and not token:
             MessageBox.warning(
                 self.tr(
-                    "This provider requires an API token/key but none is set. "
-                    "Please click the Edit button on the provider to set it."
+                    "Missing API token. Edit the provider to set it."
                 ),
                 self.tr("Authentication Required"),
                 self,
