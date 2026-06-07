@@ -12,49 +12,64 @@ Basemaps is a QGIS 3.0+ plugin that provides easy access to online basemap servi
 Basemaps/
 ├── __init__.py              # Plugin entry point (classFactory)
 ├── basemaps.py              # Main plugin class (BasemapsPlugin)
-├── basemaps_dialog.py       # Dialog classes (BasemapsDialog, ProviderInputDialog, BasemapInputDialog)
-├── config_loader.py         # YAML configuration loader
-├── wms_fetch_task.py        # Background WMS/WMTS fetching (QgsTask)
-├── wmts_parser.py           # ElementTree-based WMTS XML parser
+├── basemaps_dialog.py       # Dialog classes + VectorTileLoadTask (QgsTask)
+├── config_loader.py         # YAML configuration loader + tag overrides
+├── preview_manager.py       # Preview thumbnail fetching, caching, rendering
+├── wms_fetch_task.py        # Background WMS/WMTS capabilities fetching (QgsTask)
+├── wmts_parser.py           # ElementTree-based WMTS XML parser (fallback)
 ├── messageTool.py           # Logger, MessageBar, MessageBox wrappers
+├── metadata.txt             # QGIS plugin metadata (version, author, dependencies)
 ├── ui/
 │   ├── __init__.py          # UI loading, icon setup
-│   └── basemaps_dialog_base.ui  # Qt Designer UI definition
+│   ├── basemaps_dialog_base.ui  # Qt Designer UI definition (880×531px)
+│   └── basemap_delegate.py  # Custom QStyledItemDelegate for gallery card view
 ├── resources/
-│   ├── providers/           # Provider configuration files
-│   │   ├── default/         # Built-in default providers (YAML)
-│   │   │   ├── xyz_01_Esri.yaml
-│   │   │   ├── wms_01_EOX_Sentinel-2_Cloudless.yaml
-│   │   │   └── ...
-│   │   └── user/            # User-customized providers (YAML)
-│   │       └── ...
+│   ├── providers/           # Provider configuration files (one YAML per provider)
+│   │   ├── default/         # Built-in default providers (read-only, 12+ files)
+│   │   └── user/            # User-customized providers (editable)
+│   ├── previews/            # Cached preview thumbnails (PNG)
+│   │   ├── default/{xyz,wms}/
+│   │   └── user/{xyz,wms}/
 │   ├── icons/               # Provider icons (SVG/PNG)
-└── i18n/                    # Translations (zh, ja, fr, de, ru, ko)
+│   └── tag_overrides.yaml   # Persisted user tag edits (separate file mode)
+└── i18n/                    # Translations (11 languages: zh, ja, ko, fr, de, ru, ar, es, pt, hi, bn)
 ```
 
 ### Key Components
 
-- **[`__init__.py`](/__init__.py)**: Implements `classFactory(iface)` - standard QGIS plugin entry point
-- **[`basemaps.py`](basemaps.py)**: Plugin lifecycle (initGui, unload), toolbar/menu integration, translation setup
-- **[`basemaps_dialog.py`](basemaps_dialog.py)**: Main UI logic - two tabs for XYZ and WMS services, provider/basemap CRUD, import/export (ZIP with YAML + icons)
-- **[`config_loader.py`](config_loader.py)**: YAML configuration loader, converts YAML type-based structure to providers list
-- **[`wms_fetch_task.py`](wms_fetch_task.py)**: Asynchronous WMS/WMTS service capabilities fetching using `QgsTask`, prevents UI blocking during network requests
-- **[`wmts_parser.py`](wmts_parser.py)**: ElementTree-based WMTS capabilities parser, used as fallback when OWSLib fails on non-standard XML
-- **[`messageTool.py`](messageTool.py)**: Unified logging and messaging utilities - `Logger` (QgsMessageLog), `MessageBar`, `MessageBox` with Qt5/Qt6 compatibility
-- **[`ui/__init__.py`](ui/__init__.py)**: Dynamically loads `.ui` file using `uic.loadUiType()`
+- **[`__init__.py`](/__init__.py)**: Implements `classFactory(iface)` — standard QGIS plugin entry point
+- **[`basemaps.py`](basemaps.py)**: Plugin lifecycle (`initGui`, `unload`), toolbar/menu integration, translation setup from QSettings locale
+- **[`basemaps_dialog.py`](basemaps_dialog.py)**: Main UI logic (3,590 lines). Contains 6 classes:
+  - `BasemapsDialog` — Two-tab dialog (XYZ/Vector Tiles + WMS/WMTS), provider/basemap CRUD, chunked UI rendering, tag filtering, search, gallery grid view, import/export (ZIP), context menus, bidirectional view mode sync
+  - `ProviderInputDialog` — Modal form for Add/Edit Provider with fields that vary by provider type
+  - `BasemapInputDialog` — Modal form for Add/Edit Basemap/Layer with tile type (raster/vector), source URL, style URL, layer settings, and tag selector
+  - `TagEditDialog` — Tag editing with save-mode preference (separate overrides file vs direct provider file)
+  - `TokenAuthWidget` — Checkable `QGroupBox` for API token auth with well-known provider presets (MapTiler, Mapbox, Thunderforest, etc.)
+  - `VectorTileLoadTask` — `QgsTask` that downloads vector tile style JSON in background
+- **[`config_loader.py`](config_loader.py)**: YAML config loading/saving, converts YAML type-based structure to providers list, tag overrides persistence, provider file rename/delete management
+- **[`preview_manager.py`](preview_manager.py)**: Preview thumbnail system (1,783 lines). Multi-zoom tile fetching with retry, composite tile merging, vector tile off-screen rendering, WMTS capabilities caching, auth query param propagation, blank preview detection, placeholder generation
+- **[`wms_fetch_task.py`](wms_fetch_task.py)**: Asynchronous WMS/WMTS capabilities fetching using `QgsTask`, auto-detects service type, dual parsing (OWSLib + `wmts_parser`), namespace fixing for ArcGIS
+- **[`wmts_parser.py`](wmts_parser.py)**: ElementTree-based WMTS XML parser, namespace-aware, used as fallback when OWSLib fails on non-standard/ArcGIS XML
+- **[`messageTool.py`](messageTool.py)**: `Logger` (QgsMessageLog), `MessageBar`, `MessageBox` with Qt5/Qt6 compatibility
+- **[`ui/__init__.py`](ui/__init__.py)**: Loads `.ui` via `uic.loadUiType()`, Qt6 Designer enum-scope fix
+- **[`ui/basemap_delegate.py`](ui/basemap_delegate.py)**: Custom `QStyledItemDelegate` for gallery card rendering with colored tag badges, protocol badges, hover expansion, rounded corners, shadows
 
 ### Data Flow
 
 1. Plugin starts via `classFactory()` → `BasemapsPlugin.__init__()` → `initGui()`
 2. User clicks "Load Basemaps" → `BasemapsDialog` created
 3. Dialog loads YAML configs from `resources/providers/{default|user}/*.yaml` via `config_loader`
-4. XYZ/WMS providers populate QListWidgets with icons and separators ("Default"/"User")
-5. **WMS/WMTS fetch**: User adds WMS/WMTS provider → `WMSFetchTask` fetches capabilities asynchronously:
+4. Applies tag overrides from `resources/tag_overrides.yaml` if present
+5. XYZ/WMS providers populate QListWidgets with icons and separators ("Default"/"User") using chunked rendering (15 items per `QTimer` tick) to keep UI responsive for large providers (e.g., Wayback with 170+ layers)
+6. **Preview thumbnails**: `PreviewManager` fetches tiles asynchronously with multi-zoom escalation and retry, caches PNGs to `resources/previews/`, emits signals to update gallery cards
+7. **Tag filtering**: Combo box at top filters basemaps by tag category; providers without matching items are hidden
+8. **WMS/WMTS fetch**: User adds WMS/WMTS provider → `WMSFetchTask` fetches capabilities asynchronously:
    - Primary: `owslib.wms.WebMapService` or `owslib.wmts.WebMapTileService`
    - Fallback: `wmts_parser.parse_wmts_capabilities()` for non-standard XML
-6. User selections create `QgsRasterLayer` with 'xyz' or 'wms' provider
-7. User modifications save to individual YAML files in `resources/providers/user/`
-8. Provider deletions remove the corresponding YAML file
+9. **Vector tile loading**: User loads a vector basemap → `VectorTileLoadTask` downloads style JSON in background, then `QgsVectorTileLayer` loads with the style on the main thread
+10. User clicks Load → creates `QgsRasterLayer` (raster) or `QgsVectorTileLayer` (vector) from datasource URI
+11. User modifications save to individual YAML files in `resources/providers/user/`; tag edits save to `tag_overrides.yaml` or directly to the provider file depending on user preference
+12. Provider deletions remove the corresponding YAML file; renames clean up old filenames via `source_file` tracking
 
 ## Development
 
@@ -101,13 +116,27 @@ See [`basemaps_dialog.py`](basemaps_dialog.py) and [`messageTool.py`](messageToo
 **YAML structure** (all configs use this format):
 
 ```yaml
+# XYZ raster basemap
 xyz:
   ProviderName:
     icon: icons/provider.svg
     basemaps:
       - name: Basemap Name
         url: https://example.com/tile/{z}/{x}/{y}.png
+        tags: [Satellite]  # optional: All, Satellite, Streets, Terrain, Thematic, Overlay, Overlay/*
 
+# XYZ vector tile basemap
+xyz:
+  ProviderName:
+    icon: icons/provider.svg
+    basemaps:
+      - name: Vector Basemap
+        tile_type: vector
+        url: https://example.com/tile/{z}/{x}/{y}.pbf
+        style_url: https://example.com/style.json
+        tags: [Streets]
+
+# WMS/WMTS provider (layers fetched from capabilities)
 wms:
   ProviderName:
     icon: icons/provider.png
@@ -120,6 +149,7 @@ wms:
         format: [image/jpeg]
         styles: [default]
         service_type: wmts
+        tags: [Satellite]
 ```
 
 **File naming convention**:
@@ -195,9 +225,40 @@ lrelease-qt6 i18n/Basemaps.pro
 
 - Source files (editable): `*.ts` files
 - Compiled files (generated): `*.qm` files
-- Supported languages: zh (Chinese), ja (Japanese), fr (French), de (German), ru (Russian), ko (Korean)
+- Supported languages: zh (Chinese), ja (Japanese), ko (Korean), fr (French), de (German), ru (Russian), ar (Arabic), es (Spanish), pt (Brazilian Portuguese), hi (Hindi), bn (Bangla)
 
 **Note**: The `i18n/Basemaps.pro` file lists all source files with translatable strings. When adding new Python files with user-facing messages, add them to the `SOURCES` list in this file.
+
+## Preview System
+
+Preview thumbnails are managed by [`preview_manager.py`](preview_manager.py):
+
+1. **Raster tiles**: Multi-zoom escalation (z=0 → z=0 composite → z=1 composite → ... up to z=3) with per-tile retry (5 attempts)
+2. **Vector tiles**: Off-screen `QgsMapRendererSequentialJob` rendering with zoom extent retries (z=0 to z=4), blank preview detection via color histogram, placeholder generation with QPainter
+3. **Wayback optimization**: All ESRI Wayback layers share a single preview (same imagery, different dates)
+4. **Caching**: PNG files stored in `resources/previews/{default|user}/{xyz|wms}/`, keyed by provider/basemap name
+5. **Network queue**: Configurable concurrency based on CPU count (min 2, max 8), single-tile and composite-tile queues
+6. **Vector style pipeline**: Fetches style JSON, detects Mapbox style vs TileJSON, builds generic styles from TileJSON with color palettes per source layer
+
+## UI Features
+
+- **Gallery card view**: Custom `BasemapCardDelegate` renders 140×100px cards with preview thumbnails, provider fallback icons, colored tag badges, protocol badges, hover expansion
+- **Tag badge colors**: Satellite=#4A90E2, Streets=#E67E22, Terrain=#27AE60, Thematic=#8E44AD, Overlay=#1ABC9C, Overlay/Hydrography=#3498DB, Overlay/Transportation=#F39C12, Overlay/Labels=#E91E63, Overlay/Boundaries=#795548
+- **Chunked rendering**: Basemap lists populate in chunks of 15 items per `QTimer` tick with version-guarded deferred processing to keep UI responsive for providers with 170+ layers
+- **Bidirectional view sync**: Text (list/tree) and Gallery (grid) views synchronized across both XYZ and WMS tabs
+- **Search + tag filter**: Real-time text search on layer names combined with tag category combo box filtering; providers without matching items are hidden
+- **Context menus**: Right-click on default providers to "Duplicate as User Provider" for customization
+
+## Translation Conventions
+
+When editing translations, follow terminology conventions for consistency.
+
+**General rules**:
+
+- Use domain-standard GIS terminology for each language (e.g., QGIS official translations, Esri localizations)
+- Keep terminology consistent within each language file — never mix synonyms for the same concept
+- Prefer shorter forms when both are acceptable (e.g., ja: レイヤ over レイヤー)
+- Portuguese uses Brazilian (pt-BR) conventions exclusively
 
 ## Contributing
 

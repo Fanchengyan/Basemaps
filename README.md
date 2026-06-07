@@ -1,16 +1,14 @@
 # Basemaps (Plugin for QGIS)
 
-A QGIS plugin that provides easy access to multiple well-known online basemap services, supporting XYZ tiles, WMS, and WMTS services.
+A QGIS plugin with 12 providers and 1500+ basemaps — XYZ tiles, vector tiles, WMS, and WMTS — in 11 languages. Just click and load.
 
 ## Features
 
-- **Pre-integrated Popular Basemap Providers**: Includes well-known basemaps such as `ESRI`, `Google Maps`, `Bing Maps`, `OpenStreetMap`, `Sentinel-2 Cloudless`, and more.
-- **Wide Compatibility**: Fully supports **QGIS 3.x** and **QGIS 4.x** versions.
-- **Multi-language Support**: Available in multiple languages including `English`, `Chinese (Simplified)`, `Japanese`, `Korean`, `French`, `German`, `Russian`, and `Arabic`.
-
-- **Intuitive Management**: Easily add, edit, and remove custom basemap services.
-- **Import/Export Functionality**: Share your custom basemap configurations with others easily using the import/export feature (supports ZIP files).
-- **Asynchronous Loading**: Fetches WMS/WMTS capabilities in the background ensuring the UI remains responsive.
+- **12 providers with 1500+ basemaps** — XYZ tiles, Vector tiles, WMS, and WMTS, including Esri, Google Maps, Bing Maps, OpenStreetMap, Sentinel-2 Cloudless, and more.
+- **QGIS 3.x and 4.x** compatible.
+- **11 languages**: English, 中文, 日本語, 한국어, Français, Deutsch, Русский, العربية, Español, Português, हिन्दी, বাংলা.
+- **Add, edit, remove**, and **import/export** custom basemaps — share configs with colleagues or back up your settings.
+- **Clean and fast** — carefully crafted to keep the interface intuitive and loading responsive for a seamless experience.
 
 
 ## Installation
