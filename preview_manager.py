@@ -79,6 +79,7 @@ class VectorPreviewTask(QgsTask):
         tile_url: str,
         style_url: str,
         preview_path: Path,
+        resolved_style_path: str | None = None,
     ) -> None:
         super().__init__(
             f"Rendering vector preview for {provider_name} / {layer_name}",
@@ -89,6 +90,7 @@ class VectorPreviewTask(QgsTask):
         self.tile_url = tile_url
         self.style_url = style_url
         self.preview_path = preview_path
+        self.resolved_style_path = resolved_style_path
         self.key = f"{provider_name}_{layer_name}"
         self.signals = VectorPreviewTaskSignals()
         self._result = VectorPreviewResult(False, self.key, "", "")
@@ -107,6 +109,7 @@ class VectorPreviewTask(QgsTask):
                 self.tile_url,
                 self.style_url,
                 self.layer_name,
+                self.resolved_style_path,
             )
             if image is None or image.isNull():
                 self._result = VectorPreviewResult(
@@ -382,34 +385,27 @@ class PreviewManager(QObject):
             provider_name, layer_name, "xyz", is_default, tile_url
         )
         key = f"{provider_name}_{layer_name}"
-        Logger.info(f"Queueing vector preview for {key}")
 
         if preview_path.exists():
-            if self._is_invalid_vector_preview_cache(preview_path):
-                try:
-                    preview_path.unlink()
-                except OSError as exc:
-                    Logger.warning(
-                        f"Failed to remove invalid vector preview cache {preview_path}: {exc}"
-                    )
-            else:
-                self.preview_readied.emit(key, str(preview_path))
-                return
+            self.preview_readied.emit(key, str(preview_path))
+            return
 
         if key in self._pending_tasks:
             return
 
         self._pending_tasks.add(key)
-        task = VectorPreviewTask(
-            provider_name=provider_name,
-            layer_name=layer_name,
-            tile_url=tile_url,
-            style_url=style_url,
-            preview_path=preview_path,
-        )
-        task.signals.finished.connect(self._on_vector_preview_task_finished)
-        self._vector_preview_tasks[key] = task
-        QgsApplication.taskManager().addTask(task)
+        task = {
+            "type": "vector",
+            "provider": provider_name,
+            "layer": layer_name,
+            "tile_url": tile_url,
+            "style_url": style_url,
+            "path": preview_path,
+            "key": key,
+            "is_default": is_default,
+        }
+        self._request_queue.append(task)
+        self._process_queue()
 
     def request_preview(
         self,
@@ -608,6 +604,20 @@ class PreviewManager(QObject):
                 req_id = f"{key}_single"
                 self._start_request(fetch_url, req_id, task)
 
+            elif task["type"] == "vector":
+                style_url = task.get("style_url")
+                if not style_url:
+                    style_url = self._derive_tilejson_url(task["tile_url"])
+                if not style_url:
+                    # No style URL — render directly without a style file
+                    self._start_vector_render(task, None)
+                    continue
+                req_id = f"{key}_vector_style"
+                self._start_request(
+                    style_url, req_id, task,
+                    extra_headers={"Accept": "application/json, text/plain, */*"},
+                )
+
             elif task["type"] == "composite":
                 z = task.get("z", 1)
                 # Tile coords for different zoom levels, picking 4 tiles from
@@ -661,7 +671,8 @@ class PreviewManager(QObject):
                     self._handle_composite_complete(key, task)
 
     def _start_request(
-        self, url: str, req_id: str, task: dict, composite_idx: int = -1
+        self, url: str, req_id: str, task: dict, composite_idx: int = -1,
+        extra_headers: dict | None = None,
     ) -> None:
         nam = QgsNetworkAccessManager.instance()
         request = QNetworkRequest(QUrl(url))
@@ -670,6 +681,9 @@ class PreviewManager(QObject):
             QNetworkRequest.UserAgentHeader,
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Safari/537.36 QGIS/3.0.0",
         )
+        if extra_headers:
+            for key, value in extra_headers.items():
+                request.setRawHeader(key.encode("utf-8"), value.encode("utf-8"))
 
         # Enable automatic redirect following
         # Qt5: FollowRedirectsAttribute (deprecated in Qt6)
@@ -973,6 +987,7 @@ class PreviewManager(QObject):
         tile_url: str,
         style_url: str,
         layer_name: str,
+        resolved_style_path: str | None = None,
     ) -> QImage | None:
         """Render a vector tile basemap thumbnail off-screen.
 
@@ -984,6 +999,9 @@ class PreviewManager(QObject):
             Tokenized vector style URL, when available.
         layer_name : str
             Display name for the temporary layer.
+        resolved_style_path : str | None, default=None
+            Pre-resolved style file path. When provided, skips the
+            ``_prepare_vector_style_file`` HTTP fetch.
 
         Returns
         -------
@@ -991,9 +1009,10 @@ class PreviewManager(QObject):
             Rendered preview image, or ``None`` when the layer cannot be
             rendered.
         """
-        resolved_style_path = cls._prepare_vector_style_file(
-            tile_url, style_url, layer_name
-        )
+        if resolved_style_path is None:
+            resolved_style_path = cls._prepare_vector_style_file(
+                tile_url, style_url, layer_name
+            )
         uri = QgsDataSourceUri()
         uri.setParam("type", "xyz")
         uri.setParam("url", tile_url)
@@ -1076,6 +1095,35 @@ class PreviewManager(QObject):
             f"Vector preview failed for {result.key}: {result.error_message or 'unknown error'}"
         )
         self.preview_readied.emit(result.key, str(self.failed_icon_path))
+
+    def _start_vector_render(
+        self, task: dict, resolved_style_path: str | None
+    ) -> None:
+        """Create and submit a VectorPreviewTask for rendering.
+
+        Called after the style JSON has been fetched (or determined to be
+        unavailable) via the async network queue.
+
+        Parameters
+        ----------
+        task : dict
+            The vector preview task dict from the request queue.
+        resolved_style_path : str | None
+            Path to a temporary style file, or ``None`` when the style
+            should be loaded from the remote URL.
+        """
+        key = task["key"]
+        preview_task = VectorPreviewTask(
+            provider_name=task["provider"],
+            layer_name=task["layer"],
+            tile_url=task["tile_url"],
+            style_url=task.get("style_url", ""),
+            preview_path=task["path"],
+            resolved_style_path=resolved_style_path,
+        )
+        preview_task.signals.finished.connect(self._on_vector_preview_task_finished)
+        self._vector_preview_tasks[key] = preview_task
+        QgsApplication.taskManager().addTask(preview_task)
 
     @staticmethod
     def _render_vector_layer_image(
@@ -1390,7 +1438,29 @@ class PreviewManager(QObject):
                     f"error: {error_code}, size: {len(content) if content else 0}"
                 )
 
-        if task["type"] == "single":
+        if task["type"] == "vector":
+            resolved_path = None
+            if content and error_code == 0:
+                try:
+                    payload = json.loads(bytes(content))
+                    style_url = task.get("style_url", "")
+                    if self._looks_like_mapbox_style(payload):
+                        if "arcgis" not in style_url.lower() and "esri" not in style_url.lower():
+                            resolved_path = self._write_temp_json(payload)
+                    elif self._looks_like_tilejson(payload):
+                        generated = self._build_generic_vector_style(
+                            payload, task["layer"]
+                        )
+                        if generated:
+                            resolved_path = self._write_temp_json(generated)
+                except Exception as exc:
+                    Logger.warning(
+                        f"Failed to parse vector style for {key}: {exc}"
+                    )
+            self._start_vector_render(task, resolved_path)
+            self._process_queue()
+
+        elif task["type"] == "single":
             if success:
                 self._finalize_image(task, image)
             elif task.get("retry_as_composite", False):

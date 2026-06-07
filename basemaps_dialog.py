@@ -1336,6 +1336,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def on_provider_changed(self):
         """update basemap list and disable edit/remove buttons for default providers"""
+        from qgis.PyQt.QtCore import QTimer
+
         current_item = self.listProviders.currentItem()
         if not current_item:
             self.listBasemaps.clear()
@@ -1346,38 +1348,28 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             self.btnRemoveProvider.setEnabled(False)
             return
 
-        # Cancel any pending preview requests from previous provider
-        self.preview_manager.cleanup()
-
         provider_data = current_item.data(user_role)
         if not provider_data or "data" not in provider_data:
             return
 
-        # Set basemap list icon size
-        self.listBasemaps.setIconSize(QSize(15, 15))
+        # Clear immediately so old content disappears; populate deferred
+        self.listBasemaps.clear()
+        self.listBasemapsGrid.clear()
+        self.btnEditBasemap.setEnabled(False)
+        self.btnRemoveBasemap.setEnabled(False)
 
-        # Get provider icon
+        # Capture everything needed for deferred population
         provider = provider_data["data"]
+        provider_name = provider["name"]
+        token = provider.get("token", "")
+        token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
+        is_default_provider = self._is_default_provider(provider)
+        provider_icon = IconBasemaps
         if "icon" in provider:
             icon_file = self.icons_dir / provider["icon"]
             if icon_file.exists():
                 provider_icon = QIcon(str(icon_file))
-            else:
-                provider_icon = IconBasemaps
-        else:
-            provider_icon = IconBasemaps
 
-        # Update basemap list and grid (chunked for large providers)
-        from qgis.PyQt.QtCore import QTimer
-
-        self.listBasemaps.clear()
-        self.listBasemapsGrid.clear()
-
-        token = provider.get("token", "")
-        token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
-        is_default_provider = self._is_default_provider(provider)
-
-        # Filter valid basemaps and sort once
         basemaps = [
             bm for bm in sorted(
                 provider_data["data"].get("basemaps", []), key=self._sort_key_by_tag
@@ -1387,22 +1379,23 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         ]
 
         CHUNK = 15
+        self._xyz_version = getattr(self, "_xyz_version", 0) + 1
+        version = self._xyz_version
 
         def process_chunk(start: int):
-            """Process one chunk, schedule next if more remain."""
+            if self._xyz_version != version:
+                return
             end = min(start + CHUNK, len(basemaps))
             for i in range(start, end):
                 basemap = basemaps[i]
                 tile_type = basemap.get("tile_type", "raster")
                 protocol = "vector" if tile_type == "vector" else "xyz"
 
-                # List item
                 item = QListWidgetItem(basemap["name"])
                 item.setIcon(provider_icon)
                 item.setData(user_role, basemap)
                 self.listBasemaps.addItem(item)
 
-                # Grid item
                 grid_item = QListWidgetItem(basemap["name"])
                 grid_item.setData(user_role, basemap)
                 grid_item.setData(Qt.UserRole + 10, provider_icon)
@@ -1412,7 +1405,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 grid_item.setData(Qt.UserRole + 11, bm_tags[0] if bm_tags else None)
                 self.listBasemapsGrid.addItem(grid_item)
 
-                # Request preview
+                # Issue preview inline (same as WMS)
                 if tile_type == "vector":
                     preview_url = self._append_token(
                         basemap.get("url", ""), token, token_param
@@ -1422,36 +1415,26 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     )
                     if preview_url:
                         self.preview_manager.request_vector_preview(
-                            provider["name"], basemap["name"],
+                            provider_name, basemap["name"],
                             preview_url, preview_style_url, is_default_provider,
                         )
                 else:
                     preview_url = self._append_token(basemap["url"], token, token_param)
                     self.preview_manager.request_preview(
-                        provider["name"], basemap["name"],
+                        provider_name, basemap["name"],
                         preview_url, "xyz", None, is_default_provider,
                     )
 
             if end < len(basemaps):
                 QCoreApplication.processEvents()
                 QTimer.singleShot(5, lambda s=end: process_chunk(s))
+            else:
+                self.btnAddBasemap.setEnabled(not is_default_provider)
+                self.btnEditProvider.setEnabled(not is_default_provider)
+                self.btnRemoveProvider.setEnabled(not is_default_provider)
+                self._apply_tag_filter()
 
-        process_chunk(0)
-
-        # Disable add basemap / edit provider / remove provider for default providers
-        is_default = self._is_default_provider(provider)
-        self.btnAddBasemap.setEnabled(not is_default)
-        self.btnEditProvider.setEnabled(not is_default)
-        self.btnRemoveProvider.setEnabled(not is_default)
-
-        # Edit/Remove basemap buttons depend on selection state — delegate to handler
-        self.on_basemap_selection_changed()
-
-        # Apply tag filter to the newly loaded basemaps
-        self._apply_tag_filter()
-
-        # Force repaint so vector placeholders appear immediately
-        self.listBasemapsGrid.viewport().update()
+        QTimer.singleShot(0, lambda: process_chunk(0))
 
     def on_wms_provider_changed(self):
         """Update layer tree when WMS provider changed (chunked to keep UI responsive)."""
@@ -1460,6 +1443,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         current_item = self.listWmsProviders.currentItem()
         if not current_item:
             self.treeWmsLayers.clear()
+            self.listWmsLayersGrid.clear()
             self.btnEditWmsProvider.setEnabled(False)
             self.btnRemoveWmsProvider.setEnabled(False)
             return
@@ -1468,35 +1452,36 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if not provider_data:
             return
 
-        # Set tree icon size
-        self.treeWmsLayers.setIconSize(QSize(15, 15))
+        # Clear immediately so old content disappears; populate deferred
+        self.treeWmsLayers.clear()
+        self.listWmsLayersGrid.clear()
+        self.btnEditWmsProvider.setEnabled(False)
+        self.btnRemoveWmsProvider.setEnabled(False)
 
-        # Get provider icon
         provider = provider_data["data"]
+        provider_name = provider["name"]
         token = provider.get("token", "")
         token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
+        is_default = self._is_default_provider(provider)
         provider_icon = IconBasemaps
         if "icon" in provider:
             icon_file = self.icons_dir / provider["icon"]
             if icon_file.exists():
                 provider_icon = QIcon(str(icon_file))
-
-        is_default = self._is_default_provider(provider)
         preview_url_base = self._append_token(provider["url"], token, token_param)
+        provider_service_type = provider.get("service_type", "wms")
 
-        # Sort layers once
         layers = sorted(
             provider_data["data"].get("layers", []), key=self._sort_key_by_tag
         )
 
-        # Clear and prepare for chunked population
-        self.treeWmsLayers.clear()
-        self.listWmsLayersGrid.clear()
-
         CHUNK = 15
+        self._wms_version = getattr(self, "_wms_version", 0) + 1
+        version = self._wms_version
 
         def process_chunk(start: int):
-            """Process one chunk of layers, schedule next if more remain."""
+            if self._wms_version != version:
+                return
             end = min(start + CHUNK, len(layers))
             for i in range(start, end):
                 layer = layers[i]
@@ -1504,22 +1489,18 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     "layer_title", layer.get("layer_name", "Unknown Layer")
                 )
                 service_type = layer.get(
-                    "service_type", provider.get("service_type", "wms")
+                    "service_type", provider_service_type
                 )
 
-                # Tree item
                 layer_item = QTreeWidgetItem([display_name])
                 layer_item.setIcon(0, provider_icon)
                 self.treeWmsLayers.addTopLevelItem(layer_item)
 
-                # Store layer data on tree item (leaf node for single-CRS layers)
                 crs_list = layer.get("crs", [])
                 format_list = layer.get("format", [])
                 if len(crs_list) <= 1 and len(format_list) <= 1:
                     layer_item.setData(0, user_role, layer)
                 else:
-                    # Multi-param: store default config, children added lazily
-                    provider_service_type = provider.get("service_type", "wms")
                     layer_tags = layer.get("tags", [])
                     default_config = {
                         "layer_name": layer.get("layer_name"),
@@ -1532,7 +1513,6 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     }
                     layer_item.setData(0, user_role, default_config)
 
-                # Grid item
                 grid_item = QListWidgetItem(display_name)
                 grid_item.setData(user_role, layer)
                 grid_item.setData(Qt.UserRole + 10, provider_icon)
@@ -1542,9 +1522,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 grid_item.setData(Qt.UserRole + 11, layer_tags[0] if layer_tags else None)
                 self.listWmsLayersGrid.addItem(grid_item)
 
-                # Queue preview request
                 self.preview_manager.request_preview(
-                    provider["name"],
+                    provider_name,
                     display_name,
                     preview_url_base,
                     service_type,
@@ -1556,12 +1535,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 QCoreApplication.processEvents()
                 QTimer.singleShot(5, lambda s=end: process_chunk(s))
             else:
-                # Done — finalize
                 self.btnEditWmsProvider.setEnabled(not is_default)
                 self.btnRemoveWmsProvider.setEnabled(not is_default)
                 self._apply_tag_filter()
 
-        process_chunk(0)
+        QTimer.singleShot(0, lambda: process_chunk(0))
 
     def on_wms_layer_selection_changed(self):
         """Handle WMS layer selection changes to update button states."""
