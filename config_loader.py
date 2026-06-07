@@ -119,13 +119,59 @@ def _convert_yaml_to_providers(
                 provider["basemaps"] = provider_config.get("basemaps", [])
             elif type_name == "wms":
                 provider["url"] = provider_config.get("url", "")
-                provider["layers"] = provider_config.get("layers", [])
+                provider["layers"] = _normalize_wms_layers(
+                    provider_config.get("layers", [])
+                )
                 if "service_type" in provider_config:
                     provider["service_type"] = provider_config["service_type"]
 
             providers.append(provider)
 
     return providers
+
+
+def _normalize_wms_layers(layers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Normalize WMS/WMTS layer dictionaries loaded from YAML.
+
+    Parameters
+    ----------
+    layers : list[dict[str, Any]]
+        Layer dictionaries from a provider YAML file.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Layers with ``layer_name`` populated from ``layer_name_parts`` when
+        needed.
+    """
+    normalized_layers = []
+    for layer in layers:
+        normalized_layer = dict(layer)
+        if "layer_name" not in normalized_layer and "layer_name_parts" in layer:
+            normalized_layer["layer_name"] = "".join(
+                str(part) for part in layer["layer_name_parts"]
+            )
+        normalized_layers.append(normalized_layer)
+    return normalized_layers
+
+
+def _add_ordered_layer_name(
+    ordered_layer: OrderedDict[str, Any],
+    layer: dict[str, Any],
+) -> None:
+    """Add the layer identifier fields to an ordered YAML layer mapping.
+
+    Parameters
+    ----------
+    ordered_layer : OrderedDict[str, Any]
+        Ordered mapping being prepared for YAML output.
+    layer : dict[str, Any]
+        Source layer dictionary.
+    """
+    if "layer_name_parts" in layer:
+        ordered_layer["layer_name_parts"] = layer["layer_name_parts"]
+    elif "layer_name" in layer:
+        ordered_layer["layer_name"] = layer["layer_name"]
 
 
 def save_config_as_yaml(
@@ -185,8 +231,7 @@ def save_config_as_yaml(
                 # Use OrderedDict to ensure consistent field order
                 ordered_layer = OrderedDict()
                 # IMPORTANT: layer_name must be first
-                if "layer_name" in layer:
-                    ordered_layer["layer_name"] = layer["layer_name"]
+                _add_ordered_layer_name(ordered_layer, layer)
                 if "layer_title" in layer:
                     ordered_layer["layer_title"] = layer["layer_title"]
                 # Then: technical properties in standard order
@@ -200,7 +245,10 @@ def save_config_as_yaml(
                     ordered_layer["tags"] = layer["tags"]
                 # Add any other fields except service_type (which is at provider level)
                 for key, value in layer.items():
-                    if key not in ordered_layer and key != "service_type":
+                    if (
+                        key not in ordered_layer
+                        and key not in {"layer_name", "service_type"}
+                    ):
                         ordered_layer[key] = value
                 normalized_layers.append(ordered_layer)
 
@@ -285,8 +333,7 @@ def _build_provider_yaml_data(provider: dict[str, Any]) -> dict[str, Any]:
         normalized_layers = []
         for layer in layers:
             ordered_layer = OrderedDict()
-            if "layer_name" in layer:
-                ordered_layer["layer_name"] = layer["layer_name"]
+            _add_ordered_layer_name(ordered_layer, layer)
             if "layer_title" in layer:
                 ordered_layer["layer_title"] = layer["layer_title"]
             if "crs" in layer:
@@ -298,7 +345,7 @@ def _build_provider_yaml_data(provider: dict[str, Any]) -> dict[str, Any]:
             if "tags" in layer:
                 ordered_layer["tags"] = layer["tags"]
             for key, value in layer.items():
-                if key not in ordered_layer and key != "service_type":
+                if key not in ordered_layer and key not in {"layer_name", "service_type"}:
                     ordered_layer[key] = value
             normalized_layers.append(ordered_layer)
         provider_config["layers"] = normalized_layers

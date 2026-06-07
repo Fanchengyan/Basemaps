@@ -138,7 +138,7 @@ ASSIGNABLE_TAGS = [
 ]
 
 TOKEN_PARAM_OPTIONS = ["apikey", "key", "api_key", "access_token", "token", "tk"]
-DEFAULT_TOKEN_PARAM = "apikey"
+DEFAULT_TOKEN_PARAM = TOKEN_PARAM_OPTIONS[0]
 
 WELL_KNOWN_XYZ_PROVIDERS = {
     "MapTiler": {"icon": "MapTiler.svg", "token_param": "key"},
@@ -150,6 +150,46 @@ WELL_KNOWN_XYZ_PROVIDERS = {
     "HERE": {"icon": "", "token_param": "apiKey"},
     "OpenRouteService": {"icon": "", "token_param": "api_key"},
 }
+
+
+def _run_qt_menu(menu: QMenu, global_position: Any) -> Any:
+    """Show a Qt menu with PyQt5/PyQt6 compatibility.
+
+    Parameters
+    ----------
+    menu : QMenu
+        Context menu to show.
+    global_position : Any
+        Global screen position returned by ``mapToGlobal``.
+
+    Returns
+    -------
+    Any
+        The selected QAction, or ``None`` when the menu is dismissed.
+    """
+    show_menu = getattr(menu, "exec_", None)
+    if show_menu is None:
+        show_menu = getattr(menu, "exec")
+    return show_menu(global_position)
+
+
+def _run_qt_dialog(dialog: QDialog) -> Any:
+    """Run a modal Qt dialog with PyQt5/PyQt6 compatibility.
+
+    Parameters
+    ----------
+    dialog : QDialog
+        Dialog to run modally.
+
+    Returns
+    -------
+    Any
+        Dialog result code.
+    """
+    show_dialog = getattr(dialog, "exec_", None)
+    if show_dialog is None:
+        show_dialog = getattr(dialog, "exec")
+    return show_dialog()
 
 
 class VectorTileLoadTask(QgsTask):
@@ -180,9 +220,13 @@ class VectorTileLoadTask(QgsTask):
             fd, self.temp_style_path = tempfile.mkstemp(suffix=".json")
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 f.write(resp.text)
-        except Exception:
-            # Style download failed — layer will still load without it
-            pass
+        except Exception as error:
+            Logger.warning(
+                QCoreApplication.translate(
+                    "BasemapsDialog",
+                    "Failed to download vector tile style '{}': {}",
+                ).format(self.style_url, error)
+            )
         return True
 
     def finished(self, result: bool) -> None:
@@ -1071,7 +1115,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def add_provider(self):
         dialog = ProviderInputDialog(self)
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             provider_data = dialog.get_data()
             if any(p["name"] == provider_data["name"] for p in self.providers_data):
@@ -1162,7 +1206,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         dialog = BasemapInputDialog(self)
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             provider_data = current_item.data(user_role)
             # Directly modify providers_data data
@@ -1192,7 +1236,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         basemap = current_basemap.data(user_role)
 
         dialog = BasemapInputDialog(self, basemap)
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             # Directly modify providers_data data
             provider = self.providers_data[provider_data["index"]]
@@ -1277,7 +1321,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         current_provider = self.listProviders.currentItem()
-        token = ""
+        token = str()
         token_param = DEFAULT_TOKEN_PARAM
         if current_provider:
             provider_data = current_provider.data(user_role)
@@ -1651,7 +1695,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def add_xyz_provider(self):
         dialog = ProviderInputDialog(self, provider_type="xyz")
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             provider_data = dialog.get_data()
             if any(p["name"] == provider_data["name"] for p in self.providers_data):
@@ -1765,7 +1809,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         dialog = BasemapInputDialog(self, provider_type="xyz")
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             provider_data = current_item.data(user_role)
             # Directly modify providers_data data
@@ -1876,7 +1920,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         basemap_name = basemap_data.get("name", "Unknown")
 
         dialog = TagEditDialog(self, basemap_name, basemap_data)
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result != dialog_accepted:
             return
         new_tags = dialog.get_tags()
@@ -1947,7 +1991,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         basemap = current_basemap.data(user_role)
 
         dialog = BasemapInputDialog(self, basemap)
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             # Get edited data
             new_data = dialog.get_data()
@@ -2028,7 +2072,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
     def add_wms_provider(self):
         dialog = ProviderInputDialog(self, provider_type="wms")
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             provider_data = dialog.get_data()
             if any(p["name"] == provider_data["name"] for p in self.providers_data):
@@ -2154,7 +2198,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         dialog = BasemapInputDialog(self, provider_type="wms")
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             provider_data = current_item.data(user_role)
             # Directly modify providers_data data
@@ -2513,8 +2557,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         menu = QMenu()
         duplicate_action = menu.addAction(self.tr("Duplicate as User Provider"))
 
-        exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
-        action = exec(self.listProviders.mapToGlobal(position))
+        action = _run_qt_menu(menu, self.listProviders.mapToGlobal(position))
 
         if action == duplicate_action:
             self.duplicate_xyz_provider()
@@ -2527,8 +2570,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         menu = QMenu()
         edit_action = menu.addAction(self.tr("Edit"))
 
-        exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
-        action = exec(self.listBasemaps.mapToGlobal(position))
+        action = _run_qt_menu(menu, self.listBasemaps.mapToGlobal(position))
 
         if action == edit_action:
             self.edit_xyz_basemap()
@@ -2548,8 +2590,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         menu = QMenu()
         duplicate_action = menu.addAction(self.tr("Duplicate as User Provider"))
 
-        exec = menu.exec_ if hasattr(menu, "exec_") else menu.exec
-        action = exec(self.listWmsProviders.mapToGlobal(position))
+        action = _run_qt_menu(menu, self.listWmsProviders.mapToGlobal(position))
 
         if action == duplicate_action:
             self.duplicate_wms_provider()
@@ -2672,7 +2713,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         layer_title = layer.get("layer_title", layer.get("layer_name", "Unknown"))
         dialog = TagEditDialog(self, layer_title, layer)
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             new_tags = dialog.get_tags()
             save_mode = dialog.get_save_mode()
@@ -2768,8 +2809,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         menu = QMenu()
         edit_action = menu.addAction(self.tr("Edit"))
 
-        exec_menu = menu.exec_ if hasattr(menu, "exec_") else menu.exec
-        action = exec_menu(self.treeWmsLayers.mapToGlobal(position))
+        action = _run_qt_menu(menu, self.treeWmsLayers.mapToGlobal(position))
 
         if action == edit_action:
             self.edit_wms_layer_tags()
@@ -2787,8 +2827,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         menu = QMenu()
         edit_action = menu.addAction(self.tr("Edit"))
 
-        exec_menu = menu.exec_ if hasattr(menu, "exec_") else menu.exec
-        action = exec_menu(self.listWmsLayersGrid.mapToGlobal(position))
+        action = _run_qt_menu(menu, self.listWmsLayersGrid.mapToGlobal(position))
 
         if action == edit_action:
             self.edit_wms_layer_tags()
@@ -2821,7 +2860,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         # Open edit dialog
         dialog = ProviderInputDialog(self, provider, provider_type="xyz")
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             # Get edited data
             new_data = dialog.get_data()
@@ -2879,7 +2918,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         # Open edit dialog
         dialog = ProviderInputDialog(self, provider, provider_type="wms")
-        exec_result = dialog.exec_() if hasattr(dialog, "exec_") else dialog.exec()
+        exec_result = _run_qt_dialog(dialog)
         if exec_result == dialog_accepted:
             new_data = dialog.get_data()
             new_data["type"] = "wms"
