@@ -1873,10 +1873,17 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Sort indices from large to small, so deleting will not affect other indices
             indices_to_remove.sort(reverse=True)
 
-            # Delete provider files
+            # Delete provider files and preview images
             for provider in providers_to_delete:
                 config_loader.delete_provider_file(
                     self.resources_dir, provider, prefix="user"
+                )
+                basemaps = provider.get("basemaps", [])
+                self.preview_manager.delete_provider_previews(
+                    provider["name"],
+                    basemaps,
+                    "xyz",
+                    is_default=False,
                 )
 
             # Delete provider from data

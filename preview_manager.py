@@ -11,7 +11,6 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import requests
 from qgis.core import (
-    QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsDataSourceUri,
     QgsMapRendererSequentialJob,
@@ -27,6 +26,7 @@ from qgis.PyQt.QtCore import (
     QIODevice,
     QObject,
     QSize,
+    QTimer,
     pyqtSignal,
     QUrl,
     Qt,
@@ -45,6 +45,48 @@ VECTOR_PREVIEW_FALLBACK_CENTERS = (
     (-7792364.356, -2273030.927),  # Andes
 )
 VECTOR_PREVIEW_SYMBOL_SURROGATE_LIMIT = 48
+
+
+def qt_image_format(name: str) -> object:
+    """Return a QImage format enum for Qt5 and Qt6.
+
+    Parameters
+    ----------
+    name : str
+        Unscoped QImage format name, such as ``"Format_RGB32"``.
+
+    Returns
+    -------
+    object
+        Qt image format enum value.
+    """
+    scoped_format = getattr(QImage, "Format", None)
+    if scoped_format is not None:
+        return getattr(scoped_format, name)
+    return getattr(QImage, name)
+
+
+def network_reply_has_error(error_code: object) -> bool:
+    """Return whether a Qt network error value represents failure.
+
+    Parameters
+    ----------
+    error_code : object
+        Value returned by ``QNetworkReply.error()``.
+
+    Returns
+    -------
+    bool
+        ``True`` when the reply has a network error.
+    """
+    error_value = getattr(error_code, "value", error_code)
+    return error_value != 0
+
+
+qimage_format_rgb32 = qt_image_format("Format_RGB32")
+qimage_format_argb32_premultiplied = qt_image_format(
+    "Format_ARGB32_Premultiplied"
+)
 
 
 @dataclass
@@ -125,6 +167,26 @@ class VectorPreviewTask(QgsTask):
                 )
                 return False
 
+            return self._render_and_save_preview(update_progress=True)
+        except Exception as exc:
+            Logger.warning(f"Vector preview task failed for {self.key}: {exc}")
+            self._result = VectorPreviewResult(False, self.key, "", str(exc))
+            return False
+
+    def _render_and_save_preview(self, update_progress: bool) -> bool:
+        """Render and save the vector preview image.
+
+        Parameters
+        ----------
+        update_progress : bool
+            Whether to update the ``QgsTask`` progress value while rendering.
+
+        Returns
+        -------
+        bool
+            ``True`` when the preview image was rendered and saved.
+        """
+        try:
             image = PreviewManager.render_vector_preview_image(
                 self.tile_url,
                 self.style_url,
@@ -137,7 +199,8 @@ class VectorPreviewTask(QgsTask):
                 )
                 return False
 
-            self.setProgress(85)
+            if update_progress:
+                self.setProgress(85)
             self.preview_path.parent.mkdir(parents=True, exist_ok=True)
             if not PreviewManager._save_preview_image(image, self.preview_path):
                 self._result = VectorPreviewResult(
@@ -151,7 +214,8 @@ class VectorPreviewTask(QgsTask):
             self._result = VectorPreviewResult(
                 True, self.key, str(self.preview_path), ""
             )
-            self.setProgress(100)
+            if update_progress:
+                self.setProgress(100)
             return True
         except Exception as exc:
             Logger.warning(f"Vector preview task failed for {self.key}: {exc}")
@@ -165,6 +229,140 @@ class VectorPreviewTask(QgsTask):
                 False, self.key, "", "Vector preview task ended unsuccessfully"
             )
         self.signals.finished.emit(self._result)
+
+
+class AsyncVectorPreviewRenderer(QObject):
+    """Asynchronous main-thread vector preview renderer.
+
+    This renderer keeps QGIS/Qt objects on the main thread while
+    ``QgsMapRendererSequentialJob`` performs each render asynchronously.
+    """
+
+    finished = pyqtSignal(object)
+
+    def __init__(
+        self,
+        provider_name: str,
+        layer_name: str,
+        tile_url: str,
+        style_url: str,
+        preview_path: Path,
+        resolved_style_path: str | None = None,
+    ) -> None:
+        super().__init__()
+        self.provider_name = provider_name
+        self.layer_name = layer_name
+        self.tile_url = tile_url
+        self.style_url = style_url
+        self.preview_path = preview_path
+        self.resolved_style_path = resolved_style_path
+        self.key = f"{provider_name}_{layer_name}"
+        self._attempts: list[tuple[str, float, float, float]] = []
+        self._attempt_index = 0
+        self._allow_low_detail = False
+        self._layer: QgsVectorTileLayer | None = None
+        self._render_job: QgsMapRendererSequentialJob | None = None
+        self._canceled = False
+
+    def start(self) -> None:
+        """Start rendering attempts asynchronously."""
+        try:
+            self._allow_low_detail = PreviewManager._style_file_allows_low_detail_preview(
+                self.resolved_style_path
+            )
+            self._layer = PreviewManager._create_vector_preview_layer(
+                self.tile_url,
+                self.layer_name,
+                self.resolved_style_path,
+            )
+            if self._layer is None:
+                self._finish(False, "Vector preview layer is invalid")
+                return
+
+            self._attempts = PreviewManager._vector_preview_attempts()
+            QTimer.singleShot(0, self._start_next_attempt)
+        except Exception as exc:
+            Logger.warning(f"Async vector preview failed for {self.key}: {exc}")
+            self._finish(False, str(exc))
+
+    def cancel(self) -> None:
+        """Cancel the active render job and clean temporary resources."""
+        self._canceled = True
+        if self._render_job is not None:
+            self._render_job.cancel()
+        PreviewManager._cleanup_temp_style_file(self.resolved_style_path)
+
+    def _start_next_attempt(self) -> None:
+        """Start the next asynchronous render attempt."""
+        if self._canceled:
+            self._finish(False, "Vector preview canceled")
+            return
+
+        if self._layer is None or self._attempt_index >= len(self._attempts):
+            self._finish(False, "Vector preview image is empty")
+            return
+
+        label, half_size, center_x, center_y = self._attempts[self._attempt_index]
+        self._attempt_index += 1
+        if self._attempt_index > 1 and hasattr(self._layer, "reload"):
+            self._layer.reload()
+
+        map_settings = PreviewManager._vector_preview_map_settings(
+            self._layer,
+            half_size,
+            center_x,
+            center_y,
+        )
+        self._render_job = QgsMapRendererSequentialJob(map_settings)
+        self._render_job.finished.connect(
+            lambda attempt_label=label: self._on_render_finished(attempt_label)
+        )
+        self._render_job.start()
+
+    def _on_render_finished(self, attempt_label: str) -> None:
+        """Handle completion of one render attempt."""
+        render_job = self._render_job
+        self._render_job = None
+        if render_job is None:
+            self._start_next_attempt()
+            return
+
+        if self._canceled:
+            if hasattr(render_job, "deleteLater"):
+                render_job.deleteLater()
+            self._finish(False, "Vector preview canceled")
+            return
+
+        rendered_image = render_job.renderedImage()
+        if hasattr(render_job, "deleteLater"):
+            render_job.deleteLater()
+
+        if (
+            not rendered_image.isNull()
+            and (
+                self._allow_low_detail
+                or not PreviewManager._is_blank_vector_preview_image(rendered_image)
+            )
+        ):
+            Logger.info(
+                f"Vector preview rendered for {self.layer_name} using {attempt_label}"
+            )
+            self.preview_path.parent.mkdir(parents=True, exist_ok=True)
+            if PreviewManager._save_preview_image(rendered_image, self.preview_path):
+                self._finish(True, "")
+                return
+            self._finish(False, f"Failed to save vector preview to {self.preview_path}")
+            return
+
+        self._start_next_attempt()
+
+    def _finish(self, success: bool, error_message: str) -> None:
+        """Emit the renderer result and release resources."""
+        PreviewManager._cleanup_temp_style_file(self.resolved_style_path)
+        image_path = str(self.preview_path) if success else ""
+        self.finished.emit(
+            VectorPreviewResult(success, self.key, image_path, error_message)
+        )
 
 
 class PreviewManager(QObject):
@@ -222,8 +420,12 @@ class PreviewManager(QObject):
         self.failed_icon_path = resources_dir / "icons" / "error.svg"
         self._pending_tasks: set[str] = set()
         self._active_requests: dict = {}  # Map of request_id -> reply object
+        self._active_request_tasks: dict[str, dict] = {}
+        self._canceled_request_refs: set[tuple[str, int]] = set()
         self._request_queue: list = []  # Queue of task dicts
-        self._vector_preview_tasks: dict[str, VectorPreviewTask] = {}
+        self._vector_preview_tasks: dict[
+            str, VectorPreviewTask | AsyncVectorPreviewRenderer
+        ] = {}
 
         # Track composite downloads: key -> {'received': {index: QImage}, 'total': 4, 'failed': bool}
         self._active_composites: dict = {}
@@ -350,7 +552,7 @@ class PreviewManager(QObject):
             # Draw using QImage (proven pattern from _merge_and_save).
             # Use Format_RGB32 to avoid any premultiplied-alpha conversion
             # issues when converting to QPixmap.
-            img = QImage(256, 256, QImage.Format_RGB32)
+            img = QImage(256, 256, qimage_format_rgb32)
             img.fill(QColor(235, 240, 248))
 
             painter = QPainter(img)
@@ -420,9 +622,12 @@ class PreviewManager(QObject):
         key = f"{provider_name}_{layer_name}"
 
         if preview_path.exists():
-            self._ensure_preview_cache_size(preview_path)
-            self.preview_readied.emit(key, str(preview_path))
-            return
+            if self._is_invalid_vector_preview_cache(preview_path):
+                self._delete_preview_path(preview_path)
+            else:
+                self._ensure_preview_cache_size(preview_path)
+                self.preview_readied.emit(key, str(preview_path))
+                return
 
         if key in self._pending_tasks:
             return
@@ -602,25 +807,235 @@ class PreviewManager(QObject):
         int
             Number of deleted preview files
         """
-        deleted_count = 0
+        deleted_paths: set[Path] = set()
+        self._cancel_provider_preview_tasks(
+            provider_name,
+            basemaps_or_layers,
+            service_type,
+            is_default,
+        )
 
         # For Wayback, just delete the shared preview once
         if self._is_wayback_provider(provider_name, url):
-            if self.delete_preview(
-                provider_name, self.WAYBACK_SHARED_LAYER, service_type, is_default, url
-            ):
-                deleted_count = 1
-            return deleted_count
+            preview_path = self.get_preview_path(
+                provider_name,
+                self.WAYBACK_SHARED_LAYER,
+                service_type,
+                is_default,
+                url,
+            )
+            if self._delete_preview_path(preview_path):
+                deleted_paths.add(preview_path)
+            return len(deleted_paths)
 
         for item in basemaps_or_layers:
             # XYZ uses 'name', WMS/WMTS uses 'layer_title'
             layer_name = item.get("name") or item.get("layer_title", "")
-            if layer_name and self.delete_preview(
-                provider_name, layer_name, service_type, is_default, url
-            ):
-                deleted_count += 1
+            if not layer_name:
+                continue
+            preview_path = self.get_preview_path(
+                provider_name,
+                layer_name,
+                service_type,
+                is_default,
+                url,
+            )
+            if self._delete_preview_path(preview_path):
+                deleted_paths.add(preview_path)
 
-        return deleted_count
+        preview_dir = self._get_preview_dir(service_type, is_default)
+        safe_provider = "".join([c for c in provider_name if c.isalnum()])
+        for preview_path in preview_dir.glob(f"{safe_provider}_*.png"):
+            if self._delete_preview_path(preview_path):
+                deleted_paths.add(preview_path)
+
+        return len(deleted_paths)
+
+    def _cancel_provider_preview_tasks(
+        self,
+        provider_name: str,
+        basemaps_or_layers: list[dict],
+        service_type: str,
+        is_default: bool,
+    ) -> int:
+        """Cancel queued and active preview work for a provider.
+
+        Parameters
+        ----------
+        provider_name : str
+            Provider whose previews are being removed.
+        basemaps_or_layers : list[dict]
+            Provider basemap or layer dictionaries.
+        service_type : str
+            Preview service type.
+        is_default : bool
+            Whether the provider belongs to the default catalog.
+
+        Returns
+        -------
+        int
+            Number of preview work items canceled or removed from tracking.
+        """
+        layer_names = {
+            item.get("name") or item.get("layer_title", "")
+            for item in basemaps_or_layers
+        }
+        layer_names.discard("")
+        provider_prefix = f"{provider_name}_"
+        target_keys = {f"{provider_name}_{layer_name}" for layer_name in layer_names}
+        target_keys.add(f"{provider_name}_{self.WAYBACK_SHARED_LAYER}")
+
+        def task_matches(task: dict) -> bool:
+            return self._preview_task_matches_provider(
+                task,
+                provider_name,
+                service_type,
+                is_default,
+                target_keys,
+                provider_prefix,
+            )
+
+        canceled_count = 0
+
+        kept_tasks = []
+        for task in self._request_queue:
+            if task_matches(task):
+                canceled_count += 1
+                self._cleanup_temp_style_file(task.get("resolved_style_path"))
+                continue
+            kept_tasks.append(task)
+        self._request_queue = kept_tasks
+
+        for req_id, reply in list(self._active_requests.items()):
+            active_task = self._active_request_tasks.get(req_id)
+            request_matches = (
+                task_matches(active_task)
+                if active_task is not None
+                else self._preview_request_id_matches(
+                    req_id,
+                    target_keys,
+                    provider_prefix,
+                )
+            )
+            if request_matches:
+                self._active_requests.pop(req_id, None)
+                self._active_request_tasks.pop(req_id, None)
+                self._canceled_request_refs.add((req_id, id(reply)))
+                if reply and not reply.isFinished():
+                    reply.abort()
+                canceled_count += 1
+
+        for key, renderer in list(self._vector_preview_tasks.items()):
+            if self._preview_key_matches(key, target_keys, provider_prefix):
+                self._vector_preview_tasks.pop(key, None)
+                if renderer:
+                    try:
+                        renderer.finished.disconnect(
+                            self._on_vector_preview_task_finished
+                        )
+                    except (TypeError, RuntimeError):
+                        pass
+                    renderer.cancel()
+                canceled_count += 1
+
+        for key, composite_data in list(self._active_composites.items()):
+            if self._preview_key_matches(key, target_keys, provider_prefix):
+                self._active_composites.pop(key, None)
+                task = composite_data.get("task", {})
+                self._cleanup_temp_style_file(task.get("resolved_style_path"))
+                canceled_count += 1
+
+        for key in list(self._pending_tasks):
+            if self._preview_key_matches(key, target_keys, provider_prefix):
+                self._pending_tasks.discard(key)
+                canceled_count += 1
+
+        for key in list(self._wayback_waiting):
+            if self._preview_key_matches(key, target_keys, provider_prefix):
+                waiting_count = len(self._wayback_waiting.pop(key, []))
+                canceled_count += waiting_count + 1
+
+        for provider_url, waiting_tasks in list(self._pending_capabilities.items()):
+            kept_waiting_tasks = [task for task in waiting_tasks if not task_matches(task)]
+            removed_count = len(waiting_tasks) - len(kept_waiting_tasks)
+            if removed_count:
+                canceled_count += removed_count
+            if kept_waiting_tasks:
+                self._pending_capabilities[provider_url] = kept_waiting_tasks
+            else:
+                self._pending_capabilities.pop(provider_url, None)
+
+        if canceled_count:
+            Logger.info(
+                f"Canceled {canceled_count} pending preview item(s) for {provider_name}"
+            )
+        return canceled_count
+
+    @staticmethod
+    def _preview_task_matches_provider(
+        task: dict,
+        provider_name: str,
+        service_type: str,
+        is_default: bool,
+        target_keys: set[str],
+        provider_prefix: str,
+    ) -> bool:
+        """Return whether a preview task belongs to a provider deletion."""
+        if task.get("provider") != provider_name:
+            return False
+        if task.get("is_default", False) != is_default:
+            return False
+        task_service_type = task.get("service_type", "xyz")
+        if task.get("type") == "vector":
+            task_service_type = "xyz"
+        if task_service_type != service_type:
+            return False
+        key = task.get("key", "")
+        return PreviewManager._preview_key_matches(key, target_keys, provider_prefix)
+
+    @staticmethod
+    def _preview_request_id_matches(
+        request_id: str,
+        target_keys: set[str],
+        provider_prefix: str,
+    ) -> bool:
+        """Return whether a network request id belongs to target preview keys."""
+        return any(request_id.startswith(f"{key}_") for key in target_keys) or (
+            request_id.startswith(provider_prefix)
+        )
+
+    @staticmethod
+    def _preview_key_matches(
+        key: str,
+        target_keys: set[str],
+        provider_prefix: str,
+    ) -> bool:
+        """Return whether a preview key belongs to target provider previews."""
+        return key in target_keys or key.startswith(provider_prefix)
+
+    @staticmethod
+    def _delete_preview_path(preview_path: Path) -> bool:
+        """Delete a preview file path when it exists.
+
+        Parameters
+        ----------
+        preview_path : Path
+            Preview cache file to delete.
+
+        Returns
+        -------
+        bool
+            ``True`` when an existing file was deleted.
+        """
+        if not preview_path.exists():
+            return False
+        try:
+            preview_path.unlink()
+            Logger.info(f"Deleted preview: {preview_path}")
+            return True
+        except OSError as exc:
+            Logger.warning(f"Failed to delete preview {preview_path}: {exc}")
+            return False
 
     def _process_queue(self) -> None:
         """Process queued requests up to max concurrent limit."""
@@ -750,6 +1165,7 @@ class PreviewManager(QObject):
             c_idx=composite_idx: self._on_reply_finished(r, rid, t, c_idx)
         )
         self._active_requests[req_id] = reply
+        self._active_request_tasks[req_id] = task
 
     def _construct_preview_url(
         self,
@@ -1055,34 +1471,14 @@ class PreviewManager(QObject):
         allow_low_detail = cls._style_file_allows_low_detail_preview(
             resolved_style_path
         )
-        uri = QgsDataSourceUri()
-        uri.setParam("type", "xyz")
-        uri.setParam("url", tile_url)
-        encoded_uri = str(uri.encodedUri(), "utf-8")
-        # Only pass a local (stripped) style file to QGIS.  Never pass
-        # a remote style_url directly — QGIS would download and parse
-        # the full JSON including symbol layers, triggering the font
-        # download crash on thread-pool stacks.
-        if resolved_style_path:
-            encoded_uri += f"&styleUrl=file://{resolved_style_path}"
-
-        layer = QgsVectorTileLayer(encoded_uri, layer_name)
-        if not layer.isValid():
-            Logger.warning(f"Vector preview layer is invalid for {layer_name}")
+        layer = cls._create_vector_preview_layer(
+            tile_url,
+            layer_name,
+            resolved_style_path,
+        )
+        if layer is None:
             cls._cleanup_temp_style_file(resolved_style_path)
             return None
-
-        if resolved_style_path:
-            # Symbol layers have been stripped from the local style file
-            # (see _strip_symbol_layers), so loadDefaultStyle only applies
-            # fill / line / circle / raster paint properties and does NOT
-            # trigger QgsFontManager font downloading.
-            try:
-                layer.loadDefaultStyle()
-            except Exception as exc:
-                Logger.warning(
-                    f"Failed to load vector style for preview {layer_name}: {exc}"
-                )
 
         try:
             # z=0 → full; z=1 → half; z=2 → 1/4; z=3 → 1/8; z=4 → 1/16
@@ -1191,7 +1587,7 @@ class PreviewManager(QObject):
         self.preview_readied.emit(result.key, str(self.failed_icon_path))
 
     def _start_vector_render(self, task: dict, resolved_style_path: str | None) -> None:
-        """Create and submit a VectorPreviewTask for rendering.
+        """Start asynchronous vector preview rendering.
 
         Called after the style JSON has been fetched (or determined to be
         unavailable) via the async network queue.
@@ -1205,7 +1601,7 @@ class PreviewManager(QObject):
             should be loaded from the remote URL.
         """
         key = task["key"]
-        preview_task = VectorPreviewTask(
+        renderer = AsyncVectorPreviewRenderer(
             provider_name=task["provider"],
             layer_name=task["layer"],
             tile_url=task["tile_url"],
@@ -1213,9 +1609,9 @@ class PreviewManager(QObject):
             preview_path=task["path"],
             resolved_style_path=resolved_style_path,
         )
-        preview_task.signals.finished.connect(self._on_vector_preview_task_finished)
-        self._vector_preview_tasks[key] = preview_task
-        QgsApplication.taskManager().addTask(preview_task)
+        renderer.finished.connect(self._on_vector_preview_task_finished)
+        self._vector_preview_tasks[key] = renderer
+        renderer.start()
 
     @staticmethod
     def _render_vector_layer_image(
@@ -1270,6 +1666,177 @@ class PreviewManager(QObject):
         ):
             return None
         return rendered_image
+
+    @staticmethod
+    def _create_vector_preview_layer(
+        tile_url: str,
+        layer_name: str,
+        resolved_style_path: str | None,
+    ) -> QgsVectorTileLayer | None:
+        """Create a vector tile layer for preview rendering."""
+        uri = QgsDataSourceUri()
+        uri.setParam("type", "xyz")
+        uri.setParam("url", tile_url)
+        encoded_uri = str(uri.encodedUri(), "utf-8")
+
+        layer = QgsVectorTileLayer(encoded_uri, layer_name)
+        if not layer.isValid():
+            Logger.warning(f"Vector preview layer is invalid for {layer_name}")
+            return None
+
+        if resolved_style_path:
+            if not PreviewManager._apply_vector_preview_style(
+                layer,
+                resolved_style_path,
+                layer_name,
+            ):
+                try:
+                    message, ok = layer.loadDefaultStyle()
+                    if not ok:
+                        Logger.warning(
+                            f"QGIS default style load failed for {layer_name}: {message}"
+                        )
+                except Exception as exc:
+                    Logger.warning(
+                        f"Failed to load vector style for preview {layer_name}: {exc}"
+                    )
+        return layer
+
+    @staticmethod
+    def _apply_vector_preview_style(
+        layer: QgsVectorTileLayer,
+        resolved_style_path: str,
+        layer_name: str,
+    ) -> bool:
+        """Apply a local Mapbox style directly to a vector tile preview layer.
+
+        Parameters
+        ----------
+        layer : QgsVectorTileLayer
+            Temporary preview layer.
+        resolved_style_path : str
+            Local Mapbox style JSON path.
+        layer_name : str
+            Display layer name for logging.
+
+        Returns
+        -------
+        bool
+            ``True`` when a QGIS renderer or labeling object was applied.
+        """
+        try:
+            from qgis.core import QgsMapBoxGlStyleConverter
+        except (ImportError, AttributeError):
+            return False
+
+        try:
+            with Path(resolved_style_path).open("r", encoding="utf-8") as handle:
+                style_payload = json.load(handle)
+        except (OSError, json.JSONDecodeError) as exc:
+            Logger.warning(f"Failed to read vector preview style {layer_name}: {exc}")
+            return False
+
+        converter = QgsMapBoxGlStyleConverter()
+        try:
+            result = converter.convert(style_payload)
+        except Exception as exc:
+            Logger.warning(f"Failed to convert vector style for {layer_name}: {exc}")
+            return False
+
+        success_value = getattr(QgsMapBoxGlStyleConverter, "Success", None)
+        if success_value is not None and result != success_value:
+            error_message = converter.errorMessage()
+            if error_message:
+                Logger.warning(
+                    f"Vector style conversion warning for {layer_name}: {error_message}"
+                )
+
+        style_applied = False
+        try:
+            renderer = converter.renderer()
+            if renderer is not None:
+                layer.setRenderer(renderer)
+                style_applied = True
+        except Exception as exc:
+            Logger.warning(f"Failed to set vector renderer for {layer_name}: {exc}")
+
+        try:
+            labeling = converter.labeling()
+            if labeling is not None:
+                layer.setLabeling(labeling)
+                layer.setLabelsEnabled(True)
+                style_applied = True
+        except Exception as exc:
+            Logger.warning(f"Failed to set vector labeling for {layer_name}: {exc}")
+
+        if style_applied:
+            Logger.info(f"Applied vector preview style for {layer_name}")
+        return style_applied
+
+    @staticmethod
+    def _vector_preview_map_settings(
+        layer: QgsVectorTileLayer,
+        half_size: float,
+        center_x: float,
+        center_y: float,
+    ) -> QgsMapSettings:
+        """Build map settings for one vector preview render attempt."""
+        map_settings = QgsMapSettings()
+        map_settings.setLayers([layer])
+        map_settings.setBackgroundColor(QColor(245, 248, 252))
+        map_settings.setDestinationCrs(QgsCoordinateReferenceSystem("EPSG:3857"))
+        map_settings.setExtent(
+            QgsRectangle(
+                center_x - half_size,
+                center_y - half_size,
+                center_x + half_size,
+                center_y + half_size,
+            )
+        )
+        map_settings.setOutputSize(QSize(256, 256))
+        map_settings.setOutputDpi(96)
+        return map_settings
+
+    @staticmethod
+    def _vector_preview_attempts() -> list[tuple[str, float, float, float]]:
+        """Return ordered vector preview render attempts."""
+        full = 20037508.3427892
+        attempts: list[tuple[str, float, float, float]] = []
+        zoom_extents = [full, full / 2, full / 4, full / 8, full / 16]
+        fallback_extents = [
+            (5, full / 32),
+            (7, full / 128),
+            (9, full / 512),
+            (11, full / 2048),
+            (12, full / 4096),
+            (13, full / 8192),
+            (14, full / 16384),
+        ]
+        max_retries = 5
+        fallback_retries = 2
+
+        for z_idx, half_size in enumerate(zoom_extents):
+            for retry in range(max_retries):
+                attempts.append(
+                    (
+                        f"z≈{z_idx} (retry {retry})",
+                        half_size,
+                        *VECTOR_PREVIEW_PRIMARY_CENTER,
+                    )
+                )
+
+        for center_x, center_y in VECTOR_PREVIEW_FALLBACK_CENTERS:
+            for fallback_zoom, fallback_extent in fallback_extents:
+                for retry in range(fallback_retries):
+                    attempts.append(
+                        (
+                            f"fallback land extent z≈{fallback_zoom} (retry {retry})",
+                            fallback_extent,
+                            center_x,
+                            center_y,
+                        )
+                    )
+        return attempts
 
     @staticmethod
     def _strip_symbol_layers(style: dict) -> dict:
@@ -1708,7 +2275,7 @@ class PreviewManager(QObject):
         QImage
             Opaque RGB image suitable for compact JPEG encoding.
         """
-        flattened = QImage(image.size(), QImage.Format_RGB32)
+        flattened = QImage(image.size(), qimage_format_rgb32)
         flattened.fill(QColor(255, 255, 255))
 
         painter = QPainter(flattened)
@@ -1892,11 +2459,20 @@ class PreviewManager(QObject):
     def _on_reply_finished(
         self, reply, req_id: str, task: dict, composite_idx: int
     ) -> None:
+        canceled_request_ref = (req_id, id(reply))
+        if canceled_request_ref in self._canceled_request_refs:
+            self._canceled_request_refs.discard(canceled_request_ref)
+            reply.deleteLater()
+            self._active_requests.pop(req_id, None)
+            self._active_request_tasks.pop(req_id, None)
+            return
+
         content = reply.readAll()
         error_code = reply.error()
         http_status = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         reply.deleteLater()
         self._active_requests.pop(req_id, None)
+        self._active_request_tasks.pop(req_id, None)
 
         key = task["key"]
 
@@ -1921,7 +2497,7 @@ class PreviewManager(QObject):
 
         if task["type"] == "vector":
             resolved_path = None
-            if content and error_code == 0:
+            if content and not network_reply_has_error(error_code):
                 try:
                     payload = json.loads(bytes(content))
                     if self._looks_like_mapbox_style(payload):
@@ -1935,7 +2511,14 @@ class PreviewManager(QObject):
                             resolved_path = self._write_temp_json(generated)
                 except Exception as exc:
                     Logger.warning(f"Failed to parse vector style for {key}: {exc}")
-            self._start_vector_render(task, resolved_path)
+            QTimer.singleShot(
+                0,
+                lambda vector_task=task, style_path=resolved_path: (
+                    self._start_vector_render(vector_task, style_path)
+                    if vector_task["key"] in self._pending_tasks
+                    else self._cleanup_temp_style_file(style_path)
+                ),
+            )
             self._process_queue()
 
         elif task["type"] == "single":
@@ -2057,7 +2640,7 @@ class PreviewManager(QObject):
                 self._process_queue()
 
     def _merge_and_save(self, task: dict, images: dict) -> None:
-        canvas = QImage(512, 512, QImage.Format_ARGB32_Premultiplied)
+        canvas = QImage(512, 512, qimage_format_argb32_premultiplied)
         canvas.fill(0)
         painter = QPainter(canvas)
 
@@ -2186,7 +2769,7 @@ class PreviewManager(QObject):
 
         waiting_tasks = self._pending_capabilities.pop(provider_url, [])
 
-        if error_code != 0 or not content:
+        if network_reply_has_error(error_code) or not content:
             Logger.warning(f"Failed to fetch WMTS capabilities: {provider_url}")
             # Fall back to KVP for all waiting tasks
             for task in waiting_tasks:
@@ -2245,6 +2828,8 @@ class PreviewManager(QObject):
                 task.cancel()
 
         self._active_requests.clear()
+        self._active_request_tasks.clear()
+        self._canceled_request_refs.clear()
         self._request_queue.clear()
         self._pending_tasks.clear()
         self._active_composites.clear()
