@@ -83,11 +83,6 @@ xyz:
       tags:
       - Thematic
       tile_type: vector
-    - name: MapTiler Landform
-      url: https://api.maptiler.com/tiles/landform/{z}/{x}/{y}.pbf
-      tags:
-      - Thematic
-      tile_type: vector
     - name: MapTiler Outdoor Vector
       url: https://api.maptiler.com/tiles/outdoor/{z}/{x}/{y}.pbf
       tags:
