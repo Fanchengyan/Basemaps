@@ -19,9 +19,9 @@ from urllib.parse import urlencode
 import os
 import tempfile
 
-import requests
 from qgis.core import (
     QgsApplication,
+    QgsBlockingNetworkRequest,
     QgsDataSourceUri,
     QgsProject,
     QgsRasterLayer,
@@ -35,6 +35,7 @@ from qgis.PyQt.QtCore import (
     QSettings,
     QSize,
     Qt,
+    QUrl,
 )
 from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import (
@@ -56,6 +57,7 @@ from qgis.PyQt.QtWidgets import (
     QTreeWidgetItem,
     QVBoxLayout,
 )
+from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from . import config_loader
 from .messageTool import Logger, MessageBox
@@ -76,6 +78,7 @@ if QT_VERSION_INT <= 5:
     button_cancel = QDialogButtonBox.Cancel
     dialog_accepted = QDialog.Accepted
     window_modal = Qt.WindowModal
+    http_status_code_attribute = QNetworkRequest.HttpStatusCodeAttribute
 else:
     extended_selection = QAbstractItemView.SelectionMode.ExtendedSelection
     custom_context_menu = Qt.ContextMenuPolicy.CustomContextMenu
@@ -86,6 +89,17 @@ else:
     button_cancel = QDialogButtonBox.StandardButton.Cancel
     dialog_accepted = QDialog.DialogCode.Accepted
     window_modal = Qt.WindowModality.WindowModal
+    http_status_code_attribute = QNetworkRequest.Attribute.HttpStatusCodeAttribute
+
+VECTOR_STYLE_REQUEST_HEADERS = (
+    (
+        b"User-Agent",
+        b"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        b"AppleWebKit/537.36 (KHTML, like Gecko) "
+        b"Chrome/120.0.0.0 Safari/537.36",
+    ),
+    (b"Accept", b"application/json, text/plain, */*"),
+)
 
 default_separator = {
     "name": "Default Providers ─────────────────",
@@ -212,24 +226,99 @@ class VectorTileLoadTask(QgsTask):
         self.temp_style_path: str | None = None
 
     def run(self) -> bool:
+        """Download the remote style JSON through QGIS network access.
+
+        Returns
+        -------
+        bool
+            Always ``True`` so layer creation can continue with a remote
+            ``styleUrl`` fallback when local style download fails.
+        """
         if not self.style_url:
             return True
+
+        style_text = self._fetch_style_text()
+        if style_text is None:
+            return True
+
         try:
-            resp = requests.get(self.style_url, timeout=30)
-            resp.raise_for_status()
             fd, self.temp_style_path = tempfile.mkstemp(suffix=".json")
             with os.fdopen(fd, "w", encoding="utf-8") as f:
-                f.write(resp.text)
+                f.write(style_text)
         except Exception as error:
             Logger.warning(
                 QCoreApplication.translate(
                     "BasemapsDialog",
-                    "Failed to download vector tile style '{}': {}",
+                    "Failed to write vector tile style '{}': {}",
                 ).format(self.style_url, error)
             )
         return True
 
+    def _fetch_style_text(self) -> str | None:
+        """Fetch style JSON text using QGIS network settings.
+
+        Returns
+        -------
+        str | None
+            Response body text when the request succeeds, otherwise ``None``.
+        """
+        request = QNetworkRequest(QUrl(self.style_url))
+        for header, value in VECTOR_STYLE_REQUEST_HEADERS:
+            request.setRawHeader(header, value)
+
+        network_request = QgsBlockingNetworkRequest()
+        error_code = network_request.get(request, True)
+        if error_code != QgsBlockingNetworkRequest.NoError:
+            Logger.warning(
+                QCoreApplication.translate(
+                    "BasemapsDialog",
+                    "Failed to download vector tile style '{}': {}",
+                ).format(self.style_url, network_request.errorMessage())
+            )
+            return None
+
+        reply = network_request.reply()
+        status_code = reply.attribute(http_status_code_attribute)
+        if status_code and int(status_code) >= 400:
+            Logger.warning(
+                QCoreApplication.translate(
+                    "BasemapsDialog",
+                    "Failed to download vector tile style '{}': HTTP {}",
+                ).format(self.style_url, status_code)
+            )
+            return None
+
+        content = bytes(reply.content())
+        if not content:
+            Logger.warning(
+                QCoreApplication.translate(
+                    "BasemapsDialog",
+                    "Vector tile style '{}' returned an empty response",
+                ).format(self.style_url)
+            )
+            return None
+
+        try:
+            return content.decode("utf-8")
+        except UnicodeDecodeError as error:
+            Logger.warning(
+                QCoreApplication.translate(
+                    "BasemapsDialog",
+                    "Failed to decode vector tile style '{}': {}",
+                ).format(self.style_url, error)
+            )
+            return None
+
     def finished(self, result: bool) -> None:
+        """Create the vector tile layer after the background task finishes.
+
+        Parameters
+        ----------
+        result : bool
+            Task result emitted by QGIS. The layer creation path uses the
+            downloaded style file when available, or the remote style URL as
+            a fallback.
+        """
         uri = self.encoded_uri
         if self.temp_style_path:
             uri += f"&styleUrl=file://{self.temp_style_path}"

@@ -37,6 +37,15 @@ from qgis.PyQt.QtGui import QColor, QImage, QPainter, QPen, QPixmap
 from .messageTool import Logger
 from . import wmts_parser
 
+VECTOR_PREVIEW_PRIMARY_CENTER = (0.0, 0.0)
+VECTOR_PREVIEW_FALLBACK_CENTERS = (
+    (890555.926, 5780349.22),  # Alps
+    (9573476.208, 3248973.79),  # Himalaya
+    (-12245143.987, 4865942.28),  # Rockies
+    (-7792364.356, -2273030.927),  # Andes
+)
+VECTOR_PREVIEW_SYMBOL_SURROGATE_LIMIT = 48
+
 
 @dataclass
 class VectorPreviewResult:
@@ -1043,6 +1052,9 @@ class PreviewManager(QObject):
             resolved_style_path = cls._prepare_vector_style_file(
                 tile_url, style_url, layer_name
             )
+        allow_low_detail = cls._style_file_allows_low_detail_preview(
+            resolved_style_path
+        )
         uri = QgsDataSourceUri()
         uri.setParam("type", "xyz")
         uri.setParam("url", tile_url)
@@ -1076,12 +1088,27 @@ class PreviewManager(QObject):
             # z=0 → full; z=1 → half; z=2 → 1/4; z=3 → 1/8; z=4 → 1/16
             full = 20037508.3427892
             zoom_extents = [full, full / 2, full / 4, full / 8, full / 16]
+            fallback_extents = [
+                (5, full / 32),
+                (7, full / 128),
+                (9, full / 512),
+                (11, full / 2048),
+                (12, full / 4096),
+                (13, full / 8192),
+                (14, full / 16384),
+            ]
             max_retries = 5
+            fallback_retries = 2
 
             for z_idx, half_size in enumerate(zoom_extents):
                 z_label = z_idx  # z=0, z=1, z≈2, z≈3, z≈4
                 for retry in range(max_retries):
-                    rendered_image = cls._render_vector_layer_image(layer, half_size)
+                    rendered_image = cls._render_vector_layer_image(
+                        layer,
+                        half_size,
+                        *VECTOR_PREVIEW_PRIMARY_CENTER,
+                        allow_low_detail=allow_low_detail,
+                    )
                     if rendered_image is not None and not rendered_image.isNull():
                         Logger.info(
                             f"Vector preview rendered for {layer_name} "
@@ -1101,6 +1128,33 @@ class PreviewManager(QObject):
                     f"Vector preview z≈{z_label} exhausted for {layer_name}, "
                     f"escalating to next zoom"
                 )
+
+            for center_x, center_y in VECTOR_PREVIEW_FALLBACK_CENTERS:
+                for fallback_zoom, fallback_extent in fallback_extents:
+                    for retry in range(fallback_retries):
+                        rendered_image = cls._render_vector_layer_image(
+                            layer,
+                            fallback_extent,
+                            center_x,
+                            center_y,
+                            allow_low_detail=allow_low_detail,
+                        )
+                        if rendered_image is not None and not rendered_image.isNull():
+                            Logger.info(
+                                f"Vector preview rendered for {layer_name} "
+                                f"using fallback land extent z≈{fallback_zoom} "
+                                f"(retry {retry})"
+                            )
+                            return rendered_image
+
+                        if retry < fallback_retries - 1:
+                            Logger.info(
+                                f"Vector preview blank for {layer_name} "
+                                f"at fallback land extent z≈{fallback_zoom}, "
+                                f"retry {retry + 1}/{fallback_retries}"
+                            )
+                            if hasattr(layer, "reload"):
+                                layer.reload()
 
             Logger.warning(f"Vector preview remained blank for {layer_name}")
             return None
@@ -1165,7 +1219,11 @@ class PreviewManager(QObject):
 
     @staticmethod
     def _render_vector_layer_image(
-        layer: QgsVectorTileLayer, half_size: float
+        layer: QgsVectorTileLayer,
+        half_size: float,
+        center_x: float = 0.0,
+        center_y: float = 0.0,
+        allow_low_detail: bool = False,
     ) -> QImage | None:
         """Render a vector tile layer at a single zoom extent.
 
@@ -1176,13 +1234,25 @@ class PreviewManager(QObject):
         half_size : float
             Half the extent size in meters (EPSG:3857).
             Smaller = higher zoom.
+        center_x : float, default=0.0
+            Center X coordinate in EPSG:3857 meters.
+        center_y : float, default=0.0
+            Center Y coordinate in EPSG:3857 meters.
+        allow_low_detail : bool, default=False
+            Whether a low-detail render is acceptable for styles that
+            intentionally contain background-only or minimal base layers.
         """
         map_settings = QgsMapSettings()
         map_settings.setLayers([layer])
         map_settings.setBackgroundColor(QColor(245, 248, 252))
         map_settings.setDestinationCrs(QgsCoordinateReferenceSystem("EPSG:3857"))
         map_settings.setExtent(
-            QgsRectangle(-half_size, -half_size, half_size, half_size)
+            QgsRectangle(
+                center_x - half_size,
+                center_y - half_size,
+                center_x + half_size,
+                center_y + half_size,
+            )
         )
         map_settings.setOutputSize(QSize(256, 256))
         map_settings.setOutputDpi(96)
@@ -1194,7 +1264,10 @@ class PreviewManager(QObject):
         rendered_image = render_job.renderedImage()
         if rendered_image.isNull():
             return None
-        if PreviewManager._is_blank_vector_preview_image(rendered_image):
+        if (
+            not allow_low_detail
+            and PreviewManager._is_blank_vector_preview_image(rendered_image)
+        ):
             return None
         return rendered_image
 
@@ -1224,6 +1297,146 @@ class PreviewManager(QObject):
         return safe
 
     @classmethod
+    def _prepare_mapbox_preview_style(cls, style: dict) -> dict:
+        """Build a QGIS-safe preview style from a Mapbox style payload.
+
+        Parameters
+        ----------
+        style : dict
+            Mapbox style JSON payload.
+
+        Returns
+        -------
+        dict
+            Style payload suitable for preview rendering in a background task.
+        """
+        stripped = cls._strip_symbol_layers(style)
+        if cls._has_renderable_style_layers(stripped):
+            return stripped
+
+        symbol_preview = cls._build_symbol_surrogate_style(style)
+        if symbol_preview:
+            return symbol_preview
+
+        return stripped
+
+    @staticmethod
+    def _has_renderable_style_layers(style: dict) -> bool:
+        """Return whether a style has non-symbol layers left to render."""
+        layers = style.get("layers")
+        if not isinstance(layers, list):
+            return False
+        return any(layer.get("type") != "symbol" for layer in layers)
+
+    @staticmethod
+    def _style_allows_low_detail_preview(style: dict) -> bool:
+        """Return whether a low-detail render can still be a valid preview."""
+        layers = style.get("layers")
+        if not isinstance(layers, list):
+            return False
+        return any(layer.get("type") == "background" for layer in layers)
+
+    @classmethod
+    def _style_file_allows_low_detail_preview(cls, style_path: str | None) -> bool:
+        """Inspect a local style file for valid low-detail preview layers."""
+        if not style_path:
+            return False
+        try:
+            with Path(style_path).open(encoding="utf-8") as style_file:
+                payload = json.load(style_file)
+        except Exception as exc:
+            Logger.warning(f"Failed to inspect vector preview style {style_path}: {exc}")
+            return False
+        if not isinstance(payload, dict):
+            return False
+        return cls._style_allows_low_detail_preview(payload)
+
+    @classmethod
+    def _build_symbol_surrogate_style(cls, style: dict) -> dict | None:
+        """Convert symbol-only Mapbox styles into safe geometry previews."""
+        sources = style.get("sources")
+        layers = style.get("layers")
+        if not isinstance(sources, dict) or not isinstance(layers, list):
+            return None
+
+        surrogate_layers: list[dict] = []
+        seen: set[tuple[str, str]] = set()
+        for layer in layers:
+            if layer.get("type") != "symbol":
+                continue
+            source_name = layer.get("source")
+            source_layer = layer.get("source-layer")
+            if not source_name or not source_layer:
+                continue
+            key = (source_name, source_layer)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            color = cls._symbol_surrogate_color(source_layer, len(seen))
+            safe_layer_id = cls._safe_style_layer_id(source_layer)
+            surrogate_layers.extend(
+                [
+                    {
+                        "id": f"{safe_layer_id}_line_preview",
+                        "type": "line",
+                        "source": source_name,
+                        "source-layer": source_layer,
+                        "paint": {
+                            "line-color": color,
+                            "line-width": 1.2,
+                            "line-opacity": 0.72,
+                        },
+                    },
+                    {
+                        "id": f"{safe_layer_id}_circle_preview",
+                        "type": "circle",
+                        "source": source_name,
+                        "source-layer": source_layer,
+                        "paint": {
+                            "circle-color": color,
+                            "circle-radius": 2.4,
+                            "circle-opacity": 0.78,
+                        },
+                    },
+                    {
+                        "id": f"{safe_layer_id}_fill_preview",
+                        "type": "fill",
+                        "source": source_name,
+                        "source-layer": source_layer,
+                        "paint": {
+                            "fill-color": color,
+                            "fill-opacity": 0.12,
+                        },
+                    },
+                ]
+            )
+            if len(surrogate_layers) >= VECTOR_PREVIEW_SYMBOL_SURROGATE_LIMIT:
+                break
+
+        if not surrogate_layers:
+            return None
+
+        return {
+            "version": 8,
+            "name": f"{style.get('name', 'Symbol')} preview",
+            "sources": sources,
+            "layers": surrogate_layers,
+        }
+
+    @staticmethod
+    def _safe_style_layer_id(source_layer: str) -> str:
+        """Return a filesystem-neutral style layer identifier."""
+        layer_id = "".join(char if char.isalnum() else "_" for char in source_layer)
+        return layer_id.strip("_") or "symbol"
+
+    @classmethod
+    def _symbol_surrogate_color(cls, source_layer: str, index: int) -> str:
+        """Return a deterministic preview color for a symbol source layer."""
+        fill_color, line_color = cls._layer_palette(source_layer, index)
+        return line_color or fill_color
+
+    @classmethod
     def _prepare_vector_style_file(
         cls, tile_url: str, style_url: str, layer_name: str
     ) -> str | None:
@@ -1243,7 +1456,7 @@ class PreviewManager(QObject):
             # only consumers of external sprite/glyph resources, so
             # removing them also makes local file:// loading safe for
             # ArcGIS/Esri styles.
-            payload = cls._strip_symbol_layers(payload)
+            payload = cls._prepare_mapbox_preview_style(payload)
             return cls._write_temp_json(payload)
 
         if cls._looks_like_tilejson(payload):
@@ -1712,7 +1925,7 @@ class PreviewManager(QObject):
                 try:
                     payload = json.loads(bytes(content))
                     if self._looks_like_mapbox_style(payload):
-                        payload = self._strip_symbol_layers(payload)
+                        payload = self._prepare_mapbox_preview_style(payload)
                         resolved_path = self._write_temp_json(payload)
                     elif self._looks_like_tilejson(payload):
                         generated = self._build_generic_vector_style(
