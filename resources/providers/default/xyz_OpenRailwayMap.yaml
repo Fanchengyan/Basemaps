@@ -1,6 +1,6 @@
 xyz:
   OpenRailwayMap:
-    icon: /Users/fancy/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/Basemaps/resources/icons/OpenRailWayMap.png
+    icon: OpenRailWayMap.png
     basemaps:
       - name: Standard
         url: https://tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png

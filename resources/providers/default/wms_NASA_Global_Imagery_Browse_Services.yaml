@@ -1,6 +1,6 @@
 wms:
   NASA Global Imagery Browse Services:
-    icon: /Users/fancy/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/Basemaps/resources/icons/NASA.svg
+    icon: NASA.svg
     url: "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/1.0.0/WMTSCapabilities.xml"
     service_type: wmts
     layers:
@@ -47,10 +47,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'AIRS_L2_Carbon_'
-          - 'Monoxide_500hPa_'
-          - 'Volume_Mixing_'
-          - 'Ratio_Day'
+          - "AIRS_L2_Carbon_"
+          - "Monoxide_500hPa_"
+          - "Volume_Mixing_"
+          - "Ratio_Day"
         layer_title: Carbon Monoxide (L2, 500 hPa, Day, AIRS, Aqua)
         crs:
           - 2km
@@ -61,10 +61,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'AIRS_L2_Carbon_'
-          - 'Monoxide_500hPa_'
-          - 'Volume_Mixing_'
-          - 'Ratio_Night'
+          - "AIRS_L2_Carbon_"
+          - "Monoxide_500hPa_"
+          - "Volume_Mixing_"
+          - "Ratio_Night"
         layer_title: Carbon Monoxide (L2, 500 hPa, Night, AIRS, Aqua)
         crs:
           - 2km
@@ -431,10 +431,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'AIRS_L3_Carbon_'
-          - 'Monoxide_500hPa_'
-          - 'Volume_Mixing_'
-          - 'Ratio_Daily_Day'
+          - "AIRS_L3_Carbon_"
+          - "Monoxide_500hPa_"
+          - "Volume_Mixing_"
+          - "Ratio_Daily_Day"
         layer_title:
           "Carbon Monoxide Volume Mixing Ratio at 500hPa (L3, Daytime/Ascending,
           Daily, AIRS, Aqua) "
@@ -447,11 +447,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'AIRS_L3_Carbon_'
-          - 'Monoxide_500hPa_'
-          - 'Volume_Mixing_'
-          - 'Ratio_Daily_'
-          - 'Night'
+          - "AIRS_L3_Carbon_"
+          - "Monoxide_500hPa_"
+          - "Volume_Mixing_"
+          - "Ratio_Daily_"
+          - "Night"
         layer_title:
           "Carbon Monoxide Volume Mixing Ratio at 500hPa (L3, Nighttime/Descending,
           Daily, AIRS, Aqua) "
@@ -464,11 +464,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'AIRS_L3_Carbon_'
-          - 'Monoxide_500hPa_'
-          - 'Volume_Mixing_'
-          - 'Ratio_Monthly_'
-          - 'Day'
+          - "AIRS_L3_Carbon_"
+          - "Monoxide_500hPa_"
+          - "Volume_Mixing_"
+          - "Ratio_Monthly_"
+          - "Day"
         layer_title:
           "Carbon Monoxide Volume Mixing Ratio at 500hPa (L3, Daytime/Ascending,
           Monthly, AIRS, Aqua) "
@@ -481,11 +481,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'AIRS_L3_Carbon_'
-          - 'Monoxide_500hPa_'
-          - 'Volume_Mixing_'
-          - 'Ratio_Monthly_'
-          - 'Night'
+          - "AIRS_L3_Carbon_"
+          - "Monoxide_500hPa_"
+          - "Volume_Mixing_"
+          - "Ratio_Monthly_"
+          - "Night"
         layer_title:
           "Carbon Monoxide Volume Mixing Ratio at 500hPa (L3, Nighttime/Descending,
           Monthly, AIRS, Aqua) "
@@ -2236,9 +2236,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'AVISO_Absolute_'
-          - 'Dynamic_Topograp'
-          - 'hy'
+          - "AVISO_Absolute_"
+          - "Dynamic_Topograp"
+          - "hy"
         layer_title: Absolute Dynamic Topography (Monthly, AVISO)
         crs:
           - 2km
@@ -2279,12 +2279,12 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CALIPSO_Imaging_'
-          - 'Infrared_'
-          - 'Radiometer_'
-          - 'Brightness_'
-          - 'Temperature_Day_'
-          - 'CH3'
+          - "CALIPSO_Imaging_"
+          - "Infrared_"
+          - "Radiometer_"
+          - "Brightness_"
+          - "Temperature_Day_"
+          - "CH3"
         layer_title: Brightness Temperature (L2, Day, 12.05um)
         crs:
           - 1km
@@ -2295,13 +2295,13 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CALIPSO_Imaging_'
-          - 'Infrared_'
-          - 'Radiometer_'
-          - 'Brightness_'
-          - 'Temperature_'
-          - 'Difference_Day_'
-          - 'CH1_CH3'
+          - "CALIPSO_Imaging_"
+          - "Infrared_"
+          - "Radiometer_"
+          - "Brightness_"
+          - "Temperature_"
+          - "Difference_Day_"
+          - "CH1_CH3"
         layer_title: Brightness Temperature Difference (L2, Day, 8.65um-12.05um)
         crs:
           - 1km
@@ -2312,13 +2312,13 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CALIPSO_Imaging_'
-          - 'Infrared_'
-          - 'Radiometer_'
-          - 'Brightness_'
-          - 'Temperature_'
-          - 'Difference_Day_'
-          - 'CH2_CH3'
+          - "CALIPSO_Imaging_"
+          - "Infrared_"
+          - "Radiometer_"
+          - "Brightness_"
+          - "Temperature_"
+          - "Difference_Day_"
+          - "CH2_CH3"
         layer_title: Brightness Temperature Difference (L2, Day, 10.60um-12.05um)
         crs:
           - 1km
@@ -2329,13 +2329,13 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CALIPSO_Imaging_'
-          - 'Infrared_'
-          - 'Radiometer_'
-          - 'Brightness_'
-          - 'Temperature_'
-          - 'Difference_Night_'
-          - 'CH1_CH3'
+          - "CALIPSO_Imaging_"
+          - "Infrared_"
+          - "Radiometer_"
+          - "Brightness_"
+          - "Temperature_"
+          - "Difference_Night_"
+          - "CH1_CH3"
         layer_title: Brightness Temperature Difference (L2, Night, 8.65um-12.05um)
         crs:
           - 1km
@@ -2346,13 +2346,13 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CALIPSO_Imaging_'
-          - 'Infrared_'
-          - 'Radiometer_'
-          - 'Brightness_'
-          - 'Temperature_'
-          - 'Difference_Night_'
-          - 'CH2_CH3'
+          - "CALIPSO_Imaging_"
+          - "Infrared_"
+          - "Radiometer_"
+          - "Brightness_"
+          - "Temperature_"
+          - "Difference_Night_"
+          - "CH2_CH3"
         layer_title: Brightness Temperature Difference (L2, Night, 10.60um-12.05um)
         crs:
           - 1km
@@ -2423,10 +2423,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Longwave_'
-          - 'Flux_Down_All_'
-          - 'Sky_Monthly'
+          - "CERES_Combined_"
+          - "Surface_Longwave_"
+          - "Flux_Down_All_"
+          - "Sky_Monthly"
         layer_title:
           Initial Longwave Surface Flux (Monthly, Down, All-Sky, CERES, Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2439,10 +2439,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Longwave_'
-          - 'Flux_Down_Clear_'
-          - 'Sky_Monthly'
+          - "CERES_Combined_"
+          - "Surface_Longwave_"
+          - "Flux_Down_Clear_"
+          - "Sky_Monthly"
         layer_title:
           Initial Longwave Surface Flux (Monthly, Down, Clear-Sky, CERES,
           Geostationary Satellites, Terra, Aqua, NOAA-20)
@@ -2455,10 +2455,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Longwave_'
-          - 'Flux_Up_All_Sky_'
-          - 'Monthly'
+          - "CERES_Combined_"
+          - "Surface_Longwave_"
+          - "Flux_Up_All_Sky_"
+          - "Monthly"
         layer_title:
           Initial Longwave Surface Flux (Monthly, Up, All-Sky, CERES, Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2471,10 +2471,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Longwave_'
-          - 'Flux_Up_Clear_'
-          - 'Sky_Monthly'
+          - "CERES_Combined_"
+          - "Surface_Longwave_"
+          - "Flux_Up_Clear_"
+          - "Sky_Monthly"
         layer_title:
           Initial Longwave Surface Flux (Monthly, Up, Clear-Sky, CERES, Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2487,10 +2487,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Shortwav'
-          - 'e_Flux_Diffuse_'
-          - 'All_Sky_Monthly'
+          - "CERES_Combined_"
+          - "Surface_Shortwav"
+          - "e_Flux_Diffuse_"
+          - "All_Sky_Monthly"
         layer_title:
           Diffuse Shortwave Surface Flux (Monthly, All-Sky, CERES, Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2503,11 +2503,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Shortwav'
-          - 'e_Flux_Diffuse_'
-          - 'Clear_Sky_'
-          - 'Monthly'
+          - "CERES_Combined_"
+          - "Surface_Shortwav"
+          - "e_Flux_Diffuse_"
+          - "Clear_Sky_"
+          - "Monthly"
         layer_title:
           Diffuse Shortwave Surface Flux (Monthly, Clear-Sky, CERES, Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2520,10 +2520,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Shortwav'
-          - 'e_Flux_Direct_'
-          - 'All_Sky_Monthly'
+          - "CERES_Combined_"
+          - "Surface_Shortwav"
+          - "e_Flux_Direct_"
+          - "All_Sky_Monthly"
         layer_title:
           Direct Shortwave Surface Flux (Monthly, All-Sky, CERES, Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2536,11 +2536,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Shortwav'
-          - 'e_Flux_Direct_'
-          - 'Clear_Sky_'
-          - 'Monthly'
+          - "CERES_Combined_"
+          - "Surface_Shortwav"
+          - "e_Flux_Direct_"
+          - "Clear_Sky_"
+          - "Monthly"
         layer_title:
           Direct Shortwave Surface Flux (Monthly, Clear-Sky, CERES, Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2553,10 +2553,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Shortwav'
-          - 'e_Flux_Down_All_'
-          - 'Sky_Monthly'
+          - "CERES_Combined_"
+          - "Surface_Shortwav"
+          - "e_Flux_Down_All_"
+          - "Sky_Monthly"
         layer_title:
           Initial Shortwave Surface Flux (Monthly, Down, All-Sky, CERES,Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2569,11 +2569,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Shortwav'
-          - 'e_Flux_Down_'
-          - 'Clear_Sky_'
-          - 'Monthly'
+          - "CERES_Combined_"
+          - "Surface_Shortwav"
+          - "e_Flux_Down_"
+          - "Clear_Sky_"
+          - "Monthly"
         layer_title:
           Initial Shortwave Surface Flux (Monthly, Down, Clear-Sky  CERES,
           Geostationary Satellites, Terra, Aqua, NOAA-20)
@@ -2586,10 +2586,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Shortwav'
-          - 'e_Flux_Up_All_'
-          - 'Sky_Monthly'
+          - "CERES_Combined_"
+          - "Surface_Shortwav"
+          - "e_Flux_Up_All_"
+          - "Sky_Monthly"
         layer_title:
           Initial Shortwave Surface Flux (Monthly, Up, All-Sky, CERES, Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2602,10 +2602,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_Shortwav'
-          - 'e_Flux_Up_Clear_'
-          - 'Sky_Monthly'
+          - "CERES_Combined_"
+          - "Surface_Shortwav"
+          - "e_Flux_Up_Clear_"
+          - "Sky_Monthly"
         layer_title:
           Initial Shortwave Surface Flux (Monthly, Up, Clear-Sky, CERES,
           Geostationary Satellites, Terra, Aqua, NOAA-20)
@@ -2618,9 +2618,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'Surface_UV_Index_'
-          - 'All_Sky_Monthly'
+          - "CERES_Combined_"
+          - "Surface_UV_Index_"
+          - "All_Sky_Monthly"
         layer_title:
           Surface UV Index (Monthly, All-Sky, CERES, Geostationary Satellites,
           Terra, Aqua, NOAA-20)
@@ -2633,10 +2633,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'TOA_Longwave_'
-          - 'Flux_All_Sky_'
-          - 'Monthly'
+          - "CERES_Combined_"
+          - "TOA_Longwave_"
+          - "Flux_All_Sky_"
+          - "Monthly"
         layer_title:
           TOA Longwave Flux (Monthly, All-Sky, CERES, Geostationary Satellites,
           Terra, Aqua, NOAA-20)
@@ -2649,10 +2649,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'TOA_Longwave_'
-          - 'Flux_Clear_Sky_'
-          - 'Monthly'
+          - "CERES_Combined_"
+          - "TOA_Longwave_"
+          - "Flux_Clear_Sky_"
+          - "Monthly"
         layer_title:
           TOA Longwave Flux (Monthly, Clear-Sky, CERES, Geostationary Satellites,
           Terra, Aqua, NOAA-20)
@@ -2665,10 +2665,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'TOA_Shortwave_'
-          - 'Flux_All_Sky_'
-          - 'Monthly'
+          - "CERES_Combined_"
+          - "TOA_Shortwave_"
+          - "Flux_All_Sky_"
+          - "Monthly"
         layer_title:
           TOA Shortwave Flux (Monthly, All-Sky, CERES, Geostationary Satellites,
           Terra, Aqua, NOAA-20)
@@ -2681,10 +2681,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'TOA_Shortwave_'
-          - 'Flux_Clear_Sky_'
-          - 'Monthly'
+          - "CERES_Combined_"
+          - "TOA_Shortwave_"
+          - "Flux_Clear_Sky_"
+          - "Monthly"
         layer_title:
           TOA Shortwave Flux (Monthly, Clear-Sky, CERES, Geostationary Satellites,
           Terra, Aqua, NOAA-20)
@@ -2709,11 +2709,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Combined_'
-          - 'TOA_Window_'
-          - 'Region_Flux_'
-          - 'Clear_Sky_'
-          - 'Monthly'
+          - "CERES_Combined_"
+          - "TOA_Window_"
+          - "Region_Flux_"
+          - "Clear_Sky_"
+          - "Monthly"
         layer_title:
           TOA Window-Region Flux (Monthly, Clear-Sky, CERES, Geostationary
           Satellites, Terra, Aqua, NOAA-20)
@@ -2762,10 +2762,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_EBAF_'
-          - 'Surface_Longwave_'
-          - 'Flux_Down_All_'
-          - 'Sky_Monthly'
+          - "CERES_EBAF_"
+          - "Surface_Longwave_"
+          - "Flux_Down_All_"
+          - "Sky_Monthly"
         layer_title:
           Surface Longwave Flux (Monthly, Energy Balanced and Filled, Down,
           All-Sky, CERES, Terra, Aqua, NOAA-20)
@@ -2778,10 +2778,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_EBAF_'
-          - 'Surface_Longwave_'
-          - 'Flux_Down_Clear_'
-          - 'Sky_Monthly'
+          - "CERES_EBAF_"
+          - "Surface_Longwave_"
+          - "Flux_Down_Clear_"
+          - "Sky_Monthly"
         layer_title:
           Surface Longwave Flux (Monthly, Energy Balanced and Filled, Down,
           Clear-Sky, CERES, Terra)
@@ -2794,10 +2794,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_EBAF_'
-          - 'Surface_Longwave_'
-          - 'Flux_Up_All_Sky_'
-          - 'Monthly'
+          - "CERES_EBAF_"
+          - "Surface_Longwave_"
+          - "Flux_Up_All_Sky_"
+          - "Monthly"
         layer_title:
           Surface Longwave Flux (Monthly, Energy Balanced and Filled, Up,
           All-Sky, CERES, Terra, Aqua, NOAA-20)
@@ -2810,10 +2810,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_EBAF_'
-          - 'Surface_Longwave_'
-          - 'Flux_Up_Clear_'
-          - 'Sky_Monthly'
+          - "CERES_EBAF_"
+          - "Surface_Longwave_"
+          - "Flux_Up_Clear_"
+          - "Sky_Monthly"
         layer_title:
           Surface Longwave Flux (Monthly, Energy Balanced and Filled, Up,
           Clear-Sky, CERES, Terra)
@@ -2826,10 +2826,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_EBAF_'
-          - 'Surface_Net_'
-          - 'Longwave_Flux_'
-          - 'All_Sky_Monthly'
+          - "CERES_EBAF_"
+          - "Surface_Net_"
+          - "Longwave_Flux_"
+          - "All_Sky_Monthly"
         layer_title:
           Surface Net Longwave Flux (Monthly, Energy Balanced and Filled,
           All-Sky, CERES, Terra, Aqua, NOAA-20)
@@ -2842,11 +2842,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_EBAF_'
-          - 'Surface_Net_'
-          - 'Longwave_Flux_'
-          - 'Clear_Sky_'
-          - 'Monthly'
+          - "CERES_EBAF_"
+          - "Surface_Net_"
+          - "Longwave_Flux_"
+          - "Clear_Sky_"
+          - "Monthly"
         layer_title:
           Surface Net Longwave Flux (Monthly, Energy Balanced and Filled,
           Clear-Sky, CERES, Terra)
@@ -3097,10 +3097,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'CERES_Terra_'
-          - 'Surface_Longwave_'
-          - 'Flux_Up_All_Sky_'
-          - 'Monthly'
+          - "CERES_Terra_"
+          - "Surface_Longwave_"
+          - "Flux_Up_All_Sky_"
+          - "Monthly"
         layer_title: Untuned Longwave Surface Flux (Monthly, Up, All-Sky, CERES, Aqua+Terra)
         crs:
           - 2km
@@ -3409,10 +3409,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'GEDI_ISS_L3_'
-          - 'Canopy_Height_'
-          - 'Mean_RH100_'
-          - '201904-202108'
+          - "GEDI_ISS_L3_"
+          - "Canopy_Height_"
+          - "Mean_RH100_"
+          - "201904-202108"
         layer_title: Canopy Height Mean (L3, RH100, 201904-202108, GEDI, ISS)
         crs:
           - 1km
@@ -3455,10 +3455,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'GEDI_ISS_L3_'
-          - 'Canopy_Height_'
-          - 'StdDev_RH100_'
-          - '201904-202104'
+          - "GEDI_ISS_L3_"
+          - "Canopy_Height_"
+          - "StdDev_RH100_"
+          - "201904-202104"
         layer_title:
           Canopy Height Standard Deviation (L3, RH100, 201904-202104, GEDI,
           ISS)
@@ -3471,10 +3471,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'GEDI_ISS_L3_'
-          - 'Canopy_Height_'
-          - 'StdDev_RH100_'
-          - '201904-202108'
+          - "GEDI_ISS_L3_"
+          - "Canopy_Height_"
+          - "StdDev_RH100_"
+          - "201904-202108"
         layer_title:
           Canopy Height Standard Deviation (L3, RH100, 201904-202108, GEDI,
           ISS)
@@ -3499,10 +3499,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'GEDI_ISS_L3_'
-          - 'Canopy_Height_'
-          - 'StdDev_RH100_'
-          - '201904-202303'
+          - "GEDI_ISS_L3_"
+          - "Canopy_Height_"
+          - "StdDev_RH100_"
+          - "201904-202303"
         layer_title:
           Canopy Height Standard Deviation (L3, RH100, 201904-202303, GEDI,
           ISS)
@@ -3675,11 +3675,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'GEDI_ISS_L4B_'
-          - 'Aboveground_'
-          - 'Biomass_Density_'
-          - 'Mean_201904-2023'
-          - '03'
+          - "GEDI_ISS_L4B_"
+          - "Aboveground_"
+          - "Biomass_Density_"
+          - "Mean_201904-2023"
+          - "03"
         layer_title: Aboveground Biomass Density Mean (L4B, 201904-202303, GEDI, ISS)
         crs:
           - 1km
@@ -3690,12 +3690,12 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'GEDI_ISS_L4B_'
-          - 'Aboveground_'
-          - 'Biomass_Density_'
-          - 'PercentStandardE'
-          - 'rror_201904-2023'
-          - '03'
+          - "GEDI_ISS_L4B_"
+          - "Aboveground_"
+          - "Biomass_Density_"
+          - "PercentStandardE"
+          - "rror_201904-2023"
+          - "03"
         layer_title:
           Aboveground Biomass Density Percent Standard Error (L4B, 201904-202303,
           GEDI, ISS)
@@ -3708,11 +3708,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'GEDI_ISS_L4B_'
-          - 'Aboveground_'
-          - 'Biomass_Density_'
-          - 'StandardError_'
-          - '201904-202303'
+          - "GEDI_ISS_L4B_"
+          - "Aboveground_"
+          - "Biomass_Density_"
+          - "StandardError_"
+          - "201904-202303"
         layer_title:
           Aboveground Biomass Density Standard Error (L4B, 201904-202303,
           GEDI, ISS)
@@ -4521,11 +4521,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'LPRM_AMSR2_'
-          - 'Downscaled_'
-          - 'Surface_Soil_'
-          - 'Moisture_C1_Band_'
-          - 'Night_Daily'
+          - "LPRM_AMSR2_"
+          - "Downscaled_"
+          - "Surface_Soil_"
+          - "Moisture_C1_Band_"
+          - "Night_Daily"
         layer_title:
           Surface Soil Moisture C1-band (Downscaled, Night, L3, LPRM, AMSR2,
           GCOM-W1)
@@ -4548,10 +4548,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'LPRM_AMSR2_'
-          - 'Surface_Soil_'
-          - 'Moisture_C1_Band_'
-          - 'Night_Daily'
+          - "LPRM_AMSR2_"
+          - "Surface_Soil_"
+          - "Moisture_C1_Band_"
+          - "Night_Daily"
         layer_title: Surface Soil Moisture C1-band (Night, L3, LPRM, AMSR2, GCOM-W1)
         crs:
           - 2km
@@ -4874,10 +4874,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MERRA2_Snow_'
-          - 'Depth_Over_'
-          - 'Glaciated_'
-          - 'Surface_Monthly'
+          - "MERRA2_Snow_"
+          - "Depth_Over_"
+          - "Glaciated_"
+          - "Surface_Monthly"
         layer_title: Snow Depth Over Glaciated Surface (Monthly, MERRA2)
         crs:
           - 2km
@@ -4968,11 +4968,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MERRA2_Total_'
-          - 'Aerosol_Optical_'
-          - 'Thickness_550nm_'
-          - 'Scattering_'
-          - 'Monthly'
+          - "MERRA2_Total_"
+          - "Aerosol_Optical_"
+          - "Thickness_550nm_"
+          - "Scattering_"
+          - "Monthly"
         layer_title: Total Aerosol Optical Thickness Scattering 550nm (Monthly, MERRA2)
         crs:
           - 2km
@@ -5499,9 +5499,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_'
-          - 'Brightness_Temp_'
-          - 'Band31_Night'
+          - "MODIS_Aqua_"
+          - "Brightness_Temp_"
+          - "Band31_Night"
         layer_title: Brightness Temperature (Band31, Night, MODIS, Aqua)
         crs:
           - 1km
@@ -5532,9 +5532,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_Cloud_'
-          - 'Effective_Radius_'
-          - '1621'
+          - "MODIS_Aqua_Cloud_"
+          - "Effective_Radius_"
+          - "1621"
         layer_title: Cloud Effective Radius (2.1µm, 1621 Algorithm, MODIS, Aqua)
         crs:
           - 1km
@@ -5545,9 +5545,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_Cloud_'
-          - 'Effective_Radius_'
-          - '16_PCL'
+          - "MODIS_Aqua_Cloud_"
+          - "Effective_Radius_"
+          - "16_PCL"
         layer_title: Cloud Effective Radius (1.6µm, PCL, MODIS, Aqua)
         crs:
           - 1km
@@ -5568,9 +5568,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_Cloud_'
-          - 'Effective_Radius_'
-          - '37_PCL'
+          - "MODIS_Aqua_Cloud_"
+          - "Effective_Radius_"
+          - "37_PCL"
         layer_title: Cloud Effective Radius (3.7µm, PCL, MODIS, Aqua)
         crs:
           - 1km
@@ -5591,9 +5591,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_Cloud_'
-          - 'Effective_Radius_'
-          - 'PCL_1621'
+          - "MODIS_Aqua_Cloud_"
+          - "Effective_Radius_"
+          - "PCL_1621"
         layer_title: Cloud Effective Radius (2.1µm, PCL, 1621 Algorithm, MODIS, Aqua)
         crs:
           - 1km
@@ -5644,9 +5644,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_Cloud_'
-          - 'Optical_Thicknes'
-          - 's_16'
+          - "MODIS_Aqua_Cloud_"
+          - "Optical_Thicknes"
+          - "s_16"
         layer_title: Cloud Optical Thickness (1.6µm, MODIS, Aqua)
         crs:
           - 1km
@@ -5657,9 +5657,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_Cloud_'
-          - 'Optical_Thicknes'
-          - 's_1621'
+          - "MODIS_Aqua_Cloud_"
+          - "Optical_Thicknes"
+          - "s_1621"
         layer_title: Cloud Optical Thickness (2.1µm, 1621 Algorithm, MODIS, Aqua)
         crs:
           - 1km
@@ -5670,9 +5670,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_Cloud_'
-          - 'Optical_Thicknes'
-          - 's_16_PCL'
+          - "MODIS_Aqua_Cloud_"
+          - "Optical_Thicknes"
+          - "s_16_PCL"
         layer_title: Cloud Optical Thickness (1.6µm, PCL, MODIS, Aqua)
         crs:
           - 1km
@@ -5683,9 +5683,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_Cloud_'
-          - 'Optical_Thicknes'
-          - 's_PCL'
+          - "MODIS_Aqua_Cloud_"
+          - "Optical_Thicknes"
+          - "s_PCL"
         layer_title: Cloud Optical Thickness (2.1µm, PCL, MODIS, Aqua)
         crs:
           - 1km
@@ -5696,9 +5696,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_Cloud_'
-          - 'Optical_Thicknes'
-          - 's_PCL_1621'
+          - "MODIS_Aqua_Cloud_"
+          - "Optical_Thicknes"
+          - "s_PCL_1621"
         layer_title: Cloud Optical Thickness (2.1µm, PCL, 1621 Algorithm, MODIS, Aqua)
         crs:
           - 1km
@@ -5909,10 +5909,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_L2G_'
-          - 'SurfaceReflectan'
-          - 'ce_Bands143_'
-          - 'Daily'
+          - "MODIS_Aqua_L2G_"
+          - "SurfaceReflectan"
+          - "ce_Bands143_"
+          - "Daily"
         layer_title: Land Surface Reflectance (L2G, Daily, True Color, MODIS, Aqua)
         crs:
           - 500m
@@ -5993,10 +5993,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_L3_'
-          - 'Land_Surface_'
-          - 'Temp_8Day_Night_'
-          - 'TES'
+          - "MODIS_Aqua_L3_"
+          - "Land_Surface_"
+          - "Temp_8Day_Night_"
+          - "TES"
         layer_title: Land Surface Temperature (ASTER TES L3, 8-Day, Night, MODIS, Aqua)
         crs:
           - 1km
@@ -6027,9 +6027,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_L3_'
-          - 'Land_Surface_'
-          - 'Temp_Daily_Night'
+          - "MODIS_Aqua_L3_"
+          - "Land_Surface_"
+          - "Temp_Daily_Night"
         layer_title: Land Surface Temperature (L3, Daily, Night, MODIS, Aqua)
         crs:
           - 1km
@@ -6040,10 +6040,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_L3_'
-          - 'Land_Surface_'
-          - 'Temp_Daily_Night_'
-          - 'TES'
+          - "MODIS_Aqua_L3_"
+          - "Land_Surface_"
+          - "Temp_Daily_Night_"
+          - "TES"
         layer_title: Land Surface Temperature (ASTER TES L3, Daily, Night, MODIS, Aqua)
         crs:
           - 1km
@@ -6064,10 +6064,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_L3_'
-          - 'Land_Surface_'
-          - 'Temp_Monthly_CMG_'
-          - 'Night_TES'
+          - "MODIS_Aqua_L3_"
+          - "Land_Surface_"
+          - "Temp_Monthly_CMG_"
+          - "Night_TES"
         layer_title:
           Land Surface Temperature (ASTER TES L3, Monthly, Night, MODIS,
           Aqua)
@@ -6090,10 +6090,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_L3_'
-          - 'Land_Surface_'
-          - 'Temp_Monthly_'
-          - 'Night'
+          - "MODIS_Aqua_L3_"
+          - "Land_Surface_"
+          - "Temp_Monthly_"
+          - "Night"
         layer_title: Land Surface Temperature (L3, Monthly, Night, MODIS, Aqua)
         crs:
           - 2km
@@ -6474,9 +6474,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Aqua_L3_'
-          - 'SurfaceReflectan'
-          - 'ce_Bands721_8Day'
+          - "MODIS_Aqua_L3_"
+          - "SurfaceReflectan"
+          - "ce_Bands721_8Day"
         layer_title: Land Surface Reflectance (L3, 8-Day, True Color, MODIS, Aqua)
         crs:
           - 500m
@@ -6709,10 +6709,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Combined_'
-          - 'L3_IGBP_Land_'
-          - 'Cover_Type_'
-          - 'Annual'
+          - "MODIS_Combined_"
+          - "L3_IGBP_Land_"
+          - "Cover_Type_"
+          - "Annual"
         layer_title: Land Cover Type (L3, IGBP, Annual, MODIS, Aqua+Terra)
         crs:
           - 500m
@@ -6787,10 +6787,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Combined_'
-          - 'MAIAC_L2G_'
-          - 'AerosolOpticalDe'
-          - 'pth'
+          - "MODIS_Combined_"
+          - "MAIAC_L2G_"
+          - "AerosolOpticalDe"
+          - "pth"
         layer_title: MAIAC Aerosol Optical Depth (MODIS, Combined Aqua and Terra)
         crs:
           - 1km
@@ -6801,11 +6801,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Combined_'
-          - 'MAIAC_L2G_'
-          - 'BidirectionalRef'
-          - 'lectance_'
-          - 'Bands143'
+          - "MODIS_Combined_"
+          - "MAIAC_L2G_"
+          - "BidirectionalRef"
+          - "lectance_"
+          - "Bands143"
         layer_title: MAIAC Reflectance (BRDF-Adjusted, MODIS, Combined Aqua and Terra)
         crs:
           - 1km
@@ -6816,9 +6816,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Combined_'
-          - 'MAIAC_L2G_'
-          - 'ColumnWaterVapor'
+          - "MODIS_Combined_"
+          - "MAIAC_L2G_"
+          - "ColumnWaterVapor"
         layer_title: MAIAC Columnar Water Vapor (MODIS, Combined Aqua and Terra)
         crs:
           - 1km
@@ -6983,9 +6983,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Terra_'
-          - 'Cloud_Effective_'
-          - 'Radius_1621'
+          - "MODIS_Terra_"
+          - "Cloud_Effective_"
+          - "Radius_1621"
         layer_title: Cloud Effective Radius (2.1µm, 1621 Algorithm, MODIS, Terra)
         crs:
           - 1km
@@ -6996,9 +6996,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Terra_'
-          - 'Cloud_Effective_'
-          - 'Radius_16_PCL'
+          - "MODIS_Terra_"
+          - "Cloud_Effective_"
+          - "Radius_16_PCL"
         layer_title: Cloud Effective Radius (1.6µm, PCL, MODIS, Terra)
         crs:
           - 1km
@@ -7019,9 +7019,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Terra_'
-          - 'Cloud_Effective_'
-          - 'Radius_37_PCL'
+          - "MODIS_Terra_"
+          - "Cloud_Effective_"
+          - "Radius_37_PCL"
         layer_title: Cloud Effective Radius (3.7µm,  PCL, MODIS, Terra)
         crs:
           - 1km
@@ -7042,9 +7042,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Terra_'
-          - 'Cloud_Effective_'
-          - 'Radius_PCL_1621'
+          - "MODIS_Terra_"
+          - "Cloud_Effective_"
+          - "Radius_PCL_1621"
         layer_title: Cloud Effective Radius (2.1µm, PCL, 1621 Algorithm, MODIS, Terra)
         crs:
           - 1km
@@ -7105,9 +7105,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Terra_'
-          - 'Cloud_Optical_'
-          - 'Thickness_1621'
+          - "MODIS_Terra_"
+          - "Cloud_Optical_"
+          - "Thickness_1621"
         layer_title: Cloud Optical Thickness (2.1µm, 1621 Algorithm, MODIS, Terra)
         crs:
           - 1km
@@ -7118,9 +7118,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Terra_'
-          - 'Cloud_Optical_'
-          - 'Thickness_16_PCL'
+          - "MODIS_Terra_"
+          - "Cloud_Optical_"
+          - "Thickness_16_PCL"
         layer_title: Cloud Optical Thickness (1.6µm, PCL, MODIS, Terra)
         crs:
           - 1km
@@ -7141,10 +7141,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Terra_'
-          - 'Cloud_Optical_'
-          - 'Thickness_PCL_'
-          - '1621'
+          - "MODIS_Terra_"
+          - "Cloud_Optical_"
+          - "Thickness_PCL_"
+          - "1621"
         layer_title: Cloud Optical Thickness (2.1µm, PCL, 1621 Algorithm, MODIS, Terra)
         crs:
           - 1km
@@ -7375,10 +7375,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Terra_L2G_'
-          - 'SurfaceReflectan'
-          - 'ce_Bands143_'
-          - 'Daily'
+          - "MODIS_Terra_L2G_"
+          - "SurfaceReflectan"
+          - "ce_Bands143_"
+          - "Daily"
         layer_title: Land Surface Reflectance (L2G, Daily, True Color, MODIS, Terra)
         crs:
           - 500m
@@ -7519,10 +7519,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'MODIS_Terra_L3_'
-          - 'Land_Surface_'
-          - 'Temp_Monthly_CMG_'
-          - 'Night_TES'
+          - "MODIS_Terra_L3_"
+          - "Land_Surface_"
+          - "Temp_Monthly_CMG_"
+          - "Night_TES"
         layer_title:
           Land Surface Temperature (ASTER TES L3, Monthly, Night, MODIS,
           Terra)
@@ -8245,10 +8245,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'NDH_Cyclone_'
-          - 'Hazard_Frequency_'
-          - 'Distribution_'
-          - '1980-2000'
+          - "NDH_Cyclone_"
+          - "Hazard_Frequency_"
+          - "Distribution_"
+          - "1980-2000"
         layer_title:
           "Cyclone Hazard: Frequency and Distribution (Global Cyclone Hazard
           Frequency and Distribution, 1979-2000)"
@@ -8285,10 +8285,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'NDH_Drought_'
-          - 'Hazard_Frequency_'
-          - 'Distribution_'
-          - '1980-2000'
+          - "NDH_Drought_"
+          - "Hazard_Frequency_"
+          - "Distribution_"
+          - "1980-2000"
         layer_title:
           Drought Hazard (Global Drought Hazard Frequency and Distribution,
           1980-2000)
@@ -8325,10 +8325,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'NDH_Flood_Hazard_'
-          - 'Frequency_'
-          - 'Distribution_'
-          - '1985-2003'
+          - "NDH_Flood_Hazard_"
+          - "Frequency_"
+          - "Distribution_"
+          - "1985-2003"
         layer_title: Flood Hazard (Global Flood Hazard Frequency and Distribution, 1985-2003)
         crs:
           - 1km
@@ -8373,10 +8373,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'NDH_Volcano_'
-          - 'Hazard_Frequency_'
-          - 'Distribution_'
-          - '1979-2000'
+          - "NDH_Volcano_"
+          - "Hazard_Frequency_"
+          - "Distribution_"
+          - "1979-2000"
         layer_title:
           "Volcano Hazard: Frequency and Distribution (Global Volcano Hazard
           Frequency and Distribution, 1979-2000, Best)"
@@ -8837,11 +8837,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'OMPS_NOAA20_'
-          - 'NadirMapper_'
-          - 'AerosolIndex_'
-          - 'PyroCumuloNimbus_'
-          - '360'
+          - "OMPS_NOAA20_"
+          - "NadirMapper_"
+          - "AerosolIndex_"
+          - "PyroCumuloNimbus_"
+          - "360"
         layer_title:
           Aerosol Index (PyroCumuloNimbus at 360nm, L3, Daily, OMPS Nadir
           Mapper, NOAA-20)
@@ -8854,11 +8854,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'OMPS_NOAA20_'
-          - 'NadirMapper_'
-          - 'AerosolIndex_'
-          - 'PyroCumuloNimbus_'
-          - '380'
+          - "OMPS_NOAA20_"
+          - "NadirMapper_"
+          - "AerosolIndex_"
+          - "PyroCumuloNimbus_"
+          - "380"
         layer_title:
           Aerosol Index (PyroCumuloNimbus at 380nm, L3, Daily, OMPS Nadir
           Mapper, NOAA-20)
@@ -9013,11 +9013,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'OMPS_NOAA21_'
-          - 'NadirMapper_'
-          - 'AerosolIndex_'
-          - 'PyroCumuloNimbus_'
-          - '360'
+          - "OMPS_NOAA21_"
+          - "NadirMapper_"
+          - "AerosolIndex_"
+          - "PyroCumuloNimbus_"
+          - "360"
         layer_title:
           Aerosol Index (PyroCumuloNimbus at 360nm, L3, Daily, OMPS Nadir
           Mapper, NOAA-21)
@@ -9030,11 +9030,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'OMPS_NOAA21_'
-          - 'NadirMapper_'
-          - 'AerosolIndex_'
-          - 'PyroCumuloNimbus_'
-          - '380'
+          - "OMPS_NOAA21_"
+          - "NadirMapper_"
+          - "AerosolIndex_"
+          - "PyroCumuloNimbus_"
+          - "380"
         layer_title:
           Aerosol Index (PyroCumuloNimbus at 380nm, L3, Daily, OMPS Nadir
           Mapper, NOAA-21)
@@ -10443,10 +10443,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SMAP_L1_Passive_'
-          - 'Enhanced_'
-          - 'Brightness_Temp_'
-          - 'Aft_H_RFI'
+          - "SMAP_L1_Passive_"
+          - "Enhanced_"
+          - "Brightness_Temp_"
+          - "Aft_H_RFI"
         layer_title:
           Uncorrected Brightness Temperature RFI (L1, Passive Enhanced, Aft,
           H Polarization, Radiometer, SMAP)
@@ -10483,10 +10483,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SMAP_L1_Passive_'
-          - 'Enhanced_'
-          - 'Brightness_Temp_'
-          - 'Aft_V_RFI'
+          - "SMAP_L1_Passive_"
+          - "Enhanced_"
+          - "Brightness_Temp_"
+          - "Aft_V_RFI"
         layer_title:
           Uncorrected Brightness Temperature RFI (L1, Passive Enhanced, Aft,
           V Polarization, Radiometer, SMAP)
@@ -11189,10 +11189,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SSMI_DMSP_F10_'
-          - 'Cloud_Liquid_'
-          - 'Water_Over_'
-          - 'Oceans_Ascending'
+          - "SSMI_DMSP_F10_"
+          - "Cloud_Liquid_"
+          - "Water_Over_"
+          - "Oceans_Ascending"
         layer_title: Cloud Liquid Water (Ascending, Local PM, DMSP-F10 / SSMI)
         crs:
           - 2km
@@ -11273,10 +11273,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SSMI_DMSP_F11_'
-          - 'Cloud_Liquid_'
-          - 'Water_Over_'
-          - 'Oceans_Ascending'
+          - "SSMI_DMSP_F11_"
+          - "Cloud_Liquid_"
+          - "Water_Over_"
+          - "Oceans_Ascending"
         layer_title: Cloud Liquid Water (Ascending, Local PM, DMSP-F11 / SSMI)
         crs:
           - 2km
@@ -11357,10 +11357,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SSMI_DMSP_F13_'
-          - 'Cloud_Liquid_'
-          - 'Water_Over_'
-          - 'Oceans_Ascending'
+          - "SSMI_DMSP_F13_"
+          - "Cloud_Liquid_"
+          - "Water_Over_"
+          - "Oceans_Ascending"
         layer_title: Cloud Liquid Water (Ascending, Local PM, DMSP-F13 / SSMI)
         crs:
           - 2km
@@ -11441,10 +11441,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SSMI_DMSP_F14_'
-          - 'Cloud_Liquid_'
-          - 'Water_Over_'
-          - 'Oceans_Ascending'
+          - "SSMI_DMSP_F14_"
+          - "Cloud_Liquid_"
+          - "Water_Over_"
+          - "Oceans_Ascending"
         layer_title: Cloud Liquid Water (Ascending, Local PM, DMSP-F14 / SSMI)
         crs:
           - 2km
@@ -11525,10 +11525,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SSMI_DMSP_F15_'
-          - 'Cloud_Liquid_'
-          - 'Water_Over_'
-          - 'Oceans_Ascending'
+          - "SSMI_DMSP_F15_"
+          - "Cloud_Liquid_"
+          - "Water_Over_"
+          - "Oceans_Ascending"
         layer_title: Cloud Liquid Water (Ascending, Local PM, DMSP-F15 / SSMI)
         crs:
           - 2km
@@ -11609,10 +11609,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SSMI_DMSP_F16_'
-          - 'Cloud_Liquid_'
-          - 'Water_Over_'
-          - 'Oceans_Ascending'
+          - "SSMI_DMSP_F16_"
+          - "Cloud_Liquid_"
+          - "Water_Over_"
+          - "Oceans_Ascending"
         layer_title: Cloud Liquid Water (Ascending, Local PM, DMSP-F16 / SSMIS)
         crs:
           - 2km
@@ -11693,10 +11693,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SSMI_DMSP_F17_'
-          - 'Cloud_Liquid_'
-          - 'Water_Over_'
-          - 'Oceans_Ascending'
+          - "SSMI_DMSP_F17_"
+          - "Cloud_Liquid_"
+          - "Water_Over_"
+          - "Oceans_Ascending"
         layer_title: Cloud Liquid Water (Ascending, Local PM, DMSP-F17 / SSMIS)
         crs:
           - 2km
@@ -11777,10 +11777,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'SSMI_DMSP_F8_'
-          - 'Cloud_Liquid_'
-          - 'Water_Over_'
-          - 'Oceans_Ascending'
+          - "SSMI_DMSP_F8_"
+          - "Cloud_Liquid_"
+          - "Water_Over_"
+          - "Oceans_Ascending"
         layer_title: Cloud Liquid Water (Ascending, Local AM, DMSP-F8 / SSMI)
         crs:
           - 2km
@@ -12073,9 +12073,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'TEMPO_L3_NO2_'
-          - 'Vertical_Column_'
-          - 'Stratosphere'
+          - "TEMPO_L3_NO2_"
+          - "Vertical_Column_"
+          - "Stratosphere"
         layer_title: Nitrogen Dioxide (L3, Vertical Column Stratosphere, Subdaily, TEMPO)
         crs:
           - 1km
@@ -12146,12 +12146,12 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'TOPEX-Poseidon_'
-          - 'JASON_Sea_'
-          - 'Surface_Currents_'
-          - 'Meridional_US_'
-          - 'West_Coast_'
-          - 'GAFECC'
+          - "TOPEX-Poseidon_"
+          - "JASON_Sea_"
+          - "Surface_Currents_"
+          - "Meridional_US_"
+          - "West_Coast_"
+          - "GAFECC"
         layer_title:
           Sea Surface Currents (Meridional, US West Coast, GAFECC, TOPEX/Poseidon,
           JASON)
@@ -12164,11 +12164,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'TOPEX-Poseidon_'
-          - 'JASON_Sea_'
-          - 'Surface_Currents_'
-          - 'Zonal_US_West_'
-          - 'Coast_GAFECC'
+          - "TOPEX-Poseidon_"
+          - "JASON_Sea_"
+          - "Surface_Currents_"
+          - "Zonal_US_West_"
+          - "Coast_GAFECC"
         layer_title:
           Sea Surface Currents (Zonal, US West Coast, GAFECC, TOPEX/Poseidon,
           JASON)
@@ -12181,11 +12181,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'TOPEX-Poseidon_'
-          - 'JASON_Sea_'
-          - 'Surface_Height_'
-          - 'Anomalies_GDR_'
-          - 'Cycles'
+          - "TOPEX-Poseidon_"
+          - "JASON_Sea_"
+          - "Surface_Height_"
+          - "Anomalies_GDR_"
+          - "Cycles"
         layer_title: Sea Surface Height Anomalies (GDR Cycles, TOPEX/Poseidon, JASON)
         crs:
           - 2km
@@ -12196,11 +12196,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'TOPEX-Poseidon_'
-          - 'JASON_Sea_'
-          - 'Surface_Height_'
-          - 'Anomalies_'
-          - 'Reconstructed'
+          - "TOPEX-Poseidon_"
+          - "JASON_Sea_"
+          - "Surface_Height_"
+          - "Anomalies_"
+          - "Reconstructed"
         layer_title: Sea Surface Height Anomalies (Reconstructed, TOPEX/Poseidon, JASON)
         crs:
           - 2km
@@ -12211,12 +12211,12 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'TOPEX-Poseidon_'
-          - 'JASON_Sea_'
-          - 'Surface_Height_'
-          - 'Anomalies_US_'
-          - 'West_Coast_'
-          - 'GAFECC'
+          - "TOPEX-Poseidon_"
+          - "JASON_Sea_"
+          - "Surface_Height_"
+          - "Anomalies_US_"
+          - "West_Coast_"
+          - "GAFECC"
         layer_title:
           Sea Surface Height Anomalies (US West Coast, GAFECC, TOPEX/Poseidon,
           JASON)
@@ -12281,10 +12281,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'TROPOMI_L2_'
-          - 'Nitrogen_Dioxide_'
-          - 'Tropospheric_'
-          - 'Column'
+          - "TROPOMI_L2_"
+          - "Nitrogen_Dioxide_"
+          - "Tropospheric_"
+          - "Column"
         layer_title: Nitrogen Dioxide (L2, Tropospheric Column, TROPOMI, Sentinel-5P)
         crs:
           - 2km
@@ -12317,10 +12317,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'UHI_Avg_Summer_'
-          - 'Night_Min_Land_'
-          - 'Surface_Temp_'
-          - '2013'
+          - "UHI_Avg_Summer_"
+          - "Night_Min_Land_"
+          - "Surface_Temp_"
+          - "2013"
         layer_title:
           Average Summer Nighttime Minimum Land Surface Temperature (Urban
           Heat Island, 2013)
@@ -12345,11 +12345,11 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'UHI_Urban-Rural_'
-          - 'Summer_Night_Min_'
-          - 'Land_Surface_'
-          - 'Temp_Difference_'
-          - '2013'
+          - "UHI_Urban-Rural_"
+          - "Summer_Night_Min_"
+          - "Land_Surface_"
+          - "Temp_Difference_"
+          - "2013"
         layer_title:
           Summer Nighttime Urban-Rural Land Surface Temperature Difference
           (Urban Heat Island, 2013)
@@ -12514,9 +12514,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'Brightness_Temp_'
-          - 'BandI5_Day'
+          - "VIIRS_NOAA20_"
+          - "Brightness_Temp_"
+          - "BandI5_Day"
         layer_title: Brightness Temperature (Band I5, Day, VIIRS, NOAA-20)
         crs:
           - 250m
@@ -12557,9 +12557,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'Clear_Sky_'
-          - 'Confidence_Night'
+          - "VIIRS_NOAA20_"
+          - "Clear_Sky_"
+          - "Confidence_Night"
         layer_title: Clear Sky Confidence (Night, VIIRS, NOAA-20)
         crs:
           - 1km
@@ -12580,9 +12580,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'Cloud_Optical_'
-          - 'Thickness'
+          - "VIIRS_NOAA20_"
+          - "Cloud_Optical_"
+          - "Thickness"
         layer_title: Cloud Optical Thickness (VIIRS, NOAA-20)
         crs:
           - 1km
@@ -12593,9 +12593,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'Cloud_Top_Height_'
-          - 'Day'
+          - "VIIRS_NOAA20_"
+          - "Cloud_Top_Height_"
+          - "Day"
         layer_title: Cloud Top Height (Day, VIIRS, NOAA-20)
         crs:
           - 1km
@@ -12616,10 +12616,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'CorrectedReflect'
-          - 'ance_BandsM11-I2'
-          - '-I1'
+          - "VIIRS_NOAA20_"
+          - "CorrectedReflect"
+          - "ance_BandsM11-I2"
+          - "-I1"
         layer_title: Corrected Reflectance (Bands M11-I2-I1, VIIRS, NOAA-20)
         crs:
           - 250m
@@ -12630,10 +12630,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'CorrectedReflect'
-          - 'ance_BandsM11-I2'
-          - '-I1_Granule'
+          - "VIIRS_NOAA20_"
+          - "CorrectedReflect"
+          - "ance_BandsM11-I2"
+          - "-I1_Granule"
         layer_title: Corrected Reflectance (M11-I2-I1, Granules, VIIRS, NOAA-20)
         crs:
           - 250m
@@ -12644,10 +12644,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'CorrectedReflect'
-          - 'ance_BandsM3-I3-'
-          - 'M11'
+          - "VIIRS_NOAA20_"
+          - "CorrectedReflect"
+          - "ance_BandsM3-I3-"
+          - "M11"
         layer_title: Corrected Reflectance (Bands M3-I3-M11, VIIRS, NOAA-20)
         crs:
           - 250m
@@ -12658,10 +12658,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'CorrectedReflect'
-          - 'ance_BandsM3-I3-'
-          - 'M11_Granule'
+          - "VIIRS_NOAA20_"
+          - "CorrectedReflect"
+          - "ance_BandsM3-I3-"
+          - "M11_Granule"
         layer_title: Corrected Reflectance (M3-I3-M11, Granules, VIIRS, NOAA-20)
         crs:
           - 250m
@@ -12712,9 +12712,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'DayNightBand_'
-          - 'AtSensor_M15'
+          - "VIIRS_NOAA20_"
+          - "DayNightBand_"
+          - "AtSensor_M15"
         layer_title:
           Black Marble Nighttime Blue/Yellow Composite (Day/Night Band, VIIRS,
           NOAA-20)
@@ -12767,9 +12767,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'Land_Surface_'
-          - 'Temp_Night'
+          - "VIIRS_NOAA20_"
+          - "Land_Surface_"
+          - "Temp_Night"
         layer_title: Land Surface Temperature (Night, VIIRS, NOAA-20)
         crs:
           - 1km
@@ -12830,10 +12830,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'SurfaceReflectan'
-          - 'ce_BandsM11-M7-M'
-          - '5'
+          - "VIIRS_NOAA20_"
+          - "SurfaceReflectan"
+          - "ce_BandsM11-M7-M"
+          - "5"
         layer_title: Land Surface Reflectance (Bands M11-M7-M5, VIIRS, NOAA-20)
         crs:
           - 500m
@@ -12844,9 +12844,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'SurfaceReflectan'
-          - 'ce_BandsM5-M4-M3'
+          - "VIIRS_NOAA20_"
+          - "SurfaceReflectan"
+          - "ce_BandsM5-M4-M3"
         layer_title: Land Surface Reflectance (Bands I1-M4-M3, VIIRS, NOAA-20)
         crs:
           - 500m
@@ -12877,9 +12877,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA20_'
-          - 'Thermal_Anomalie'
-          - 's_375m_Night'
+          - "VIIRS_NOAA20_"
+          - "Thermal_Anomalie"
+          - "s_375m_Night"
         layer_title: Thermal Anomalies and Fires (375, Night, VIIRS, NOAA-20)
         crs:
           - 500m
@@ -12900,9 +12900,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA21_'
-          - 'Brightness_Temp_'
-          - 'BandI5_Day'
+          - "VIIRS_NOAA21_"
+          - "Brightness_Temp_"
+          - "BandI5_Day"
         layer_title: Brightness Temperature (Band I5, Day, VIIRS, NOAA-21)
         crs:
           - 250m
@@ -12943,10 +12943,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA21_'
-          - 'CorrectedReflect'
-          - 'ance_BandsM3-I3-'
-          - 'M11'
+          - "VIIRS_NOAA21_"
+          - "CorrectedReflect"
+          - "ance_BandsM3-I3-"
+          - "M11"
         layer_title: Corrected Reflectance (Bands M3-I3-M11, VIIRS, NOAA-21)
         crs:
           - 250m
@@ -13007,9 +13007,9 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_NOAA21_'
-          - 'Thermal_Anomalie'
-          - 's_375m_Night'
+          - "VIIRS_NOAA21_"
+          - "Thermal_Anomalie"
+          - "s_375m_Night"
         layer_title: Thermal Anomalies and Fires (375, Night, VIIRS, NOAA-21)
         crs:
           - 500m
@@ -13216,10 +13216,10 @@ wms:
         tags:
           - Thematic
       - layer_name_parts:
-          - 'VIIRS_SNPP_'
-          - 'CorrectedReflect'
-          - 'ance_BandsM3-I3-'
-          - 'M11_Granule'
+          - "VIIRS_SNPP_"
+          - "CorrectedReflect"
+          - "ance_BandsM3-I3-"
+          - "M11_Granule"
         layer_title: Corrected Reflectance (M3-I3-M11, Granules, VIIRS, Suomi NPP)
         crs:
           - 250m
