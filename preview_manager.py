@@ -426,6 +426,7 @@ class PreviewManager(QObject):
         self._vector_preview_tasks: dict[
             str, VectorPreviewTask | AsyncVectorPreviewRenderer
         ] = {}
+        self._discarded_keys: set[str] = set()
 
         # Track composite downloads: key -> {'received': {index: QImage}, 'total': 4, 'failed': bool}
         self._active_composites: dict = {}
@@ -808,11 +809,23 @@ class PreviewManager(QObject):
             Number of deleted preview files
         """
         deleted_paths: set[Path] = set()
-        self._cancel_provider_preview_tasks(
-            provider_name,
-            basemaps_or_layers,
-            service_type,
-            is_default,
+        try:
+            self._cancel_provider_preview_tasks(
+                provider_name,
+                basemaps_or_layers,
+                service_type,
+                is_default,
+            )
+        except Exception:
+            Logger.warning(
+                f"Failed to cancel preview tasks for '{provider_name}', "
+                "proceeding with file deletion anyway"
+            )
+
+        Logger.info(
+            f"Deleting previews for provider '{provider_name}' "
+            f"(type={service_type}, is_default={is_default}) — "
+            f"{len(basemaps_or_layers) if basemaps_or_layers else 0} items"
         )
 
         # For Wayback, just delete the shared preview once
@@ -845,10 +858,38 @@ class PreviewManager(QObject):
 
         preview_dir = self._get_preview_dir(service_type, is_default)
         safe_provider = "".join([c for c in provider_name if c.isalnum()])
-        for preview_path in preview_dir.glob(f"{safe_provider}_*.png"):
-            if self._delete_preview_path(preview_path):
-                deleted_paths.add(preview_path)
+        glob_pattern = f"{safe_provider}_*.png"
 
+        def _delete_glob_matches():
+            """Delete all preview files matching the provider glob pattern."""
+            count = 0
+            for preview_path in preview_dir.glob(glob_pattern):
+                if self._delete_preview_path(preview_path):
+                    deleted_paths.add(preview_path)
+                    count += 1
+            return count
+
+        first_pass = _delete_glob_matches()
+        Logger.info(
+            f"Glob cleanup in {preview_dir}: pattern='{glob_pattern}' "
+            f"→ {first_pass} files"
+        )
+
+        # Process pending events so that any in-progress vector render tasks
+        # that already finished in background threads can emit their results
+        # and save their preview files.  Then do a second pass to remove
+        # anything that was recreated during the first pass.
+        QCoreApplication.processEvents()
+        second_pass = _delete_glob_matches()
+        if second_pass:
+            Logger.info(
+                f"Second-pass glob cleanup removed {second_pass} recreated "
+                f"preview file(s) for provider '{provider_name}'"
+            )
+
+        Logger.info(
+            f"Deleted {len(deleted_paths)} preview files for provider '{provider_name}'"
+        )
         return len(deleted_paths)
 
     def _cancel_provider_preview_tasks(
@@ -928,6 +969,7 @@ class PreviewManager(QObject):
         for key, renderer in list(self._vector_preview_tasks.items()):
             if self._preview_key_matches(key, target_keys, provider_prefix):
                 self._vector_preview_tasks.pop(key, None)
+                self._discarded_keys.add(key)
                 if renderer:
                     try:
                         renderer.finished.disconnect(
@@ -1571,6 +1613,15 @@ class PreviewManager(QObject):
 
         self._vector_preview_tasks.pop(result.key, None)
         self._pending_tasks.discard(result.key)
+
+        if result.key in self._discarded_keys:
+            self._discarded_keys.discard(result.key)
+            if result.success and result.image_path:
+                Logger.info(
+                    f"Discarding vector preview for deleted provider: {result.key}"
+                )
+                self._delete_preview_path(Path(result.image_path))
+            return
 
         if result.success and result.image_path:
             Logger.info(f"Vector preview saved for {result.key}: {result.image_path}")

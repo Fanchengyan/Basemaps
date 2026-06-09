@@ -1879,11 +1879,16 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     self.resources_dir, provider, prefix="user"
                 )
                 basemaps = provider.get("basemaps", [])
+                Logger.info(
+                    f"Deleting provider '{provider.get('name')}' "
+                    f"with {len(basemaps)} basemaps"
+                )
                 self.preview_manager.delete_provider_previews(
                     provider["name"],
                     basemaps,
                     "xyz",
                     is_default=False,
+                    url=provider.get("url", ""),
                 )
 
             # Delete provider from data
@@ -1893,6 +1898,19 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Update interface
             self.update_providers_list()
             self.save_user_config()
+
+            # Select the first non-separator provider so the UI does not
+            # linger on the now-deleted provider and trigger stale preview
+            # requests for it.
+            for i in range(self.listProviders.count()):
+                item = self.listProviders.item(i)
+                if (
+                    item
+                    and item.data(user_role)
+                    and item.data(user_role).get("data", {}).get("type") != "separator"
+                ):
+                    self.listProviders.setCurrentItem(item)
+                    break
 
     def add_xyz_basemap(self):
         current_item = self.listProviders.currentItem()
@@ -2150,6 +2168,18 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Directly modify providers_data data
             provider = self.providers_data[provider_data["index"]]
             basemaps_to_remove = [item.data(user_role) for item in selected_basemaps]
+
+            # Delete preview images for removed basemaps
+            for basemap in basemaps_to_remove:
+                if basemap and basemap.get("name"):
+                    self.preview_manager.delete_preview(
+                        provider["name"],
+                        basemap["name"],
+                        "xyz",
+                        is_default=False,
+                        url=basemap.get("url", ""),
+                    )
+
             provider["basemaps"] = [
                 b for b in provider["basemaps"] if b not in basemaps_to_remove
             ]
@@ -2282,6 +2312,18 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             # Update interface
             self.update_providers_list()
             self.save_user_config()
+
+            # Select the first non-separator WMS provider so the UI does
+            # not linger on the now-deleted provider.
+            for i in range(self.listWmsProviders.count()):
+                item = self.listWmsProviders.item(i)
+                if (
+                    item
+                    and item.data(user_role)
+                    and item.data(user_role).get("data", {}).get("type") != "separator"
+                ):
+                    self.listWmsProviders.setCurrentItem(item)
+                    break
 
     def add_wms_layer(self):
         current_item = self.listWmsProviders.currentItem()
