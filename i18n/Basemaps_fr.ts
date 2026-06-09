@@ -4,92 +4,92 @@
 <context>
     <name>BasemapInputDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3470"/>
+        <location filename="../basemaps_dialog.py" line="3512"/>
         <source>Add/Edit Basemap</source>
         <translation>Ajouter/Modifier la carte de fond</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3478"/>
+        <location filename="../basemaps_dialog.py" line="3520"/>
         <source>Name:</source>
         <translation>Nom :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3490"/>
+        <location filename="../basemaps_dialog.py" line="3532"/>
         <source>Tile Type:</source>
         <translation>Type de tuile :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3492"/>
+        <location filename="../basemaps_dialog.py" line="3534"/>
         <source>Raster (XYZ)</source>
         <translation>Raster (XYZ)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3492"/>
+        <location filename="../basemaps_dialog.py" line="3534"/>
         <source>Vector</source>
         <translation>Vecteur</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3609"/>
+        <location filename="../basemaps_dialog.py" line="3651"/>
         <source>Source URL:</source>
         <translation>URL source :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3609"/>
+        <location filename="../basemaps_dialog.py" line="3651"/>
         <source>URL:</source>
         <translation>URL :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3514"/>
+        <location filename="../basemaps_dialog.py" line="3556"/>
         <source>Style URL:</source>
         <translation>URL du style :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3526"/>
+        <location filename="../basemaps_dialog.py" line="3568"/>
         <source>Layer Settings</source>
         <translation>Paramètres de couche</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3531"/>
+        <location filename="../basemaps_dialog.py" line="3573"/>
         <source>Layer Name:</source>
         <translation>Nom de couche :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3541"/>
+        <location filename="../basemaps_dialog.py" line="3583"/>
         <source>Layer Title:</source>
         <translation>Titre de couche :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3551"/>
+        <location filename="../basemaps_dialog.py" line="3593"/>
         <source>CRS:</source>
         <translation>SCR :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3553"/>
+        <location filename="../basemaps_dialog.py" line="3595"/>
         <source>EPSG:4326</source>
         <translation>EPSG:4326</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3562"/>
+        <location filename="../basemaps_dialog.py" line="3604"/>
         <source>Format:</source>
         <translation>Format :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3564"/>
+        <location filename="../basemaps_dialog.py" line="3606"/>
         <source>image/png</source>
         <translation>image/png</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3564"/>
+        <location filename="../basemaps_dialog.py" line="3606"/>
         <source>image/jpeg</source>
         <translation>image/jpeg</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3564"/>
+        <location filename="../basemaps_dialog.py" line="3606"/>
         <source>image/tiff</source>
         <translation>image/tiff</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3585"/>
+        <location filename="../basemaps_dialog.py" line="3627"/>
         <source>Tag:</source>
         <translation>Étiquette :</translation>
     </message>
@@ -102,7 +102,7 @@
         <translation>Échec du chargement de la configuration par défaut : {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2562"/>
+        <location filename="../basemaps_dialog.py" line="2604"/>
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
@@ -152,7 +152,7 @@
         <translation>Configuration enregistrée avec succès.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3135"/>
+        <location filename="../basemaps_dialog.py" line="3177"/>
         <source>Success</source>
         <translation>Succès</translation>
     </message>
@@ -167,37 +167,37 @@
         <translation>Échec du chargement du fichier de configuration : {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2175"/>
+        <location filename="../basemaps_dialog.py" line="2205"/>
         <source>Provider &apos;{}&apos; already exists.</source>
         <translation>Le fournisseur '{}' existe déjà.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3008"/>
+        <location filename="../basemaps_dialog.py" line="3050"/>
         <source>Warning</source>
         <translation>Avertissement</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2231"/>
+        <location filename="../basemaps_dialog.py" line="2261"/>
         <source>Default providers cannot be removed.</source>
         <translation>Les fournisseurs par défaut ne peuvent pas être supprimés.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2241"/>
+        <location filename="../basemaps_dialog.py" line="2271"/>
         <source>Are you sure you want to remove providers: &quot;{}&quot;?</source>
         <translation>Êtes-vous sûr de vouloir supprimer les fournisseurs : &quot;{}&quot; ?</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2241"/>
+        <location filename="../basemaps_dialog.py" line="2271"/>
         <source>Confirm Deletion</source>
         <translation>Confirmer la suppression</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1900"/>
+        <location filename="../basemaps_dialog.py" line="1918"/>
         <source>Please select a provider first.</source>
         <translation>Veuillez d'abord sélectionner un fournisseur.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2140"/>
+        <location filename="../basemaps_dialog.py" line="2158"/>
         <source>Are you sure you want to remove basemaps: &quot;{}&quot;?</source>
         <translation>Êtes-vous sûr de vouloir supprimer les fonds de carte : &quot;{}&quot; ?</translation>
     </message>
@@ -212,27 +212,27 @@
         <translation>Données de fond de carte invalides : {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2217"/>
+        <location filename="../basemaps_dialog.py" line="2247"/>
         <source>Please select providers to remove.</source>
         <translation>Veuillez sélectionner les fournisseurs à supprimer.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2079"/>
+        <location filename="../basemaps_dialog.py" line="2097"/>
         <source>Please select a basemap to edit.</source>
         <translation>Veuillez sélectionner un fond de carte à modifier.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2130"/>
+        <location filename="../basemaps_dialog.py" line="2148"/>
         <source>Please select basemaps to remove.</source>
         <translation>Veuillez sélectionner les fonds de carte à supprimer.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2504"/>
+        <location filename="../basemaps_dialog.py" line="2546"/>
         <source>Please select a WMS provider first.</source>
         <translation>Veuillez d'abord sélectionner un fournisseur WMS.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2438"/>
+        <location filename="../basemaps_dialog.py" line="2480"/>
         <source>Failed to load WMS layer: {}
 
 Error: {}</source>
@@ -241,7 +241,7 @@ Error: {}</source>
 Erreur : {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2483"/>
+        <location filename="../basemaps_dialog.py" line="2525"/>
         <source>Failed to load WMTS layer: {}
 
 Error: {}</source>
@@ -250,47 +250,47 @@ Error: {}</source>
 Erreur : {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2535"/>
+        <location filename="../basemaps_dialog.py" line="2577"/>
         <source>Fetching layers in background...</source>
         <translation>Récupération des couches en arrière-plan...</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2562"/>
+        <location filename="../basemaps_dialog.py" line="2604"/>
         <source>Failed to fetch layers: {}</source>
         <translation>Échec de la récupération des couches : {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2635"/>
+        <location filename="../basemaps_dialog.py" line="2677"/>
         <source>Successfully refreshed {} layers.</source>
         <translation>Actualisation réussie de {} couches.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2993"/>
+        <location filename="../basemaps_dialog.py" line="3035"/>
         <source>Please select a WMS provider to edit.</source>
         <translation>Veuillez sélectionner un fournisseur WMS à modifier.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2935"/>
+        <location filename="../basemaps_dialog.py" line="2977"/>
         <source>Please select a provider to edit.</source>
         <translation>Veuillez sélectionner un fournisseur à modifier.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3008"/>
+        <location filename="../basemaps_dialog.py" line="3050"/>
         <source>Default providers cannot be edited.</source>
         <translation>Les fournisseurs par défaut ne peuvent pas être modifiés.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3108"/>
+        <location filename="../basemaps_dialog.py" line="3150"/>
         <source>Only default providers can be duplicated.</source>
         <translation>Seuls les fournisseurs par défaut peuvent être dupliqués.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3108"/>
+        <location filename="../basemaps_dialog.py" line="3150"/>
         <source>Information</source>
         <translation>Informations</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3135"/>
+        <location filename="../basemaps_dialog.py" line="3177"/>
         <source>Provider duplicated as &apos;{}&apos;</source>
         <translation>Fournisseur dupliqué en tant que '{}'</translation>
     </message>
@@ -300,22 +300,22 @@ Erreur : {}</translation>
         <translation>Échec du chargement de la couche de tuiles vectorielles : {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2378"/>
+        <location filename="../basemaps_dialog.py" line="2420"/>
         <source>Missing API token. Edit the provider to set it.</source>
         <translation>Jeton API manquant. Modifiez le fournisseur pour le définir.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2378"/>
+        <location filename="../basemaps_dialog.py" line="2420"/>
         <source>Authentication Required</source>
         <translation>Authentification requise</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2790"/>
+        <location filename="../basemaps_dialog.py" line="2832"/>
         <source>Please select a WMS/WMTS layer first.</source>
         <translation>Veuillez d'abord sélectionner une couche WMS/WMTS.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2924"/>
+        <location filename="../basemaps_dialog.py" line="2966"/>
         <source>Edit</source>
         <translation>Modifier</translation>
     </message>
@@ -340,12 +340,12 @@ Erreur : {}</translation>
         <translation>Couche inconnue</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2572"/>
+        <location filename="../basemaps_dialog.py" line="2614"/>
         <source>Fetch completed but context was lost</source>
         <translation>Récupération terminée mais le contexte a été perdu</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2687"/>
+        <location filename="../basemaps_dialog.py" line="2729"/>
         <source>Duplicate as User Provider</source>
         <translation>Dupliquer en tant que fournisseur utilisateur</translation>
     </message>
@@ -410,10 +410,12 @@ Erreur : {}</translation>
         <translation type="obsolete">Fournisseurs utilisateur ─────────────────</translation>
     </message>
     <message>
+        <location filename="../basemaps_dialog.py" line="2548"/>
         <source>OK</source>
         <translation type="obsolete">OK</translation>
     </message>
     <message>
+        <location filename="../basemaps_dialog.py" line="2548"/>
         <source>Cancel</source>
         <translation type="obsolete">Annuler</translation>
     </message>
@@ -529,7 +531,7 @@ Erreur : {}</translation>
         <translation>Aucune couche trouvée dans les capacités WMTS</translation>
     </message>
     <message>
-        <location filename="../preview_manager.py" line="1580"/>
+        <location filename="../preview_manager.py" line="1631"/>
         <source>unknown error</source>
         <translation>erreur inconnue</translation>
     </message>
@@ -567,42 +569,42 @@ Erreur : {}</translation>
 <context>
     <name>ProviderInputDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3281"/>
+        <location filename="../basemaps_dialog.py" line="3323"/>
         <source>Add/Edit Provider</source>
         <translation>Ajouter/Modifier le fournisseur</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3289"/>
+        <location filename="../basemaps_dialog.py" line="3331"/>
         <source>Name:</source>
         <translation>Nom :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3299"/>
+        <location filename="../basemaps_dialog.py" line="3341"/>
         <source>Icon:</source>
         <translation>Icône :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3303"/>
+        <location filename="../basemaps_dialog.py" line="3345"/>
         <source>Browse...</source>
         <translation>Parcourir...</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3313"/>
+        <location filename="../basemaps_dialog.py" line="3355"/>
         <source>URL:</source>
         <translation>URL :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3332"/>
+        <location filename="../basemaps_dialog.py" line="3374"/>
         <source>Select Icon File</source>
         <translation>Sélectionner un fichier d'icône</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3332"/>
+        <location filename="../basemaps_dialog.py" line="3374"/>
         <source>Image Files (*.png *.jpg *.svg *.ico);;All Files (*)</source>
         <translation>Fichiers image (*.png *.jpg *.svg *.ico);;Tous les fichiers (*)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3345"/>
+        <location filename="../basemaps_dialog.py" line="3387"/>
         <source>Authentication</source>
         <translation>Authentification</translation>
     </message>
@@ -610,32 +612,32 @@ Erreur : {}</translation>
 <context>
     <name>TagEditDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3655"/>
+        <location filename="../basemaps_dialog.py" line="3697"/>
         <source>Edit Tags</source>
         <translation>Modifier les étiquettes</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3670"/>
+        <location filename="../basemaps_dialog.py" line="3712"/>
         <source>Tag:</source>
         <translation>Étiquette :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3686"/>
+        <location filename="../basemaps_dialog.py" line="3728"/>
         <source>Save tags to</source>
         <translation>Enregistrer les étiquettes dans</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3688"/>
+        <location filename="../basemaps_dialog.py" line="3730"/>
         <source>Separate file (recommended, safer for updates)</source>
         <translation>Fichier séparé (recommandé, plus sûr pour les mises à jour)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3691"/>
+        <location filename="../basemaps_dialog.py" line="3733"/>
         <source>Original provider file</source>
         <translation>Fichier fournisseur d'origine</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3692"/>
+        <location filename="../basemaps_dialog.py" line="3734"/>
         <source>Warning: edits in provider config files will be lost when the plugin is updated.</source>
         <translation>Attention : les modifications dans les fichiers de configuration du fournisseur seront perdues lors de la mise à jour du plugin.</translation>
     </message>
@@ -643,32 +645,32 @@ Erreur : {}</translation>
 <context>
     <name>TokenAuthWidget</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3368"/>
+        <location filename="../basemaps_dialog.py" line="3410"/>
         <source>Authentication</source>
         <translation>Authentification</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3381"/>
+        <location filename="../basemaps_dialog.py" line="3423"/>
         <source>Provider:</source>
         <translation>Fournisseur :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3392"/>
+        <location filename="../basemaps_dialog.py" line="3434"/>
         <source>Token:</source>
         <translation>Jeton :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3394"/>
+        <location filename="../basemaps_dialog.py" line="3436"/>
         <source>API token / key</source>
         <translation>Jeton / clé API</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3401"/>
+        <location filename="../basemaps_dialog.py" line="3443"/>
         <source>Token Parameter:</source>
         <translation>Paramètre de jeton :</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3460"/>
+        <location filename="../basemaps_dialog.py" line="3502"/>
         <source>Authentication is enabled but no API token/key is set. Please click the Edit button on the provider to set it.</source>
         <translation>L'authentification est activée mais aucun jeton/clé API n'est défini. Veuillez cliquer sur le bouton Modifier du fournisseur pour le définir.</translation>
     </message>

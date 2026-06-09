@@ -4,92 +4,92 @@
 <context>
     <name>BasemapInputDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3470"/>
+        <location filename="../basemaps_dialog.py" line="3512"/>
         <source>Add/Edit Basemap</source>
         <translation>বেসম্যাপ যোগ/সম্পাদনা</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3478"/>
+        <location filename="../basemaps_dialog.py" line="3520"/>
         <source>Name:</source>
         <translation>নাম:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3490"/>
+        <location filename="../basemaps_dialog.py" line="3532"/>
         <source>Tile Type:</source>
         <translation>টাইল প্রকার:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3492"/>
+        <location filename="../basemaps_dialog.py" line="3534"/>
         <source>Raster (XYZ)</source>
         <translation>রাস্টার (XYZ)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3492"/>
+        <location filename="../basemaps_dialog.py" line="3534"/>
         <source>Vector</source>
         <translation>ভেক্টর</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3609"/>
+        <location filename="../basemaps_dialog.py" line="3651"/>
         <source>Source URL:</source>
         <translation>উৎস URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3609"/>
+        <location filename="../basemaps_dialog.py" line="3651"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3514"/>
+        <location filename="../basemaps_dialog.py" line="3556"/>
         <source>Style URL:</source>
         <translation>স্টাইল URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3526"/>
+        <location filename="../basemaps_dialog.py" line="3568"/>
         <source>Layer Settings</source>
         <translation>লেয়ার সেটিংস</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3531"/>
+        <location filename="../basemaps_dialog.py" line="3573"/>
         <source>Layer Name:</source>
         <translation>লেয়ারের নাম:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3541"/>
+        <location filename="../basemaps_dialog.py" line="3583"/>
         <source>Layer Title:</source>
         <translation>লেয়ার শিরোনাম:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3551"/>
+        <location filename="../basemaps_dialog.py" line="3593"/>
         <source>CRS:</source>
         <translation>CRS:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3553"/>
+        <location filename="../basemaps_dialog.py" line="3595"/>
         <source>EPSG:4326</source>
         <translation>EPSG:4326</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3562"/>
+        <location filename="../basemaps_dialog.py" line="3604"/>
         <source>Format:</source>
         <translation>ফরম্যাট:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3564"/>
+        <location filename="../basemaps_dialog.py" line="3606"/>
         <source>image/png</source>
         <translation>image/png</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3564"/>
+        <location filename="../basemaps_dialog.py" line="3606"/>
         <source>image/jpeg</source>
         <translation>image/jpeg</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3564"/>
+        <location filename="../basemaps_dialog.py" line="3606"/>
         <source>image/tiff</source>
         <translation>image/tiff</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3585"/>
+        <location filename="../basemaps_dialog.py" line="3627"/>
         <source>Tag:</source>
         <translation>ট্যাগ:</translation>
     </message>
@@ -102,7 +102,7 @@
         <translation>ডিফল্ট কনফিগারেশন লোড করতে ব্যর্থ: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2562"/>
+        <location filename="../basemaps_dialog.py" line="2604"/>
         <source>Error</source>
         <translation>ত্রুটি</translation>
     </message>
@@ -152,7 +152,7 @@
         <translation>কনফিগারেশন সফলভাবে সংরক্ষিত হয়েছে।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3135"/>
+        <location filename="../basemaps_dialog.py" line="3177"/>
         <source>Success</source>
         <translation>সফল</translation>
     </message>
@@ -167,47 +167,47 @@
         <translation>কনফিগারেশন ফাইল লোড করতে ব্যর্থ: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2175"/>
+        <location filename="../basemaps_dialog.py" line="2205"/>
         <source>Provider &apos;{}&apos; already exists.</source>
         <translation>প্রদাতা '{}' ইতিমধ্যে বিদ্যমান।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3008"/>
+        <location filename="../basemaps_dialog.py" line="3050"/>
         <source>Warning</source>
         <translation>সতর্কতা</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2231"/>
+        <location filename="../basemaps_dialog.py" line="2261"/>
         <source>Default providers cannot be removed.</source>
         <translation>ডিফল্ট প্রদাতাদের সরানো যায় না।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2241"/>
+        <location filename="../basemaps_dialog.py" line="2271"/>
         <source>Are you sure you want to remove providers: &quot;{}&quot;?</source>
         <translation>আপনি কি নিশ্চিত যে আপনি প্রদাতাদের সরাতে চান: &quot;{}&quot;?</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2241"/>
+        <location filename="../basemaps_dialog.py" line="2271"/>
         <source>Confirm Deletion</source>
         <translation>মুছে ফেলা নিশ্চিত করুন</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1900"/>
+        <location filename="../basemaps_dialog.py" line="1918"/>
         <source>Please select a provider first.</source>
         <translation>অনুগ্রহ করে প্রথমে একটি প্রদাতা নির্বাচন করুন।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2140"/>
+        <location filename="../basemaps_dialog.py" line="2158"/>
         <source>Are you sure you want to remove basemaps: &quot;{}&quot;?</source>
         <translation>আপনি কি নিশ্চিত যে আপনি বেসম্যাপ সরাতে চান: &quot;{}&quot;?</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2378"/>
+        <location filename="../basemaps_dialog.py" line="2420"/>
         <source>Missing API token. Edit the provider to set it.</source>
         <translation>API টোকেন অনুপস্থিত। এটি সেট করতে প্রদাতা সম্পাদনা করুন।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2378"/>
+        <location filename="../basemaps_dialog.py" line="2420"/>
         <source>Authentication Required</source>
         <translation>প্রমাণীকরণ প্রয়োজন</translation>
     </message>
@@ -222,27 +222,27 @@
         <translation>অবৈধ বেসম্যাপ ডেটা: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2217"/>
+        <location filename="../basemaps_dialog.py" line="2247"/>
         <source>Please select providers to remove.</source>
         <translation>অনুগ্রহ করে সরানোর জন্য প্রদাতাদের নির্বাচন করুন।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2079"/>
+        <location filename="../basemaps_dialog.py" line="2097"/>
         <source>Please select a basemap to edit.</source>
         <translation>অনুগ্রহ করে সম্পাদনা করতে একটি বেসম্যাপ নির্বাচন করুন।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2130"/>
+        <location filename="../basemaps_dialog.py" line="2148"/>
         <source>Please select basemaps to remove.</source>
         <translation>অনুগ্রহ করে সরানোর জন্য বেসম্যাপ নির্বাচন করুন।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2504"/>
+        <location filename="../basemaps_dialog.py" line="2546"/>
         <source>Please select a WMS provider first.</source>
         <translation>অনুগ্রহ করে প্রথমে একটি WMS প্রদাতা নির্বাচন করুন।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2438"/>
+        <location filename="../basemaps_dialog.py" line="2480"/>
         <source>Failed to load WMS layer: {}
 
 Error: {}</source>
@@ -251,7 +251,7 @@ Error: {}</source>
 ত্রুটি: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2483"/>
+        <location filename="../basemaps_dialog.py" line="2525"/>
         <source>Failed to load WMTS layer: {}
 
 Error: {}</source>
@@ -260,52 +260,52 @@ Error: {}</source>
 ত্রুটি: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2535"/>
+        <location filename="../basemaps_dialog.py" line="2577"/>
         <source>Fetching layers in background...</source>
         <translation>পটভূমিতে স্তর আনা হচ্ছে...</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2562"/>
+        <location filename="../basemaps_dialog.py" line="2604"/>
         <source>Failed to fetch layers: {}</source>
         <translation>স্তর আনতে ব্যর্থ: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2635"/>
+        <location filename="../basemaps_dialog.py" line="2677"/>
         <source>Successfully refreshed {} layers.</source>
         <translation>{} স্তর সফলভাবে রিফ্রেশ করা হয়েছে।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2790"/>
+        <location filename="../basemaps_dialog.py" line="2832"/>
         <source>Please select a WMS/WMTS layer first.</source>
         <translation>অনুগ্রহ করে প্রথমে একটি WMS/WMTS স্তর নির্বাচন করুন।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2935"/>
+        <location filename="../basemaps_dialog.py" line="2977"/>
         <source>Please select a provider to edit.</source>
         <translation>অনুগ্রহ করে সম্পাদনা করতে একটি প্রদাতা নির্বাচন করুন।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3008"/>
+        <location filename="../basemaps_dialog.py" line="3050"/>
         <source>Default providers cannot be edited.</source>
         <translation>ডিফল্ট প্রদাতাদের সম্পাদনা করা যায় না।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2993"/>
+        <location filename="../basemaps_dialog.py" line="3035"/>
         <source>Please select a WMS provider to edit.</source>
         <translation>অনুগ্রহ করে সম্পাদনা করতে একটি WMS প্রদাতা নির্বাচন করুন।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3108"/>
+        <location filename="../basemaps_dialog.py" line="3150"/>
         <source>Only default providers can be duplicated.</source>
         <translation>শুধুমাত্র ডিফল্ট প্রদাতাদের ডুপ্লিকেট করা যায়।</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3108"/>
+        <location filename="../basemaps_dialog.py" line="3150"/>
         <source>Information</source>
         <translation>তথ্য</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3135"/>
+        <location filename="../basemaps_dialog.py" line="3177"/>
         <source>Provider duplicated as &apos;{}&apos;</source>
         <translation>প্রদাতা '{}' হিসাবে ডুপ্লিকেট করা হয়েছে</translation>
     </message>
@@ -315,7 +315,7 @@ Error: {}</source>
         <translation>ভেক্টর টাইল স্তর লোড করতে ব্যর্থ: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2924"/>
+        <location filename="../basemaps_dialog.py" line="2966"/>
         <source>Edit</source>
         <translation>সম্পাদনা</translation>
     </message>
@@ -340,12 +340,12 @@ Error: {}</source>
         <translation>অজানা লেয়ার</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2572"/>
+        <location filename="../basemaps_dialog.py" line="2614"/>
         <source>Fetch completed but context was lost</source>
         <translation>আনয়ন সম্পন্ন হয়েছে কিন্তু প্রসঙ্গ হারিয়ে গেছে</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2687"/>
+        <location filename="../basemaps_dialog.py" line="2729"/>
         <source>Duplicate as User Provider</source>
         <translation>ব্যবহারকারী প্রদাতা হিসাবে নকল করুন</translation>
     </message>
@@ -410,10 +410,12 @@ Error: {}</source>
         <translation type="obsolete">ব্যবহারকারী প্রদাতা ─────────────────</translation>
     </message>
     <message>
+        <location filename="../basemaps_dialog.py" line="2548"/>
         <source>OK</source>
         <translation type="obsolete">ঠিক আছে</translation>
     </message>
     <message>
+        <location filename="../basemaps_dialog.py" line="2548"/>
         <source>Cancel</source>
         <translation type="obsolete">বাতিল</translation>
     </message>
@@ -529,7 +531,7 @@ Error: {}</source>
         <translation>WMTS পরিষেবায় কোনো লেয়ার পাওয়া যায়নি</translation>
     </message>
     <message>
-        <location filename="../preview_manager.py" line="1580"/>
+        <location filename="../preview_manager.py" line="1631"/>
         <source>unknown error</source>
         <translation>অজানা ত্রুটি</translation>
     </message>
@@ -567,42 +569,42 @@ Error: {}</source>
 <context>
     <name>ProviderInputDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3281"/>
+        <location filename="../basemaps_dialog.py" line="3323"/>
         <source>Add/Edit Provider</source>
         <translation>প্রদাতা যোগ/সম্পাদনা</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3289"/>
+        <location filename="../basemaps_dialog.py" line="3331"/>
         <source>Name:</source>
         <translation>নাম:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3299"/>
+        <location filename="../basemaps_dialog.py" line="3341"/>
         <source>Icon:</source>
         <translation>আইকন:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3303"/>
+        <location filename="../basemaps_dialog.py" line="3345"/>
         <source>Browse...</source>
         <translation>ব্রাউজ করুন...</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3313"/>
+        <location filename="../basemaps_dialog.py" line="3355"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3332"/>
+        <location filename="../basemaps_dialog.py" line="3374"/>
         <source>Select Icon File</source>
         <translation>আইকন ফাইল নির্বাচন করুন</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3332"/>
+        <location filename="../basemaps_dialog.py" line="3374"/>
         <source>Image Files (*.png *.jpg *.svg *.ico);;All Files (*)</source>
         <translation>ছবি ফাইল (*.png *.jpg *.svg *.ico);;সব ফাইল (*)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3345"/>
+        <location filename="../basemaps_dialog.py" line="3387"/>
         <source>Authentication</source>
         <translation>প্রমাণীকরণ</translation>
     </message>
@@ -610,32 +612,32 @@ Error: {}</source>
 <context>
     <name>TagEditDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3655"/>
+        <location filename="../basemaps_dialog.py" line="3697"/>
         <source>Edit Tags</source>
         <translation>ট্যাগ সম্পাদনা করুন</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3670"/>
+        <location filename="../basemaps_dialog.py" line="3712"/>
         <source>Tag:</source>
         <translation>ট্যাগ:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3686"/>
+        <location filename="../basemaps_dialog.py" line="3728"/>
         <source>Save tags to</source>
         <translation>ট্যাগ সংরক্ষণ করুন</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3688"/>
+        <location filename="../basemaps_dialog.py" line="3730"/>
         <source>Separate file (recommended, safer for updates)</source>
         <translation>আলাদা ফাইল (প্রস্তাবিত, আপডেটের জন্য নিরাপদ)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3691"/>
+        <location filename="../basemaps_dialog.py" line="3733"/>
         <source>Original provider file</source>
         <translation>মূল প্রদাতা ফাইল</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3692"/>
+        <location filename="../basemaps_dialog.py" line="3734"/>
         <source>Warning: edits in provider config files will be lost when the plugin is updated.</source>
         <translation>সতর্কতা: প্লাগইন আপডেট হলে প্রদাতা কনফিগারেশন ফাইলে করা সম্পাদনা হারিয়ে যাবে।</translation>
     </message>
@@ -643,32 +645,32 @@ Error: {}</source>
 <context>
     <name>TokenAuthWidget</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3368"/>
+        <location filename="../basemaps_dialog.py" line="3410"/>
         <source>Authentication</source>
         <translation>প্রমাণীকরণ</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3381"/>
+        <location filename="../basemaps_dialog.py" line="3423"/>
         <source>Provider:</source>
         <translation>প্রদাতা:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3392"/>
+        <location filename="../basemaps_dialog.py" line="3434"/>
         <source>Token:</source>
         <translation>টোকেন:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3394"/>
+        <location filename="../basemaps_dialog.py" line="3436"/>
         <source>API token / key</source>
         <translation>API টোকেন / কী</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3401"/>
+        <location filename="../basemaps_dialog.py" line="3443"/>
         <source>Token Parameter:</source>
         <translation>টোকেন প্যারামিটার:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3460"/>
+        <location filename="../basemaps_dialog.py" line="3502"/>
         <source>Authentication is enabled but no API token/key is set. Please click the Edit button on the provider to set it.</source>
         <translation>প্রমাণীকরণ সক্রিয় কিন্তু কোনো API টোকেন/কী সেট করা নেই। এটি সেট করতে প্রদাতার সম্পাদনা বোতামে ক্লিক করুন।</translation>
     </message>

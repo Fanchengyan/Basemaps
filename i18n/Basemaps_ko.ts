@@ -4,92 +4,92 @@
 <context>
     <name>BasemapInputDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3470"/>
+        <location filename="../basemaps_dialog.py" line="3512"/>
         <source>Add/Edit Basemap</source>
         <translation>베이스맵 추가/편집</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3478"/>
+        <location filename="../basemaps_dialog.py" line="3520"/>
         <source>Name:</source>
         <translation>이름:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3490"/>
+        <location filename="../basemaps_dialog.py" line="3532"/>
         <source>Tile Type:</source>
         <translation>타일 유형:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3492"/>
+        <location filename="../basemaps_dialog.py" line="3534"/>
         <source>Raster (XYZ)</source>
         <translation>래스터 (XYZ)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3492"/>
+        <location filename="../basemaps_dialog.py" line="3534"/>
         <source>Vector</source>
         <translation>벡터</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3609"/>
+        <location filename="../basemaps_dialog.py" line="3651"/>
         <source>Source URL:</source>
         <translation>소스 URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3609"/>
+        <location filename="../basemaps_dialog.py" line="3651"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3514"/>
+        <location filename="../basemaps_dialog.py" line="3556"/>
         <source>Style URL:</source>
         <translation>스타일 URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3526"/>
+        <location filename="../basemaps_dialog.py" line="3568"/>
         <source>Layer Settings</source>
         <translation>레이어 설정</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3531"/>
+        <location filename="../basemaps_dialog.py" line="3573"/>
         <source>Layer Name:</source>
         <translation>레이어 이름:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3541"/>
+        <location filename="../basemaps_dialog.py" line="3583"/>
         <source>Layer Title:</source>
         <translation>레이어 제목:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3551"/>
+        <location filename="../basemaps_dialog.py" line="3593"/>
         <source>CRS:</source>
         <translation>CRS:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3553"/>
+        <location filename="../basemaps_dialog.py" line="3595"/>
         <source>EPSG:4326</source>
         <translation>EPSG:4326</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3562"/>
+        <location filename="../basemaps_dialog.py" line="3604"/>
         <source>Format:</source>
         <translation>포맷:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3564"/>
+        <location filename="../basemaps_dialog.py" line="3606"/>
         <source>image/png</source>
         <translation>image/png</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3564"/>
+        <location filename="../basemaps_dialog.py" line="3606"/>
         <source>image/jpeg</source>
         <translation>image/jpeg</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3564"/>
+        <location filename="../basemaps_dialog.py" line="3606"/>
         <source>image/tiff</source>
         <translation>image/tiff</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3585"/>
+        <location filename="../basemaps_dialog.py" line="3627"/>
         <source>Tag:</source>
         <translation>태그:</translation>
     </message>
@@ -102,7 +102,7 @@
         <translation>기본 구성을 로드하지 못했습니다: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2562"/>
+        <location filename="../basemaps_dialog.py" line="2604"/>
         <source>Error</source>
         <translation>오류</translation>
     </message>
@@ -152,7 +152,7 @@
         <translation>구성이 성공적으로 저장되었습니다.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3135"/>
+        <location filename="../basemaps_dialog.py" line="3177"/>
         <source>Success</source>
         <translation>성공</translation>
     </message>
@@ -167,37 +167,37 @@
         <translation>구성 파일을 로드하지 못했습니다: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2175"/>
+        <location filename="../basemaps_dialog.py" line="2205"/>
         <source>Provider &apos;{}&apos; already exists.</source>
         <translation>제공자 '{}'이(가) 이미 존재합니다.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3008"/>
+        <location filename="../basemaps_dialog.py" line="3050"/>
         <source>Warning</source>
         <translation>경고</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2231"/>
+        <location filename="../basemaps_dialog.py" line="2261"/>
         <source>Default providers cannot be removed.</source>
         <translation>기본 제공자는 제거할 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2241"/>
+        <location filename="../basemaps_dialog.py" line="2271"/>
         <source>Are you sure you want to remove providers: &quot;{}&quot;?</source>
         <translation>제공자 &quot;{}&quot;을(를) 제거하시겠습니까?</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2241"/>
+        <location filename="../basemaps_dialog.py" line="2271"/>
         <source>Confirm Deletion</source>
         <translation>삭제 확인</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="1900"/>
+        <location filename="../basemaps_dialog.py" line="1918"/>
         <source>Please select a provider first.</source>
         <translation>먼저 제공자를 선택하세요.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2140"/>
+        <location filename="../basemaps_dialog.py" line="2158"/>
         <source>Are you sure you want to remove basemaps: &quot;{}&quot;?</source>
         <translation>베이스맵 &quot;{}&quot;을(를) 제거하시겠습니까?</translation>
     </message>
@@ -212,27 +212,27 @@
         <translation>잘못된 베이스맵 데이터: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2217"/>
+        <location filename="../basemaps_dialog.py" line="2247"/>
         <source>Please select providers to remove.</source>
         <translation>제거할 제공자를 선택하세요.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2079"/>
+        <location filename="../basemaps_dialog.py" line="2097"/>
         <source>Please select a basemap to edit.</source>
         <translation>편집할 베이스맵을 선택하세요.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2130"/>
+        <location filename="../basemaps_dialog.py" line="2148"/>
         <source>Please select basemaps to remove.</source>
         <translation>제거할 베이스맵을 선택하세요.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2504"/>
+        <location filename="../basemaps_dialog.py" line="2546"/>
         <source>Please select a WMS provider first.</source>
         <translation>먼저 WMS 제공자를 선택하세요.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2438"/>
+        <location filename="../basemaps_dialog.py" line="2480"/>
         <source>Failed to load WMS layer: {}
 
 Error: {}</source>
@@ -241,7 +241,7 @@ Error: {}</source>
 오류: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2483"/>
+        <location filename="../basemaps_dialog.py" line="2525"/>
         <source>Failed to load WMTS layer: {}
 
 Error: {}</source>
@@ -250,47 +250,47 @@ Error: {}</source>
 오류: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2535"/>
+        <location filename="../basemaps_dialog.py" line="2577"/>
         <source>Fetching layers in background...</source>
         <translation>백그라운드에서 레이어를 가져오는 중...</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2562"/>
+        <location filename="../basemaps_dialog.py" line="2604"/>
         <source>Failed to fetch layers: {}</source>
         <translation>레이어를 가져오지 못했습니다: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2635"/>
+        <location filename="../basemaps_dialog.py" line="2677"/>
         <source>Successfully refreshed {} layers.</source>
         <translation>{}개의 레이어를 성공적으로 새로 고쳤습니다.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2993"/>
+        <location filename="../basemaps_dialog.py" line="3035"/>
         <source>Please select a WMS provider to edit.</source>
         <translation>편집할 WMS 제공자를 선택하세요.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2935"/>
+        <location filename="../basemaps_dialog.py" line="2977"/>
         <source>Please select a provider to edit.</source>
         <translation>편집할 제공자를 선택하세요.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3008"/>
+        <location filename="../basemaps_dialog.py" line="3050"/>
         <source>Default providers cannot be edited.</source>
         <translation>기본 제공자는 편집할 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3108"/>
+        <location filename="../basemaps_dialog.py" line="3150"/>
         <source>Only default providers can be duplicated.</source>
         <translation>기본 제공자만 복제할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3108"/>
+        <location filename="../basemaps_dialog.py" line="3150"/>
         <source>Information</source>
         <translation>정보</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3135"/>
+        <location filename="../basemaps_dialog.py" line="3177"/>
         <source>Provider duplicated as &apos;{}&apos;</source>
         <translation>제공자가 '{}'(으)로 복제되었습니다</translation>
     </message>
@@ -300,22 +300,22 @@ Error: {}</source>
         <translation>벡터 타일 레이어를 로드하지 못했습니다: {}</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2378"/>
+        <location filename="../basemaps_dialog.py" line="2420"/>
         <source>Missing API token. Edit the provider to set it.</source>
         <translation>API 토큰이 없습니다. 제공자를 편집하여 설정하세요.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2378"/>
+        <location filename="../basemaps_dialog.py" line="2420"/>
         <source>Authentication Required</source>
         <translation>인증 필요</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2790"/>
+        <location filename="../basemaps_dialog.py" line="2832"/>
         <source>Please select a WMS/WMTS layer first.</source>
         <translation>먼저 WMS/WMTS 레이어를 선택하세요.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2924"/>
+        <location filename="../basemaps_dialog.py" line="2966"/>
         <source>Edit</source>
         <translation>편집</translation>
     </message>
@@ -340,12 +340,12 @@ Error: {}</source>
         <translation>알 수 없는 레이어</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2572"/>
+        <location filename="../basemaps_dialog.py" line="2614"/>
         <source>Fetch completed but context was lost</source>
         <translation>가져오기 완료되었지만 컨텍스트가 손실됨</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="2687"/>
+        <location filename="../basemaps_dialog.py" line="2729"/>
         <source>Duplicate as User Provider</source>
         <translation>사용자 제공자로 복제</translation>
     </message>
@@ -410,10 +410,12 @@ Error: {}</source>
         <translation type="obsolete">사용자 제공자 ─────────────────</translation>
     </message>
     <message>
+        <location filename="../basemaps_dialog.py" line="2548"/>
         <source>OK</source>
         <translation type="obsolete">확인</translation>
     </message>
     <message>
+        <location filename="../basemaps_dialog.py" line="2548"/>
         <source>Cancel</source>
         <translation type="obsolete">취소</translation>
     </message>
@@ -529,7 +531,7 @@ Error: {}</source>
         <translation>WMTS 서비스에서 레이어를 찾을 수 없습니다</translation>
     </message>
     <message>
-        <location filename="../preview_manager.py" line="1580"/>
+        <location filename="../preview_manager.py" line="1631"/>
         <source>unknown error</source>
         <translation>알 수 없는 오류</translation>
     </message>
@@ -567,42 +569,42 @@ Error: {}</source>
 <context>
     <name>ProviderInputDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3281"/>
+        <location filename="../basemaps_dialog.py" line="3323"/>
         <source>Add/Edit Provider</source>
         <translation>제공자 추가/편집</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3289"/>
+        <location filename="../basemaps_dialog.py" line="3331"/>
         <source>Name:</source>
         <translation>이름:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3299"/>
+        <location filename="../basemaps_dialog.py" line="3341"/>
         <source>Icon:</source>
         <translation>아이콘:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3303"/>
+        <location filename="../basemaps_dialog.py" line="3345"/>
         <source>Browse...</source>
         <translation>찾아보기...</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3313"/>
+        <location filename="../basemaps_dialog.py" line="3355"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3332"/>
+        <location filename="../basemaps_dialog.py" line="3374"/>
         <source>Select Icon File</source>
         <translation>아이콘 파일 선택</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3332"/>
+        <location filename="../basemaps_dialog.py" line="3374"/>
         <source>Image Files (*.png *.jpg *.svg *.ico);;All Files (*)</source>
         <translation>이미지 파일 (*.png *.jpg *.svg *.ico);;모든 파일 (*)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3345"/>
+        <location filename="../basemaps_dialog.py" line="3387"/>
         <source>Authentication</source>
         <translation>인증</translation>
     </message>
@@ -610,32 +612,32 @@ Error: {}</source>
 <context>
     <name>TagEditDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3655"/>
+        <location filename="../basemaps_dialog.py" line="3697"/>
         <source>Edit Tags</source>
         <translation>태그 편집</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3670"/>
+        <location filename="../basemaps_dialog.py" line="3712"/>
         <source>Tag:</source>
         <translation>태그:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3686"/>
+        <location filename="../basemaps_dialog.py" line="3728"/>
         <source>Save tags to</source>
         <translation>태그 저장 위치</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3688"/>
+        <location filename="../basemaps_dialog.py" line="3730"/>
         <source>Separate file (recommended, safer for updates)</source>
         <translation>별도 파일 (권장, 업데이트 시 안전)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3691"/>
+        <location filename="../basemaps_dialog.py" line="3733"/>
         <source>Original provider file</source>
         <translation>원본 제공자 파일</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3692"/>
+        <location filename="../basemaps_dialog.py" line="3734"/>
         <source>Warning: edits in provider config files will be lost when the plugin is updated.</source>
         <translation>경고: 제공자 구성 파일의 편집 내용은 플러그인 업데이트 시 손실됩니다.</translation>
     </message>
@@ -643,32 +645,32 @@ Error: {}</source>
 <context>
     <name>TokenAuthWidget</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="3368"/>
+        <location filename="../basemaps_dialog.py" line="3410"/>
         <source>Authentication</source>
         <translation>인증</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3381"/>
+        <location filename="../basemaps_dialog.py" line="3423"/>
         <source>Provider:</source>
         <translation>제공자:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3392"/>
+        <location filename="../basemaps_dialog.py" line="3434"/>
         <source>Token:</source>
         <translation>토큰:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3394"/>
+        <location filename="../basemaps_dialog.py" line="3436"/>
         <source>API token / key</source>
         <translation>API 토큰 / 키</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3401"/>
+        <location filename="../basemaps_dialog.py" line="3443"/>
         <source>Token Parameter:</source>
         <translation>토큰 매개변수:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="3460"/>
+        <location filename="../basemaps_dialog.py" line="3502"/>
         <source>Authentication is enabled but no API token/key is set. Please click the Edit button on the provider to set it.</source>
         <translation>인증이 활성화되었지만 API 토큰/키가 설정되지 않았습니다. 제공자의 편집 버튼을 클릭하여 설정하십시오.</translation>
     </message>
