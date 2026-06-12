@@ -4,7 +4,7 @@ xyz:
     website: https://www.bing.com/maps
     copyright: © Microsoft
     terms_of_use: https://www.microsoft.com/en-us/maps/product/terms-of-use
-    description: Bing Maps provides satellite and aerial imagery from Microsoft.
+    description: Microsoft Bing offers aerial imagery and street maps.
     basemaps:
       - name: Bing Aerial
         url: http://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=1

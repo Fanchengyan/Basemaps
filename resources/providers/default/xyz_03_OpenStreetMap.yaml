@@ -15,10 +15,10 @@ xyz:
         tags:
           - Terrain
         website: https://opentopomap.org/
-        copyright: ©OpenStreetMap contributors | DEM: SRTM, Sonny | map style: © OpenTopoMap (CC-BY-SA)
+        copyright: "Map data © OpenStreetMap contributors, DEM: SRTM and Sonny, Map style © OpenTopoMap (CC-BY-SA)"
       - name: Open Topo Map (by Top-O-Map)
         url: https://tile.top-o-map.com/relief/{z}/{x}/{y}.png
         tags:
           - Terrain
         website: https://top-o-map.com/
-        copyright: "OpenStreetMap contributors | DEM: Copernicus | Bathy: GEBCO | Powered by: Top-O-Map"
+        copyright: "Map data © OpenStreetMap contributors, DEM: Copernicus, Bathy: GEBCO, Powered by: Top-O-Map"

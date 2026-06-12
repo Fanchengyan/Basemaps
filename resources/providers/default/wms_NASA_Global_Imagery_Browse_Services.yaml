@@ -1,5 +1,5 @@
 wms:
-  NASA Global Imagery Browse Services:
+  GIBS:NASA's Global Imagery Browse Services:
     icon: NASA.svg
     website: https://earthdata.nasa.gov/gibs
     copyright: NASA

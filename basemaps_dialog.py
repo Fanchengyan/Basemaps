@@ -3358,9 +3358,6 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # ── Outermost horizontal splitter ───────────────────────────
         self._content_splitter = QSplitter(Qt.Orientation.Horizontal)
         self._content_splitter.setHandleWidth(2)
-        self._content_splitter.setStyleSheet(
-            "QSplitter::handle { background: #DCE4EC; }"
-        )
 
         left_widget = QWidget()
         left_widget.setLayout(left_col)
@@ -3443,10 +3440,6 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             QgsApplication.getThemeIcon("mActionAtlasLast.svg")
         )
         self.btnToggleDetails.setIconSize(QSize(18, 18))
-        self.btnToggleDetails.setStyleSheet(
-            "QPushButton { border: none; }"
-            "QPushButton:checked { background: #DCE4EC; border-radius: 4px; }"
-        )
         self.btnToggleDetails.toggled.connect(self._on_details_toggled)
 
     def _on_details_toggled(self, checked: bool) -> None:
