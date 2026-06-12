@@ -3958,6 +3958,7 @@ class ProviderInputDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(self.tr("Add/Edit Provider"))
         self.plugin_dir = Path(__file__).parent
+        self.icons_dir = self.plugin_dir / "resources" / "icons"
         self.provider_type = provider_type
 
         layout = QVBoxLayout(self)
@@ -4062,11 +4063,16 @@ class ProviderInputDialog(QDialog):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
             self.tr("Select Icon File"),
-            "",
+            str(self.icons_dir),
             self.tr("Image Files (*.png *.jpg *.svg *.ico);;All Files (*)"),
         )
         if file_path:
-            self.icon_edit.setText(file_path)
+            import shutil
+
+            src = Path(file_path)
+            dest = self.icons_dir / src.name
+            shutil.copy2(str(src), str(dest))
+            self.icon_edit.setText(src.name)
 
     def _validate_and_accept(self):
         """Warn if authentication is enabled but token is not set, then accept."""
@@ -4078,7 +4084,7 @@ class ProviderInputDialog(QDialog):
     def get_data(self):
         data = {
             "name": self.name_edit.text(),
-            "icon": self.icon_edit.text() or "ui/icon.svg",
+            "icon": self.icon_edit.text().strip() or "",
         }
 
         # Token
