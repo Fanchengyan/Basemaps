@@ -24,7 +24,7 @@ about=This plugin allows you to load and manage multiple basemap services. There
 changelog=Version 2.1:
       - [New] Detail panel: toggleable side panel showing providers and layers information of basemap
       - [New] Bing Maps : added Bing Aerial, Road, and Hybrid
-      - [Improvements] Provider icon handling now copies files to the plugin icons directory for better portability
+      - [Improvements] better experience for handling provider icons 
 
    Version 2.0:
       - [New] basemap providers: MapTiler, NASA, OpenRailwayMap, USGS, Open Topo Map
