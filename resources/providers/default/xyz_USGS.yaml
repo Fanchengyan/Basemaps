@@ -1,6 +1,10 @@
 xyz:
   USGS:
     icon: USGS.ico
+    website: https://www.usgs.gov/
+    copyright: U.S. Geological Survey, Department of the Interior
+    terms_of_use: https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits
+    description: USGS provides topographic and imagery basemaps from The National Map — free and in the public domain.
     basemaps:
       - name: USGS Topo
         url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}

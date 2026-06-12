@@ -2,6 +2,10 @@ wms:
   ESRI World Imagery Wayback:
     icon: Esri.ico
     created_at: 1766727395.365616
+    website: https://www.esri.com/
+    copyright: © Esri and its licensors. All rights reserved.
+    terms_of_use: https://www.esri.com/en-us/legal/terms/full-master-agreement
+    description: Esri World Imagery Wayback provides historical satellite imagery dating back to 2014, with over 170 time-specific layers.
     url: https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/WMTS/1.0.0/WMTSCapabilities.xml
     service_type: wmts
     layers:

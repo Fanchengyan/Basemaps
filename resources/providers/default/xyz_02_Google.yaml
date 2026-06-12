@@ -1,6 +1,10 @@
 xyz:
   Google:
     icon: GoogleMaps.svg
+    website: https://www.google.com/maps
+    copyright: © Google
+    terms_of_use: https://about.google/brand-resource-center/products-and-services/geo-guidelines/
+    description: Google Maps provides street maps, satellite imagery, and terrain views for the world.
     basemaps:
       - name: Google Maps
         url: https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}

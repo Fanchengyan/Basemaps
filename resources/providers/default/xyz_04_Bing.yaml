@@ -1,8 +1,22 @@
 xyz:
   Bing:
     icon: Bing.svg
+    website: https://www.bing.com/maps
+    copyright: © Microsoft
+    terms_of_use: https://www.microsoft.com/en-us/maps/product/terms-of-use
+    description: Bing Maps provides satellite and aerial imagery from Microsoft.
     basemaps:
-      - name: Bing VirtualEarth
+      - name: Bing Aerial
         url: http://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=1
         tags:
           - Satellite
+      - name: Bing Aerial Hybrid
+        url: http://ecn.t3.tiles.virtualearth.net/tiles/h{q}.jpeg?g=1
+        tags:
+          - Satellite
+        tile_type: raster
+      - name: Bing Road
+        url: http://ecn.t3.tiles.virtualearth.net/tiles/r{q}.png?g=1
+        tags:
+          - Streets
+        tile_type: raster

@@ -1,6 +1,10 @@
 xyz:
   CartoDB:
     icon: CartoDB.png
+    website: https://carto.com/
+    copyright: © OpenStreetMap contributors, © CARTO
+    terms_of_use: https://carto.com/legal/
+    description: CARTO provides beautifully styled basemaps built on OpenStreetMap data.
     basemaps:
       - name: CartoDB Light All
         url: https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png

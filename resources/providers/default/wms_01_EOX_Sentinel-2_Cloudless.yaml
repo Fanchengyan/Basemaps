@@ -2,6 +2,10 @@ wms:
   EOX Sentinel-2 Cloudless:
     icon: EOX.png
     created_at: 1766727406.8739672
+    website: https://s2maps.eu/
+    copyright: © EOX IT Services GmbH, contains modified Copernicus Sentinel data
+    terms_of_use: https://s2maps.eu/
+    description: Sentinel-2 cloudless mosaic by EOX, providing satellite imagery for the world.
     url: https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml
     service_type: wmts
     layers:

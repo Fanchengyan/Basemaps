@@ -1,6 +1,10 @@
 xyz:
   OpenStreetMap:
     icon: OpenStreetMap.svg
+    website: https://www.openstreetmap.org/
+    copyright: © OpenStreetMap contributors
+    terms_of_use: https://www.openstreetmap.org/copyright
+    description: OpenStreetMap is a free, editable map of the world, created and maintained by volunteers.
     basemaps:
       - name: Open Street Map
         url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
@@ -10,7 +14,11 @@ xyz:
         url: https://tile.opentopomap.org/{z}/{x}/{y}.png
         tags:
           - Terrain
+        website: https://opentopomap.org/
+        copyright: ©OpenStreetMap contributors | DEM: SRTM, Sonny | map style: © OpenTopoMap (CC-BY-SA)
       - name: Open Topo Map (by Top-O-Map)
         url: https://tile.top-o-map.com/relief/{z}/{x}/{y}.png
         tags:
           - Terrain
+        website: https://top-o-map.com/
+        copyright: "OpenStreetMap contributors | DEM: Copernicus | Bathy: GEBCO | Powered by: Top-O-Map"

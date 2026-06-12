@@ -1,6 +1,10 @@
 wms:
   NASA Global Imagery Browse Services:
     icon: NASA.svg
+    website: https://earthdata.nasa.gov/gibs
+    copyright: NASA
+    terms_of_use: https://www.earthdata.nasa.gov/engage/open-data-services-software-policies/data-information-guidance
+    description: NASA's Global Imagery Browse Services (GIBS) provides near real-time satellite imagery and data from NASA's Earth Observing System.
     url: "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/1.0.0/WMTSCapabilities.xml"
     service_type: wmts
     layers:

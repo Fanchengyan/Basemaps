@@ -114,6 +114,11 @@ def _convert_yaml_to_providers(
             if "token_param" in provider_config:
                 provider["token_param"] = provider_config["token_param"]
 
+            # Preserve optional provider metadata fields
+            for meta_field in ("website", "copyright", "terms_of_use", "description"):
+                if meta_field in provider_config:
+                    provider[meta_field] = provider_config[meta_field]
+
             # Add type-specific fields
             if type_name == "xyz":
                 provider["basemaps"] = provider_config.get("basemaps", [])
@@ -212,6 +217,11 @@ def save_config_as_yaml(
             provider_config["token"] = provider["token"]
         if "token_param" in provider:
             provider_config["token_param"] = provider["token_param"]
+
+        # Preserve optional provider metadata fields
+        for meta_field in ("website", "copyright", "terms_of_use", "description"):
+            if meta_field in provider:
+                provider_config[meta_field] = provider[meta_field]
 
         if type_name == "xyz":
             provider_config["basemaps"] = provider.get("basemaps", [])

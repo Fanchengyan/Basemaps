@@ -1,6 +1,10 @@
 xyz:
   Esri Raster:
     icon: Esri.ico
+    website: https://www.esri.com/
+    copyright: © Esri and its licensors. All rights reserved.
+    terms_of_use: https://www.esri.com/en-us/legal/terms/full-master-agreement
+    description: Esri provides satellite imagery, street maps, terrain, and thematic basemaps for the world.
     basemaps:
     - name: World Imagery
       url: https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}

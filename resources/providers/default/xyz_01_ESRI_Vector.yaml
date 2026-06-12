@@ -1,6 +1,10 @@
 xyz:
   Esri Vector:
     icon: Esri.ico
+    website: https://www.esri.com/
+    copyright: © Esri and its licensors. All rights reserved.
+    terms_of_use: https://www.esri.com/en-us/legal/terms/full-master-agreement
+    description: Esri provides vector tile basemaps with rich cartographic styles, including streets, terrain, and thematic maps.
     basemaps:
       - name: World Basemap v2
         url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf

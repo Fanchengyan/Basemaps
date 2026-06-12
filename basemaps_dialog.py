@@ -12,12 +12,11 @@
 
 from __future__ import annotations
 
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
-
-import os
-import tempfile
 
 from qgis.core import (
     QgsApplication,
@@ -38,32 +37,39 @@ from qgis.PyQt.QtCore import (
     QUrl,
 )
 from qgis.PyQt.QtGui import QIcon, QPixmap
+from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
+    QApplication,
     QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
+    QFrame,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QListView,
-    QListWidgetItem,
     QListWidget,
+    QListWidgetItem,
     QMenu,
     QPushButton,
     QRadioButton,
+    QScrollArea,
+    QSizePolicy,
+    QSplitter,
+    QToolTip,
     QTreeWidgetItem,
     QVBoxLayout,
+    QWidget,
 )
-from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from . import config_loader
 from .messageTool import Logger, MessageBox
-from .ui import IconBasemaps, UIBasemapsBase
-from .ui.basemap_delegate import BasemapCardDelegate
 from .preview_manager import PreviewManager
+from .ui import IconBasemaps, UIBasemapsBase
+from .ui.basemap_delegate import TAG_COLORS, BasemapCardDelegate
 from .wms_fetch_task import FetchResult, WMSFetchTask
 
 QT_VERSION_INT = int(QT_VERSION_STR.split(".")[0])
@@ -495,6 +501,27 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Select Gallery view by default for both XYZ and WMS/WMTS tabs
         self.tabBasemapsView.setCurrentIndex(1)
         self.tabWmsView.setCurrentIndex(1)
+
+        # Set layout stretch so list/tab widgets expand to fill space
+        self.verticalLayout_2.setStretch(1, 1)  # listProviders
+        self.verticalLayout_3.setStretch(1, 1)  # tabBasemapsView
+        self.verticalLayout_4.setStretch(1, 1)  # listWmsProviders
+        self.verticalLayout_5.setStretch(1, 1)  # tabWmsView
+
+        # Detail Panel setup
+        self._panel_width = 300
+        self._details_visible = False
+        self._setup_detail_panel()
+        self._setup_details_toggle_button()
+
+        # Refresh detail panel on selection changes
+        self.listBasemaps.itemSelectionChanged.connect(self._refresh_detail_panel)
+        self.listBasemapsGrid.itemSelectionChanged.connect(self._refresh_detail_panel)
+        self.treeWmsLayers.itemSelectionChanged.connect(self._refresh_detail_panel)
+        self.listWmsLayersGrid.itemSelectionChanged.connect(self._refresh_detail_panel)
+        self.listProviders.itemSelectionChanged.connect(self._refresh_detail_panel)
+        self.listWmsProviders.itemSelectionChanged.connect(self._refresh_detail_panel)
+        self.tabWidget.currentChanged.connect(self._on_detail_tab_changed)
 
     def tr(self, message):
         """Get the translation for a string using Qt translation API."""
@@ -1452,14 +1479,18 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     # Hold reference to prevent garbage collection
                     self._vector_tile_tasks.append(task)
                     task.taskCompleted.connect(
-                        lambda t=task: self._vector_tile_tasks.remove(t)
-                        if t in self._vector_tile_tasks
-                        else None
+                        lambda t=task: (
+                            self._vector_tile_tasks.remove(t)
+                            if t in self._vector_tile_tasks
+                            else None
+                        )
                     )
                     task.taskTerminated.connect(
-                        lambda t=task: self._vector_tile_tasks.remove(t)
-                        if t in self._vector_tile_tasks
-                        else None
+                        lambda t=task: (
+                            self._vector_tile_tasks.remove(t)
+                            if t in self._vector_tile_tasks
+                            else None
+                        )
                     )
                     QgsApplication.taskManager().addTask(task)
                 else:
@@ -1676,9 +1707,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 grid_item.setData(user_role + 12, service_type)
                 grid_item.setToolTip(display_name)
                 layer_tags = layer.get("tags", [])
-                grid_item.setData(
-                    user_role + 11, layer_tags[0] if layer_tags else None
-                )
+                grid_item.setData(user_role + 11, layer_tags[0] if layer_tags else None)
                 self.listWmsLayersGrid.addItem(grid_item)
 
                 self.preview_manager.request_preview(
@@ -1798,13 +1827,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return
 
             # Initialize XYZ provider data
-            provider_data.update(
-                {
-                    "type": "xyz",
-                    "basemaps": [],
-                    "created_at": __import__("time").time(),
-                }
-            )
+            provider_data.update({
+                "type": "xyz",
+                "basemaps": [],
+                "created_at": __import__("time").time(),
+            })
 
             # Add to data list
             self.providers_data.append(provider_data)
@@ -2212,13 +2239,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 return
 
             # Initialize WMS provider data
-            provider_data.update(
-                {
-                    "type": "wms",
-                    "layers": [],  # Initialize empty layer list
-                    "created_at": __import__("time").time(),  # Add creation timestamp
-                }
-            )
+            provider_data.update({
+                "type": "wms",
+                "layers": [],  # Initialize empty layer list
+                "created_at": __import__("time").time(),  # Add creation timestamp
+            })
 
             # Add to data list
             self.providers_data.append(provider_data)
@@ -2631,28 +2656,24 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if is_default_provider:
             # Create user copy with refreshed layers
             new_provider = self._duplicate_provider_as_user(provider)
-            new_provider.update(
-                {
-                    "icon": provider.get("icon", "ui/icon.svg"),
-                    "type": "wms",
-                    "service_type": detected_type,
-                    "url": url,
-                    "layers": result.layers,
-                }
-            )
+            new_provider.update({
+                "icon": provider.get("icon", "ui/icon.svg"),
+                "type": "wms",
+                "service_type": detected_type,
+                "url": url,
+                "layers": result.layers,
+            })
             self.providers_data.append(new_provider)
             selected_provider_name = new_provider["name"]
         else:
             # Update existing user provider
-            self.providers_data[provider_index].update(
-                {
-                    "icon": provider.get("icon", "ui/icon.svg"),
-                    "type": "wms",
-                    "service_type": detected_type,
-                    "url": url,
-                    "layers": result.layers,
-                }
-            )
+            self.providers_data[provider_index].update({
+                "icon": provider.get("icon", "ui/icon.svg"),
+                "type": "wms",
+                "service_type": detected_type,
+                "url": url,
+                "layers": result.layers,
+            })
             selected_provider_name = provider["name"]
 
         # Update interface display
@@ -3196,6 +3217,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                     # Trigger repaint
                     grid_view.update()
 
+        # Refresh detail panel preview if visible
+        if self._details_visible:
+            self._refresh_detail_panel()
+
     def _get_current_provider_name(self, grid_view):
         if grid_view == self.listBasemapsGrid:
             provider_list = self.listProviders
@@ -3304,6 +3329,624 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.tabBasemapsView.setCurrentIndex(index)
         self.tabBasemapsView.blockSignals(False)
 
+    # ── Detail Panel ──────────────────────────────────────────────
+
+    def _setup_detail_panel(self) -> None:
+        """Create the detail panel and restructure the dialog layout.
+
+        Wraps the toolbar (``horizontalLayout``) and ``tabWidget`` in a
+        vertical column, then places that column alongside a ``QFrame``
+        detail panel in an outermost horizontal layout.  This ensures the
+        toolbar buttons stay fixed when the panel is toggled.
+        """
+        # Hidden placeholder to park the detail panel when it is closed,
+        # so it does not contribute to the splitter's minimum size hint.
+        self._park_widget = QWidget()
+
+        # ── Extract toolbar and tabWidget from the main layout ─────
+        self.verticalLayout.removeWidget(self.tabWidget)
+        toolbar_item = self.verticalLayout.takeAt(0)
+
+        # ── Left column: toolbar + tabWidget ───────────────────────
+        left_col = QVBoxLayout()
+        left_col.setContentsMargins(0, 0, 0, 0)
+        left_col.setSpacing(0)
+        if toolbar_item and toolbar_item.layout():
+            left_col.addLayout(toolbar_item.layout())
+        left_col.addWidget(self.tabWidget, 1)
+
+        # ── Outermost horizontal splitter ───────────────────────────
+        self._content_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self._content_splitter.setHandleWidth(2)
+        self._content_splitter.setStyleSheet(
+            "QSplitter::handle { background: #DCE4EC; }"
+        )
+
+        left_widget = QWidget()
+        left_widget.setLayout(left_col)
+        self._content_splitter.addWidget(left_widget)
+
+        # ── Detail panel frame ─────────────────────────────────────
+        self.detailsPanel = QFrame()
+        self.detailsPanel.setObjectName("detailsPanel")
+        self.detailsPanel.setMinimumWidth(self._panel_width)
+        self.detailsPanel.setFrameShape(QFrame.Shape.StyledPanel)
+        self.detailsPanel.setStyleSheet("QFrame#detailsPanel {  background: #FAFBFC;}")
+
+        panel_layout = QVBoxLayout(self.detailsPanel)
+        panel_layout.setContentsMargins(10, 10, 10, 10)
+        panel_layout.setSpacing(0)
+
+        # Scroll area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setStyleSheet("QScrollArea { background: transparent; }")
+
+        # Content widget inside scroll area
+        self._panel_content = QWidget()
+        self._panel_content.setStyleSheet("background: transparent;")
+        self._panel_content_layout = QVBoxLayout(self._panel_content)
+        self._panel_content_layout.setContentsMargins(0, 0, 10, 0)
+        self._panel_content_layout.setSpacing(10)
+
+        # Preview thumbnail label
+        self._panel_preview = QLabel()
+        self._panel_preview.setMinimumHeight(120)
+        self._panel_preview.setMaximumHeight(180)
+        self._panel_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._panel_preview.setStyleSheet(
+            "QLabel {"
+            "  background: #F0F2F5;"
+            "  border: 1px solid #DCE4EC;"
+            "  border-radius: 6px;"
+            "}"
+        )
+        self._panel_preview.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
+        )
+        self._panel_content_layout.addWidget(self._panel_preview)
+
+        # Info text — single rich-text label for all metadata
+        self._panel_info = QLabel()
+        self._panel_info.setWordWrap(True)
+        self._panel_info.setOpenExternalLinks(False)
+        self._panel_info.setTextFormat(Qt.TextFormat.RichText)
+        self._panel_info.setStyleSheet(
+            "QLabel {  color: #2C3E50;  font-size: 11px;  background: transparent;}"
+        )
+        self._panel_info.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
+        self._panel_info.setAlignment(
+            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+        )
+        self._panel_info.linkActivated.connect(self._on_panel_link_clicked)
+        self._panel_content_layout.addWidget(self._panel_info)
+
+        self._panel_content_layout.addStretch()
+
+        scroll.setWidget(self._panel_content)
+        panel_layout.addWidget(scroll)
+
+        # ── Add to splitter and main layout ────────────────────────
+        self._content_splitter.addWidget(self.detailsPanel)
+        self._content_splitter.setStretchFactor(0, 1)
+        self._content_splitter.setStretchFactor(1, 0)
+        self.detailsPanel.hide()
+        self.verticalLayout.addWidget(self._content_splitter, 1)
+
+    def _setup_details_toggle_button(self) -> None:
+        """Configure the details toggle button (defined in the .ui file)."""
+        self.btnToggleDetails.setIcon(
+            QgsApplication.getThemeIcon("mActionAtlasLast.svg")
+        )
+        self.btnToggleDetails.setIconSize(QSize(18, 18))
+        self.btnToggleDetails.setStyleSheet(
+            "QPushButton { border: none; }"
+            "QPushButton:checked { background: #DCE4EC; border-radius: 4px; }"
+        )
+        self.btnToggleDetails.toggled.connect(self._on_details_toggled)
+
+    def _on_details_toggled(self, checked: bool) -> None:
+        """Handle detail panel toggle — resize dialog to grow/shrink."""
+        if checked:
+            pre_panel_width = self.width()
+            # Re-add panel to splitter (it was parked on _park_widget during hide)
+            self.detailsPanel.setParent(self._content_splitter)
+            self.detailsPanel.show()
+            self.resize(pre_panel_width + self._panel_width, self.height())
+        else:
+            panel_width = self.detailsPanel.width()
+            if panel_width <= 0:
+                splitter_sizes = self._content_splitter.sizes()
+                if len(splitter_sizes) > 1:
+                    panel_width = splitter_sizes[1]
+            if panel_width <= 0:
+                panel_width = self._panel_width
+
+            target_width = max(1, self.width() - panel_width)
+            self.setMinimumWidth(min(self.minimumWidth(), target_width))
+            self.detailsPanel.hide()
+            # Park the panel under a hidden placeholder so it no longer
+            # contributes to the splitter's minimum size hint.  Without
+            # this the left-widget's expanded width prevents the dialog
+            # from shrinking to the current content width.
+            self.detailsPanel.setParent(self._park_widget)
+            self.resize(target_width, self.height())
+
+        self._details_visible = checked
+        self._refresh_detail_panel()
+
+    def _on_detail_tab_changed(self, _index: int) -> None:
+        """Refresh the detail panel when switching between XYZ and WMS tabs."""
+        self._refresh_detail_panel()
+
+    def _refresh_detail_panel(self) -> None:
+        """Update the detail panel for the currently selected item."""
+        if not self._details_visible:
+            return
+
+        current_tab = self.tabWidget.currentIndex()
+
+        if current_tab == 0:  # XYZ / Vector Tiles
+            layer_data, protocol = self._get_current_xyz_layer()
+            provider_data = self._get_current_provider(self.listProviders, "xyz")
+            if layer_data:
+                self._render_layer_detail(layer_data, provider_data, protocol)
+            elif provider_data:
+                self._render_provider_detail(provider_data)
+            else:
+                self._render_empty_detail()
+        else:  # WMS / WMTS
+            layer_data, protocol = self._get_current_wms_layer()
+            provider_data = self._get_current_provider(self.listWmsProviders, "wms")
+            if layer_data:
+                self._render_layer_detail(layer_data, provider_data, protocol)
+            elif provider_data:
+                self._render_provider_detail(provider_data)
+            else:
+                self._render_empty_detail()
+
+    # ── Data helpers ───────────────────────────────────────────
+
+    @staticmethod
+    def _get_current_provider(list_widget: QListWidget, _svc_type: str) -> dict | None:
+        """Return the *provider* data dict for the selected provider item."""
+        item = list_widget.currentItem()
+        if not item:
+            return None
+        data = item.data(user_role)
+        if not data or "data" not in data:
+            return None
+        return data["data"]
+
+    def _get_current_xyz_layer(self) -> tuple[dict | None, str]:
+        """Return (layer_dict, protocol) for the selected XYZ basemap."""
+        # Prefer currently visible view
+        if self.tabBasemapsView.currentIndex() == 1:  # Gallery
+            items = self.listBasemapsGrid.selectedItems()
+        else:
+            items = self.listBasemaps.selectedItems()
+
+        if items:
+            basemap = items[0].data(user_role)
+            if isinstance(basemap, dict):
+                protocol = "vector" if basemap.get("tile_type") == "vector" else "xyz"
+                return basemap, protocol
+        return None, ""
+
+    def _get_current_wms_layer(self) -> tuple[dict | None, str]:
+        """Return (layer_dict, protocol) for the selected WMS/WMTS layer."""
+        if self.tabWmsView.currentIndex() == 0:  # Tree (Text)
+            items = self.treeWmsLayers.selectedItems()
+        else:
+            items = self.listWmsLayersGrid.selectedItems()
+
+        if items:
+            item = items[0]
+            # QTreeWidgetItem needs (column, role); QListWidgetItem needs (role)
+            if isinstance(item, QTreeWidgetItem):
+                layer = item.data(0, user_role)
+            else:
+                layer = item.data(user_role)
+            if isinstance(layer, dict):
+                provider_data = self._get_current_provider(self.listWmsProviders, "wms")
+                if provider_data:
+                    protocol = provider_data.get("service_type", "wms")
+                else:
+                    protocol = layer.get("service_type", "wms")
+                return layer, protocol
+        return None, ""
+
+    # ── Rendering ───────────────────────────────────────────────
+
+    def _render_layer_detail(
+        self,
+        layer_data: dict,
+        provider_data: dict | None,
+        protocol: str,
+    ) -> None:
+        """Populate the detail panel with layer + provider metadata."""
+        # ── Preview ──────────────────────────────────────────────
+        name = layer_data.get("name") or layer_data.get("layer_title", "")
+        key = f"{provider_data.get('name', '')}_{name}" if provider_data else f"_{name}"
+        # Try to find a cached preview pixmap from the grid views
+        pixmap = self._find_preview_pixmap(key)
+        if pixmap:
+            preview_w = max(100, self.detailsPanel.width() - 20)
+            preview_h = int(preview_w * 0.6)
+            self._panel_preview.setPixmap(
+                pixmap.scaled(
+                    preview_w,
+                    preview_h,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+        else:
+            self._panel_preview.clear()
+            # Show provider icon placeholder
+            if provider_data:
+                icon_file = self.icons_dir / provider_data.get("icon", "")
+                if icon_file.exists():
+                    self._panel_preview.setPixmap(QIcon(str(icon_file)).pixmap(48, 48))
+
+        # ── Info HTML ────────────────────────────────────────────
+        parts: list[str] = []
+
+        # Layer section
+        parts.append(
+            '<h3 style="margin:0 0 4px 0;color:#2C3E50;font-size:12px;">'
+            + self.tr("Layer Information")
+            + "</h3>"
+        )
+        parts.append(self._info_row(self.tr("Name"), self._esc(name)))
+
+        # Tags — clickable colour badges, reuse gallery tag-editor flow
+        tags = layer_data.get("tags", [])
+        if tags:
+            tag_spans = []
+            for t in tags:
+                tc = TAG_COLORS.get(t, "#999")
+                tc_hex = tc.name() if hasattr(tc, "name") else tc
+                display = t[t.find("/") + 1 :] if "/" in t else t
+                tag_spans.append(
+                    f'<a href="tag:{self._esc(t)}" '
+                    f'style="background:{tc_hex};color:#fff;'
+                    f"padding:1px 5px;border-radius:3px;font-size:10px;"
+                    f"margin-right:3px;text-decoration:none;"
+                    f'font-weight:bold;">{self._esc(display)}</a>'
+                )
+            parts.append(self._info_row(self.tr("Tag"), " ".join(tag_spans)))
+
+        # Protocol — plain text
+        proto_label = {
+            "xyz": "XYZ Tile",
+            "vector": "Vector Tile",
+            "wms": "WMS",
+            "wmts": "WMTS",
+        }
+        parts.append(
+            self._info_row(
+                self.tr("Protocol"),
+                self._esc(proto_label.get(protocol, protocol.upper())),
+            )
+        )
+
+        # URLs — truncated display, hover tooltip shows full URL, click copies
+        url = layer_data.get("url") or layer_data.get("resource_url", "")
+        if url:
+            display_url = self._truncate_url(url)
+            parts.append(
+                self._info_row(
+                    self.tr("URL"),
+                    f'<a href="copy:{self._esc(url)}" '
+                    f'title="{self._esc(url)}" '
+                    f'style="color:#2C3E50;text-decoration:none;'
+                    f'font-size:10px;font-family:monospace;">'
+                    f"{self._esc(display_url)}</a>",
+                )
+            )
+        style_url = layer_data.get("style_url", "")
+        if style_url:
+            display_style_url = self._truncate_url(style_url)
+            parts.append(
+                self._info_row(
+                    self.tr("Style URL"),
+                    f'<a href="copy:{self._esc(style_url)}" '
+                    f'title="{self._esc(style_url)}" '
+                    f'style="color:#2C3E50;text-decoration:none;'
+                    f'font-size:10px;font-family:monospace;">'
+                    f"{self._esc(display_style_url)}</a>",
+                )
+            )
+
+        # CRS / Format (WMS/WMTS)
+        crs = layer_data.get("crs", [])
+        if crs:
+            crs_str = ", ".join(crs) if isinstance(crs, list) else str(crs)
+            parts.append(self._info_row(self.tr("CRS"), self._esc(crs_str)))
+        fmt = layer_data.get("format", [])
+        if fmt:
+            fmt_str = ", ".join(fmt) if isinstance(fmt, list) else str(fmt)
+            parts.append(self._info_row(self.tr("Format"), self._esc(fmt_str)))
+
+        # Layer Metadata (from basemap config, inline in Layer Info)
+        layer_website = layer_data.get("website", "")
+        layer_copyright = layer_data.get("copyright", "")
+        layer_terms = layer_data.get("terms_of_use", "")
+        layer_desc = layer_data.get("description", "")
+
+        if layer_website:
+            display_lw = self._truncate_url(layer_website)
+            parts.append(
+                self._info_row(
+                    "🌐 " + self.tr("Website"),
+                    f'<a href="{self._esc(layer_website)}" '
+                    f'title="{self._esc(layer_website)}" '
+                    f'style="color:#3498DB;">{self._esc(display_lw)}</a>',
+                )
+            )
+        if layer_copyright:
+            parts.append(
+                self._info_row(
+                    "© " + self.tr("Copyright"),
+                    self._esc(layer_copyright),
+                )
+            )
+        if layer_terms:
+            display_lt = self._truncate_url(layer_terms)
+            parts.append(
+                self._info_row(
+                    "📄 " + self.tr("Terms of Use"),
+                    f'<a href="{self._esc(layer_terms)}" '
+                    f'title="{self._esc(layer_terms)}" '
+                    f'style="color:#3498DB;">{self._esc(display_lt)}</a>',
+                )
+            )
+        if layer_desc:
+            parts.append(
+                self._info_row(
+                    self.tr("Description"),
+                    self._esc(layer_desc).replace("\n", "<br>"),
+                )
+            )
+
+        # Provider section
+        if provider_data:
+            parts.append(
+                '<hr style="border:none;border-top:1px solid #DCE4EC;margin:8px 0;">'
+            )
+            parts.append(
+                '<h3 style="margin:0 0 4px 0;color:#2C3E50;font-size:12px;">'
+                + self.tr("Provider Information")
+                + "</h3>"
+            )
+            parts.append(
+                self._info_row(
+                    self.tr("Name"), self._esc(provider_data.get("name", ""))
+                )
+            )
+            service_type = provider_data.get("service_type", "")
+            if service_type:
+                parts.append(
+                    self._info_row(
+                        self.tr("Protocol"),
+                        self._esc(service_type.upper()),
+                    )
+                )
+
+        copyright_text = provider_data.get("copyright", "")
+        if copyright_text:
+            parts.append(
+                self._info_row(
+                    "© " + self.tr("Copyright"),
+                    self._esc(copyright_text),
+                )
+            )
+
+        website = provider_data.get("website", "")
+        if website:
+            display_website = self._truncate_url(website)
+            parts.append(
+                self._info_row(
+                    "🌐 " + self.tr("Website"),
+                    f'<a href="{self._esc(website)}" '
+                    f'title="{self._esc(website)}" '
+                    f'style="color:#3498DB;">{self._esc(display_website)}</a>',
+                )
+            )
+
+        terms = provider_data.get("terms_of_use", "")
+        if terms:
+            display_terms = self._truncate_url(terms)
+            parts.append(
+                self._info_row(
+                    "📄 " + self.tr("Terms of Use"),
+                    f'<a href="{self._esc(terms)}" '
+                    f'title="{self._esc(terms)}" '
+                    f'style="color:#3498DB;">{self._esc(display_terms)}</a>',
+                )
+            )
+
+            desc = provider_data.get("description", "")
+            if desc:
+                parts.append(
+                    self._info_row(
+                        self.tr("Description"),
+                        self._esc(desc).replace("\n", "<br>"),
+                    )
+                )
+
+        self._panel_info.setText("".join(parts))
+
+    def _render_provider_detail(self, provider_data: dict) -> None:
+        """Render detail panel with provider metadata only (no layer selected)."""
+        self._panel_preview.clear()
+        icon_file = self.icons_dir / provider_data.get("icon", "")
+        if icon_file.exists():
+            self._panel_preview.setPixmap(QIcon(str(icon_file)).pixmap(48, 48))
+
+        parts: list[str] = []
+        parts.append(
+            '<h3 style="margin:0 0 4px 0;color:#2C3E50;font-size:12px;">'
+            + self.tr("Provider Information")
+            + "</h3>"
+        )
+        parts.append(
+            self._info_row(self.tr("Name"), self._esc(provider_data.get("name", "")))
+        )
+        service_type = provider_data.get("service_type", "")
+        if service_type:
+            parts.append(
+                self._info_row(
+                    self.tr("Protocol"),
+                    self._esc(service_type.upper()),
+                )
+            )
+
+        copyright_text = provider_data.get("copyright", "")
+        if copyright_text:
+            parts.append(
+                self._info_row("© " + self.tr("Copyright"), self._esc(copyright_text))
+            )
+        website = provider_data.get("website", "")
+        if website:
+            display_website = self._truncate_url(website)
+            parts.append(
+                self._info_row(
+                    "🌐 " + self.tr("Website"),
+                    f'<a href="{self._esc(website)}" '
+                    f'title="{self._esc(website)}" '
+                    f'style="color:#3498DB;">{self._esc(display_website)}</a>',
+                )
+            )
+        terms = provider_data.get("terms_of_use", "")
+        if terms:
+            display_terms = self._truncate_url(terms)
+            parts.append(
+                self._info_row(
+                    "📄 " + self.tr("Terms of Use"),
+                    f'<a href="{self._esc(terms)}" '
+                    f'title="{self._esc(terms)}" '
+                    f'style="color:#3498DB;">{self._esc(display_terms)}</a>',
+                )
+            )
+        desc = provider_data.get("description", "")
+        if desc:
+            parts.append(
+                self._info_row(
+                    self.tr("Description"),
+                    self._esc(desc).replace("\n", "<br>"),
+                )
+            )
+
+        parts.append(
+            '<p style="color:#7F8C8D;font-style:italic;margin-top:8px;">'
+            + self.tr("Select a layer to see details")
+            + "</p>"
+        )
+        self._panel_info.setText("".join(parts))
+
+    def _render_empty_detail(self) -> None:
+        """Show placeholder content when nothing is selected."""
+        self._panel_preview.clear()
+        self._panel_info.setText(
+            '<p style="color:#7F8C8D;font-style:italic;">'
+            + self.tr("Select a provider or layer to see details")
+            + "</p>"
+        )
+
+    # ── Helpers ─────────────────────────────────────────────────
+
+    @staticmethod
+    def _esc(text: str) -> str:
+        """Escape HTML entities in *text*."""
+        return (
+            text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace('"', "&quot;")
+        )
+
+    @staticmethod
+    def _truncate_url(url: str, max_len: int = 80) -> str:
+        """Truncate a long URL for display."""
+        if len(url) <= max_len:
+            return url
+        return url[: max_len - 3] + "..."
+
+    @staticmethod
+    def _info_row(label: str, value: str) -> str:
+        """Return an HTML table row with a thin separator below."""
+        return (
+            f'<table style="margin:0;font-size:11px;" width="100%">'
+            f"<tr>"
+            f'<td style="color:#7F8C8D;white-space:nowrap;'
+            f'padding-right:8px;vertical-align:top;width:1%;">'
+            f"{label}</td>"
+            f'<td style="color:#2C3E50;vertical-align:top;'
+            f'text-align:right;word-wrap:break-word;overflow-wrap:break-word;">'
+            f"{value}</td>"
+            f"</tr></table>"
+            f'<table style="margin:0;" width="100%">'
+            f'<tr><td style="border-bottom:1px solid #E0E0E0;'
+            f'font-size:0;line-height:0;">&nbsp;</td></tr></table>'
+        )
+
+    def _find_preview_pixmap(self, key: str) -> QPixmap | None:
+        """Look up a cached preview pixmap from the grid views by *key*.
+
+        *key* has the form ``"{provider_name}_{layer_name}"``.
+        """
+        for grid_view in [self.listBasemapsGrid, self.listWmsLayersGrid]:
+            provider_name = self._get_current_provider_name(grid_view)
+            for i in range(grid_view.count()):
+                item = grid_view.item(i)
+                item_key = f"{provider_name}_{item.text()}"
+                if item_key == key:
+                    pix = item.data(Qt.ItemDataRole.DecorationRole)
+                    if isinstance(pix, QPixmap) and not pix.isNull():
+                        return pix
+        return None
+
+    def _on_panel_link_clicked(self, link: str) -> None:
+        """Handle clicks on links in the detail panel info text.
+
+        Supported schemes:
+
+        * ``copy:...`` — copy the payload to the system clipboard.
+        * ``tag:...`` — open the tag editor (reuses the gallery badge flow).
+        * anything else — open in the system browser.
+        """
+        if link.startswith("copy:"):
+            url = link[5:]
+            QApplication.clipboard().setText(url)
+            from qgis.PyQt.QtGui import QCursor
+
+            QToolTip.showText(
+                QCursor.pos(),
+                self.tr("✓ Copied!"),
+                self,
+            )
+            Logger.info(f"Detail panel copied URL: {url}")
+        elif link.startswith("tag:"):
+            tag = link[4:]
+            current_tab = self.tabWidget.currentIndex()
+            if current_tab == 0:  # XYZ
+                layer_data, _ = self._get_current_xyz_layer()
+                if layer_data:
+                    self._edit_xyz_basemap_tags(layer_data)
+            else:  # WMS
+                self.edit_wms_layer_tags()
+        else:
+            from qgis.PyQt.QtGui import QDesktopServices
+
+            QDesktopServices.openUrl(QUrl(link))
+
 
 def _translate_button_box(button_box: QDialogButtonBox) -> None:
     """Set translated text on standard buttons using plugin translations."""
@@ -3331,7 +3974,7 @@ class ProviderInputDialog(QDialog):
         name_label = QLabel(self.tr("Name:"))
         self.name_edit = QLineEdit()
         if provider:
-            self.name_edit.setText(provider["name"])
+            self.name_edit.setText(provider.get("name", ""))
         name_layout.addWidget(name_label)
         name_layout.addWidget(self.name_edit)
         layout.addLayout(name_layout)
@@ -3362,6 +4005,58 @@ class ProviderInputDialog(QDialog):
 
         self.token_auth_widget = TokenAuthWidget(self, provider)
         layout.addWidget(self.token_auth_widget)
+
+        # ── Provider Metadata (optional) ─────────────────────────
+        meta_group = QGroupBox(self.tr("Provider Metadata (optional)"))
+        meta_layout = QVBoxLayout(meta_group)
+
+        # Website
+        website_layout = QHBoxLayout()
+        website_label = QLabel(self.tr("Website:"))
+        self.website_edit = QLineEdit()
+        self.website_edit.setPlaceholderText("https://...")
+        if provider:
+            self.website_edit.setText(provider.get("website", ""))
+        website_layout.addWidget(website_label)
+        website_layout.addWidget(self.website_edit)
+        meta_layout.addLayout(website_layout)
+
+        # Copyright
+        copyright_layout = QHBoxLayout()
+        copyright_label = QLabel(self.tr("Copyright:"))
+        self.copyright_edit = QLineEdit()
+        self.copyright_edit.setPlaceholderText("© ...")
+        if provider:
+            self.copyright_edit.setText(provider.get("copyright", ""))
+        copyright_layout.addWidget(copyright_label)
+        copyright_layout.addWidget(self.copyright_edit)
+        meta_layout.addLayout(copyright_layout)
+
+        # Terms of Use
+        terms_layout = QHBoxLayout()
+        terms_label = QLabel(self.tr("Terms of Use:"))
+        self.terms_edit = QLineEdit()
+        self.terms_edit.setPlaceholderText("https://...")
+        if provider:
+            self.terms_edit.setText(provider.get("terms_of_use", ""))
+        terms_layout.addWidget(terms_label)
+        terms_layout.addWidget(self.terms_edit)
+        meta_layout.addLayout(terms_layout)
+
+        # Description
+        desc_layout = QVBoxLayout()
+        desc_label = QLabel(self.tr("Description:"))
+        self.desc_edit = QLineEdit()
+        self.desc_edit.setPlaceholderText(
+            self.tr("Brief description of the provider...")
+        )
+        if provider:
+            self.desc_edit.setText(provider.get("description", ""))
+        desc_layout.addWidget(desc_label)
+        desc_layout.addWidget(self.desc_edit)
+        meta_layout.addLayout(desc_layout)
+
+        layout.addWidget(meta_group)
 
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
@@ -3398,6 +4093,20 @@ class ProviderInputDialog(QDialog):
 
         if self.provider_type == "wms":
             data["url"] = self.url_edit.text()
+
+        # Optional provider metadata — only include non-empty values
+        website = self.website_edit.text().strip()
+        if website:
+            data["website"] = website
+        copyright_text = self.copyright_edit.text().strip()
+        if copyright_text:
+            data["copyright"] = copyright_text
+        terms = self.terms_edit.text().strip()
+        if terms:
+            data["terms_of_use"] = terms
+        desc = self.desc_edit.text().strip()
+        if desc:
+            data["description"] = desc
 
         return data
 
@@ -3603,13 +4312,11 @@ class BasemapInputDialog(QDialog):
             format_layout = QHBoxLayout()
             format_label = QLabel(self.tr("Format:"))
             self.format_combo = QComboBox()
-            self.format_combo.addItems(
-                [
-                    self.tr("image/png"),
-                    self.tr("image/jpeg"),
-                    self.tr("image/tiff"),
-                ]
-            )
+            self.format_combo.addItems([
+                self.tr("image/png"),
+                self.tr("image/jpeg"),
+                self.tr("image/tiff"),
+            ])
             if self.basemap:
                 self.format_combo.setCurrentText(
                     self.basemap.get("format", "image/png")
@@ -3628,7 +4335,9 @@ class BasemapInputDialog(QDialog):
         self.tag_combo = QComboBox()
         self.tag_combo.addItem("", "")
         for tag in ASSIGNABLE_TAGS:
-            self.tag_combo.addItem(QCoreApplication.translate("BasemapsDialog", tag), tag)
+            self.tag_combo.addItem(
+                QCoreApplication.translate("BasemapsDialog", tag), tag
+            )
         existing_tags = self.basemap.get("tags", []) if self.basemap else []
         if existing_tags:
             self.tag_combo.setCurrentText(
@@ -3637,6 +4346,56 @@ class BasemapInputDialog(QDialog):
         tag_layout.addWidget(tag_label)
         tag_layout.addWidget(self.tag_combo, 1)
         layout.addLayout(tag_layout)
+
+        # ── Layer Metadata (optional) ─────────────────────────────
+        meta_group = QGroupBox(self.tr("Layer Metadata (optional)"))
+        meta_layout = QVBoxLayout(meta_group)
+
+        # Website
+        website_layout = QHBoxLayout()
+        website_label = QLabel(self.tr("Website:"))
+        self.website_edit = QLineEdit()
+        self.website_edit.setPlaceholderText("https://...")
+        if self.basemap:
+            self.website_edit.setText(self.basemap.get("website", ""))
+        website_layout.addWidget(website_label)
+        website_layout.addWidget(self.website_edit)
+        meta_layout.addLayout(website_layout)
+
+        # Copyright
+        copyright_layout = QHBoxLayout()
+        copyright_label = QLabel(self.tr("Copyright:"))
+        self.copyright_edit = QLineEdit()
+        self.copyright_edit.setPlaceholderText("© ...")
+        if self.basemap:
+            self.copyright_edit.setText(self.basemap.get("copyright", ""))
+        copyright_layout.addWidget(copyright_label)
+        copyright_layout.addWidget(self.copyright_edit)
+        meta_layout.addLayout(copyright_layout)
+
+        # Terms of Use
+        terms_layout = QHBoxLayout()
+        terms_label = QLabel(self.tr("Terms of Use:"))
+        self.terms_edit = QLineEdit()
+        self.terms_edit.setPlaceholderText("https://...")
+        if self.basemap:
+            self.terms_edit.setText(self.basemap.get("terms_of_use", ""))
+        terms_layout.addWidget(terms_label)
+        terms_layout.addWidget(self.terms_edit)
+        meta_layout.addLayout(terms_layout)
+
+        # Description
+        desc_layout = QVBoxLayout()
+        desc_label = QLabel(self.tr("Description:"))
+        self.desc_edit = QLineEdit()
+        self.desc_edit.setPlaceholderText(self.tr("Brief description of the layer..."))
+        if self.basemap:
+            self.desc_edit.setText(self.basemap.get("description", ""))
+        desc_layout.addWidget(desc_label)
+        desc_layout.addWidget(self.desc_edit)
+        meta_layout.addLayout(desc_layout)
+
+        layout.addWidget(meta_group)
 
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
@@ -3661,8 +4420,24 @@ class BasemapInputDialog(QDialog):
     def get_data(self):
         selected = self.tag_combo.currentData(user_role) or ""
         tags = [selected] if selected else []
+
+        # Optional layer metadata — only include non-empty values
+        metadata = {}
+        website = self.website_edit.text().strip()
+        if website:
+            metadata["website"] = website
+        copyright_text = self.copyright_edit.text().strip()
+        if copyright_text:
+            metadata["copyright"] = copyright_text
+        terms = self.terms_edit.text().strip()
+        if terms:
+            metadata["terms_of_use"] = terms
+        desc = self.desc_edit.text().strip()
+        if desc:
+            metadata["description"] = desc
+
         if self.provider_type == "wms":
-            return {
+            data = {
                 "name": self.name_edit.text(),
                 "url": self.url_edit.text(),
                 "layer_name": self.layer_name_edit.text(),
@@ -3671,6 +4446,8 @@ class BasemapInputDialog(QDialog):
                 "format": self.format_combo.currentText(),
                 "tags": tags,
             }
+            data.update(metadata)
+            return data
         else:
             is_vector = (
                 hasattr(self, "tile_type_combo")
@@ -3686,6 +4463,7 @@ class BasemapInputDialog(QDialog):
                 style_url = self.style_url_edit.text().strip()
                 if style_url:
                     data["style_url"] = style_url
+            data.update(metadata)
             return data
 
 
@@ -3728,9 +4506,9 @@ class TagEditDialog(QDialog):
         save_group = QGroupBox(self.tr("Save tags to"))
         save_layout = QVBoxLayout(save_group)
         self.btn_overrides = QRadioButton(
-            self.tr("Separate file (recommended, safer for updates)")
+            self.tr("Sidecar file (recommended, safer for updates)")
         )
-        self.btn_direct = QRadioButton(self.tr("Original provider file"))
+        self.btn_direct = QRadioButton(self.tr("Original file"))
         self.btn_direct.setToolTip(
             self.tr(
                 "Warning: edits in provider config files "

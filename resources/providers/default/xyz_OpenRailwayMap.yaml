@@ -1,6 +1,10 @@
 xyz:
   OpenRailwayMap:
     icon: OpenRailWayMap.png
+    website: https://www.openrailwaymap.org/
+    copyright: © OpenStreetMap contributors
+    terms_of_use: https://www.openstreetmap.org/copyright
+    description: OpenRailwayMap provides detailed railway infrastructure maps based on OpenStreetMap data.
     basemaps:
       - name: Standard
         url: https://tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png
