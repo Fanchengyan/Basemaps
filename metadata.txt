@@ -2,24 +2,25 @@
 name=Basemaps
 qgisMinimumVersion=3.0
 qgisMaximumVersion=4.99
-description= A QGIS plugin to load multiple online basemap services
+description=A QGIS plugin for loading multiple online basemaps
 version=2.1
 author=Chengyan Fan
 email=fanchengyan@outlook.com
-about=This plugin allows you to load and manage multiple basemap services. There are some popular basemap services built-in, including:
+about=A QGIS 3.x/4.x plugin with 12 providers and 1500+ basemaps — XYZ tiles, vector tiles, WMS, and WMTS. Built-in providers include:
 
-    - Esri : XYZ and vector tile basemaps, along with WMTS services — such as World Imagery, World Terrain, World StreetMap, and the World Imagery Wayback archive (available from February 20, 2014, to the present).
-    - Google : Google Maps, Satellite, Terrain, Satellite Hybrid, etc.
-    - OpenStreetMap : Open Street Map, Open Topo Map.
-    - EOX : EOX Sentinel-2 cloudless (2016-2024)
-    - Bing : Bing Aerial, Bing Road, Bing Hybrid
-    - MapTiler : MapTiler XYZ/Vector basemaps (api key required)
-    - NASA : NASA's Global Imagery Browse Services (GIBS)
-    - USGS : USGS basemaps
-    - OpenRailwayMap, F4map 2D
-    - etc.
+      - Esri : raster, vector tiles, and WMTS — World Imagery, World Terrain, World StreetMap, and the Wayback archive (2014–present).
+      - Google : Maps, Satellite, Terrain, Satellite Hybrid, etc.
+      - Bing : Aerial, Road, and Hybrid.
+      - OpenStreetMap : OpenStreetMap, Open Topo Map.
+      - EOX : Sentinel-2 Cloudless imagery (2016–2024).
+      - NASA : Global Imagery Browse Services (GIBS).
+      - USGS, CartoDB, OpenRailwayMap, F4map, MapTiler, etc.
 
- If you have additional basemap services to contribute, feel free to submit a pull request or open a discussion in the GitHub repository: https://github.com/Fanchengyan/Basemaps
+   Supports adding, editing, removing, and importing/exporting custom basemaps.
+
+   Available in 12 languages: English, 中文, 日本語, 한국어, Français, Deutsch, Русский, العربية, Español, Português (pt-BR), हिन्दी, বাংলা. 
+
+   If you'd like to contribute new basemap services, report issues, or suggest improvements, feel free to open an issue or pull request on GitHub: https://github.com/Fanchengyan/Basemaps
 
 changelog=Version 2.1:
       - [New] Detail panel: toggleable side panel showing providers and layers information of basemap
