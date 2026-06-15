@@ -75,6 +75,7 @@ except AttributeError:  # pragma: no cover - very old QGIS
 # Path to the plugin's resources directory (used for provider icons).
 _RESOURCES_DIR = Path(__file__).parent / "resources"
 _ICONS_DIR = _RESOURCES_DIR / "icons"
+_PREVIEWS_DIR = _RESOURCES_DIR / "previews"
 
 # Display names for the two top-level groups. These strings are translated
 # via QCoreApplication using the "BasemapsBrowser" context.
@@ -133,6 +134,25 @@ def _provider_icon(icon_value: str) -> QIcon:
         if candidate.exists():
             return QIcon(str(candidate))
     return QIcon()
+
+
+def _preview_path(provider: dict[str, Any], layer_name: str) -> Path | None:
+    """Return the cached preview image path, or None if it does not exist."""
+    source = provider.get("source_file", "")
+    is_default = "/providers/default/" in source.replace("\\", "/")
+    prefix = "default" if is_default else "user"
+
+    service_type = provider.get("type", "xyz")
+    if service_type == "wms":
+        st = provider.get("service_type", "wms")
+        subdir = "wms" if st in ("wms", "wmts") else "xyz"
+    else:
+        subdir = "xyz"
+
+    safe_provider = "".join(c for c in provider.get("name", "") if c.isalnum())
+    safe_layer = "".join(c for c in layer_name if c.isalnum())
+    path = _PREVIEWS_DIR / prefix / subdir / f"{safe_provider}_{safe_layer}.png"
+    return path if path.exists() else None
 
 
 def _load_catalog() -> list[dict[str, Any]]:
@@ -332,14 +352,17 @@ class BasemapLayerItem(QgsDataItem):
         self._basemap = basemap
 
         tile_type = basemap.get("tile_type", "raster")
-        tags = basemap.get("tags", [])
-        tag_prefix = " · ".join(tags) + " · " if tags else ""
+        tags = " · ".join(basemap.get("tags", []))
+        type_label = _tr("Vector Tile") if tile_type == "vector" else _tr("XYZ Tile")
         if tile_type == "vector":
             self.setIcon(QgsApplication.getThemeIcon("mIconVectorTileLayer.svg"))
-            self.setToolTip(tag_prefix + _tr("Vector Tile"))
         else:
             self.setIcon(QgsApplication.getThemeIcon("mIconXyz.svg"))
-            self.setToolTip(tag_prefix + _tr("XYZ Tile"))
+        tip = f'<table width="140"><tr><td>{tags}</td><td align="right">{type_label}</td></tr></table>'
+        preview = _preview_path(provider, basemap.get("name", ""))
+        if preview:
+            tip = f'<img src="{preview}" width="140" height="100"><br>{tip}'
+        self.setToolTip(tip)
 
     # ---- interaction ------------------------------------------------------
 
@@ -401,12 +424,15 @@ class WmsLayerItem(QgsDataItem):
         self._layer_data = layer_data
         self.setIcon(QgsApplication.getThemeIcon("mIconRaster.svg"))
 
-        tags = layer_data.get("tags", [])
-        tag_prefix = " · ".join(tags) + " · " if tags else ""
+        tags = " · ".join(layer_data.get("tags", []))
         service_type = layer_data.get(
             "service_type", provider.get("service_type", "wms")
         )
-        self.setToolTip(tag_prefix + service_type.upper())
+        tip = f'<table width="140"><tr><td>{tags}</td><td align="right">{service_type.upper()}</td></tr></table>'
+        preview = _preview_path(provider, title)
+        if preview:
+            tip = f'<img src="{preview}" width="140" height="100"><br>{tip}'
+        self.setToolTip(tip)
 
     def handleDoubleClick(self):
         layer_loader.load_wms_layer(self._provider, self._layer_data)
