@@ -1542,6 +1542,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Clear immediately so old content disappears; populate deferred
         self.listBasemaps.clear()
         self.listBasemapsGrid.clear()
+        self.listBasemaps.setIconSize(QSize(16, 16))
         self.btnEditBasemap.setEnabled(False)
         self.btnRemoveBasemap.setEnabled(False)
 
@@ -1760,7 +1761,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         # Set basemap list icon size
-        self.listBasemaps.setIconSize(QSize(15, 15))
+        self.listBasemaps.setIconSize(QSize(16, 16))
 
         # Get provider icon
         provider = provider_data["data"]
