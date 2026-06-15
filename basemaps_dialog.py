@@ -3977,6 +3977,7 @@ class ProviderInputDialog(QDialog):
         icon_layout = QHBoxLayout()
         icon_label = QLabel(self.tr("Icon:"))
         self.icon_edit = QLineEdit()
+        self.icon_edit.setPlaceholderText("basemaps.svg")
         if provider:
             self.icon_edit.setText(provider.get("icon", ""))
         self.icon_button = QPushButton(self.tr("Browse..."))
@@ -4067,11 +4068,12 @@ class ProviderInputDialog(QDialog):
             self.tr("Image Files (*.png *.jpg *.svg *.ico);;All Files (*)"),
         )
         if file_path:
-            import shutil
-
             src = Path(file_path)
             dest = self.icons_dir / src.name
-            shutil.copy2(str(src), str(dest))
+            if src.resolve() != dest.resolve():
+                import shutil
+
+                shutil.copy2(str(src), str(dest))
             self.icon_edit.setText(src.name)
 
     def _validate_and_accept(self):
@@ -4084,7 +4086,7 @@ class ProviderInputDialog(QDialog):
     def get_data(self):
         data = {
             "name": self.name_edit.text(),
-            "icon": self.icon_edit.text().strip() or "",
+            "icon": self.icon_edit.text().strip() or "basemaps.svg",
         }
 
         # Token

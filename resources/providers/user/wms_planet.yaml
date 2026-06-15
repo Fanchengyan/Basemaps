@@ -1,6 +1,0 @@
-wms:
-  planet:
-    icon: ''
-    created_at: 1781498659.667685
-    url: https://api.planet.com/basemaps/v1/mosaics/wmts?api_key={pl-api-key}
-    layers: []
