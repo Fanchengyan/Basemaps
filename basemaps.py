@@ -97,6 +97,20 @@ class BasemapsPlugin:
 
             self._browser_provider = BasemapsDataItemProvider(icon=IconBasemaps)
             registry.addProvider(self._browser_provider)
+
+            # Register the token-missing callback so the Browser layer
+            # loader can open the Edit Provider dialog when needed.
+            from .layer_loader import set_token_missing_callback
+
+            def _on_token_missing(name, provider_type):
+                if not self.dialog:
+                    self.dialog = BasemapsDialog(self.iface)
+                self.dialog.show()
+                self.dialog.raise_()
+                self.dialog.activateWindow()
+                self.dialog.edit_provider_by_name(name, provider_type)
+
+            set_token_missing_callback(_on_token_missing)
         except Exception as e:
             # Browser integration is a convenience feature; never let it
             # break plugin loading.
@@ -122,6 +136,13 @@ class BasemapsPlugin:
             pass
         finally:
             self._browser_provider = None
+
+        try:
+            from .layer_loader import set_token_missing_callback
+
+            set_token_missing_callback(None)
+        except Exception:
+            pass
 
     def run(self):
         if not self.dialog:

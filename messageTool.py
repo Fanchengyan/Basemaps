@@ -509,5 +509,5 @@ class MessageBox:
             title,
             text,
             _BUTTON_YES | _BUTTON_NO,
-            _BUTTON_NO,
+            _BUTTON_YES,
         )

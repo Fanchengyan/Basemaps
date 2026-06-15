@@ -46,7 +46,7 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QCoreApplication, QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 
-from .messageTool import Logger, MessageBar
+from .messageTool import Logger, MessageBar, MessageBox
 
 # Qt5/Qt6 compatibility for the HTTP-status attribute enum scope.
 try:  # Qt6 / QGIS 3.28+
@@ -68,6 +68,16 @@ _VECTOR_STYLE_REQUEST_HEADERS = (
 TOKEN_PARAM_OPTIONS = ["apikey", "key", "api_key", "access_token", "token", "tk"]
 DEFAULT_TOKEN_PARAM = TOKEN_PARAM_OPTIONS[0]
 
+# Callback invoked when a token is missing and the user opts to set it.
+# Signature: callback(provider_name: str, provider_type: str) -> None
+_token_missing_callback = None
+
+
+def set_token_missing_callback(callback) -> None:
+    """Register a callback invoked when a token is missing and user opts to set it."""
+    global _token_missing_callback
+    _token_missing_callback = callback
+
 
 def append_token(url: str, token: str, token_param: str = DEFAULT_TOKEN_PARAM) -> str:
     """Append an API token as a query parameter to *url*.
@@ -87,17 +97,27 @@ def _provider_is_missing_token(provider: dict[str, Any]) -> bool:
     return "token" in provider and not provider.get("token", "").strip()
 
 
-def _report_token_missing(name: str) -> None:
-    """Warn the user that a provider token is required via the message bar."""
-    MessageBar.show(
-        QCoreApplication.translate("BasemapsBrowser", "Basemaps"),
+def _ask_token_missing(
+    provider_name: str, provider_type: str
+) -> None:
+    """Ask the user whether to set the missing token; open edit dialog if yes.
+
+    Parameters
+    ----------
+    provider_name : str
+        Provider name shown in the prompt and used to locate the edit dialog.
+    provider_type : str
+        ``"xyz"`` or ``"wms"``.
+    """
+    result = MessageBox.question(
         QCoreApplication.translate(
             "BasemapsBrowser",
-            "Missing API token for '{}'. Open the Basemaps window to set it.",
-        ).format(name),
-        level=2,  # Qgis.Warning (avoid importing Qgis at module load)
-        duration=10,
+            "Provider '{}' requires an API token. Set it now?",
+        ).format(provider_name),
+        QCoreApplication.translate("BasemapsBrowser", "Authentication Required"),
     )
+    if result == MessageBox.YES and _token_missing_callback:
+        _token_missing_callback(provider_name, provider_type)
 
 
 def _report_load_failure(name: str, detail: str = "") -> None:
@@ -135,7 +155,7 @@ def load_xyz_basemap(provider: dict[str, Any], basemap: dict[str, Any]) -> None:
     token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
 
     if _provider_is_missing_token(provider):
-        _report_token_missing(basemap.get("name", ""))
+        _ask_token_missing(provider.get("name", ""), "xyz")
         return
 
     name = basemap.get("name", "basemap")
@@ -317,7 +337,7 @@ def load_wms_layer(provider: dict[str, Any], layer_data: dict[str, Any]) -> None
         ``format`` and ``styles``.
     """
     if _provider_is_missing_token(provider):
-        _report_token_missing(layer_data.get("layer_title", ""))
+        _ask_token_missing(provider.get("name", ""), "wms")
         return
 
     token = provider.get("token", "")

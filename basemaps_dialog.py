@@ -1447,11 +1447,18 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
                 # Warn if authentication is enabled but token is not set
                 if "token" in provider and not token:
-                    MessageBox.warning(
-                        self.tr("Missing API token. Edit the provider to set it."),
+                    result = MessageBox.question(
+                        self.tr(
+                            "Provider '{}' requires an API token. "
+                            "Set it now?"
+                        ).format(provider.get("name", "")),
                         self.tr("Authentication Required"),
                         self,
                     )
+                    if result == MessageBox.YES:
+                        self.edit_provider_by_name(
+                            provider.get("name", ""), "xyz"
+                        )
                     return
 
         for item in selected_items:
@@ -2442,11 +2449,18 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         # Warn if authentication is enabled but token is not set
         if "token" in provider and not token:
-            MessageBox.warning(
-                self.tr("Missing API token. Edit the provider to set it."),
+            result = MessageBox.question(
+                self.tr(
+                    "Provider '{}' requires an API token. "
+                    "Set it now?"
+                ).format(provider.get("name", "")),
                 self.tr("Authentication Required"),
                 self,
             )
+            if result == MessageBox.YES:
+                self.edit_provider_by_name(
+                    provider.get("name", ""), "wms"
+                )
             return
 
         url = self._append_token(url, token, token_param)
@@ -2990,6 +3004,87 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
         if action == edit_action:
             self.edit_wms_layer_tags()
+
+    def edit_provider_by_name(self, name: str, provider_type: str) -> None:
+        """Open the edit dialog for a provider identified by name and type.
+
+        For default providers, duplicates first then opens the edit dialog
+        on the newly created user copy.
+
+        Parameters
+        ----------
+        name : str
+            The provider's display name.
+        provider_type : str
+            ``"xyz"`` or ``"wms"``.
+        """
+        if provider_type == "wms":
+            provider_list = self.listWmsProviders
+        else:
+            provider_list = self.listProviders
+
+        for i in range(provider_list.count()):
+            item = provider_list.item(i)
+            if item and item.data(user_role):
+                if item.data(user_role)["data"]["name"] == name:
+                    provider_list.setCurrentItem(item)
+                    provider = item.data(user_role)["data"]
+
+                    if self._is_default_provider(provider):
+                        new_provider = self._duplicate_provider_as_user(provider)
+                        self.providers_data.append(new_provider)
+                        self.update_providers_list()
+                        # Select the newly created user copy
+                        for j in range(provider_list.count()):
+                            new_item = provider_list.item(j)
+                            if (
+                                new_item
+                                and new_item.data(user_role)
+                                and new_item.data(user_role)["data"]["name"]
+                                == new_provider["name"]
+                            ):
+                                provider_list.setCurrentItem(new_item)
+                                provider = new_provider
+                                break
+                        self.save_user_config()
+
+                    # Open the edit dialog directly
+                    if provider_type == "wms":
+                        dialog = ProviderInputDialog(
+                            self, provider, provider_type="wms"
+                        )
+                        dialog.focus_token_field()
+                        exec_result = _run_qt_dialog(dialog)
+                        if exec_result == dialog_accepted:
+                            new_data = dialog.get_data()
+                            new_data["type"] = "wms"
+                            new_data["layers"] = provider.get("layers", [])
+                            new_data["url"] = dialog.url_edit.text()
+                            if "source_file" in provider:
+                                new_data["source_file"] = provider["source_file"]
+                            provider_data = item.data(user_role)
+                            self.providers_data[provider_data["index"]] = new_data
+                            self.update_providers_list()
+                            self.save_user_config()
+                    else:
+                        dialog = ProviderInputDialog(
+                            self, provider, provider_type="xyz"
+                        )
+                        dialog.focus_token_field()
+                        exec_result = _run_qt_dialog(dialog)
+                        if exec_result == dialog_accepted:
+                            new_data = dialog.get_data()
+                            new_data["type"] = "xyz"
+                            new_data["basemaps"] = provider.get("basemaps", [])
+                            if "source_file" in provider:
+                                new_data["source_file"] = provider["source_file"]
+                            provider_data = item.data(user_role)
+                            self.providers_data[provider_data["index"]] = new_data
+                            self.update_providers_list()
+                            self.save_user_config()
+                    return
+
+        Logger.warning(f"Provider '{name}' not found in {provider_type} list")
 
     def edit_xyz_provider(self):
         """Edit selected XYZ provider"""
@@ -4107,6 +4202,12 @@ class ProviderInputDialog(QDialog):
             data["description"] = desc
 
         return data
+
+    def focus_token_field(self):
+        """Enable auth and focus the token input field."""
+        self.token_auth_widget.setChecked(True)
+        self.token_auth_widget.token_edit.setFocus()
+        self.token_auth_widget.token_edit.selectAll()
 
 
 class TokenAuthWidget(QGroupBox):
