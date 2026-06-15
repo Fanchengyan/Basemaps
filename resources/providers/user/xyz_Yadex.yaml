@@ -1,6 +1,10 @@
 xyz:
   Yadex:
     icon: Yandex.svg
+    website: https://yandex.com/maps/
+    copyright: "© Yandex"
+    terms_of_use: https://yandex.com/legal/
+    description: Yandex Maps provides mapping services including street maps and satellite imagery, primarily covering Russia and neighboring countries with global coverage.
     created_at: 1765258443.782388
     basemaps:
     - name: Yandex Satellite
