@@ -40,6 +40,7 @@ from typing import Any
 
 from qgis.core import (
     Qgis,
+    QgsApplication,
     QgsDataCollectionItem,
     QgsDataItem,
     QgsDataSourceUri,
@@ -80,6 +81,38 @@ _ICONS_DIR = _RESOURCES_DIR / "icons"
 _XYZ_GROUP_KEY = "xyz"
 _WMS_GROUP_KEY = "wms"
 
+# Sort order for basemap/layer items within each provider, matching the
+# main dialog's TAG_SORT_ORDER so the Browser panel displays layers in
+# the same sequence.
+TAG_SORT_ORDER = [
+    "Satellite",
+    "Streets",
+    "Terrain",
+    "Thematic",
+    "Overlay/Labels",
+    "Overlay/Boundaries",
+    "Overlay/Transportation",
+    "Overlay/Hydrography",
+    "Overlay",
+]
+
+
+def _sort_key_by_tag(item: dict) -> int:
+    """Return sort key for a basemap/layer based on its tags.
+
+    Items are ordered by the first matching tag in TAG_SORT_ORDER.
+    Items without a recognized tag are placed at the end.
+    """
+    if not isinstance(item, dict):
+        return len(TAG_SORT_ORDER)
+    tags = item.get("tags", [])
+    if not tags:
+        return len(TAG_SORT_ORDER)
+    for tag in tags:
+        if tag in TAG_SORT_ORDER:
+            return TAG_SORT_ORDER.index(tag)
+    return len(TAG_SORT_ORDER)
+
 
 def _tr(message: str) -> str:
     """Translate a string in the BasemapsBrowser context."""
@@ -96,7 +129,7 @@ def _provider_icon(icon_value: str) -> QIcon:
     if icon_value:
         candidate = Path(icon_value)
         if not candidate.is_absolute():
-            candidate = _RESOURCES_DIR / icon_value
+            candidate = _ICONS_DIR / icon_value
         if candidate.exists():
             return QIcon(str(candidate))
     return QIcon()
@@ -148,7 +181,8 @@ class BasemapsRootItem(QgsDataCollectionItem):
         ]
         from qgis.PyQt import sip
 
-        for child in children:
+        for idx, child in enumerate(children):
+            child.setSortKey(idx)
             sip.transferto(child, self)
         return children
 
@@ -172,7 +206,7 @@ class GroupCollectionItem(QgsDataCollectionItem):
         from qgis.PyQt import sip
 
         children = []
-        for provider in _load_catalog():
+        for idx, provider in enumerate(_load_catalog()):
             if provider.get("type") != self._group_key:
                 continue
             # Skip separators / unknown entries defensively.
@@ -182,6 +216,7 @@ class GroupCollectionItem(QgsDataCollectionItem):
                 continue
 
             item = ProviderCollectionItem(self, provider)
+            item.setSortKey(idx)
             sip.transferto(item, self)
             children.append(item)
         return children
@@ -207,20 +242,30 @@ class ProviderCollectionItem(QgsDataCollectionItem):
         children = []
         provider_type = self._provider.get("type")
         if provider_type == _XYZ_GROUP_KEY:
-            for basemap in self._provider.get("basemaps", []):
+            items = sorted(
+                self._provider.get("basemaps", []),
+                key=_sort_key_by_tag,
+            )
+            for idx, basemap in enumerate(items):
                 if not basemap.get("name"):
                     continue
                 item = BasemapLayerItem(self, self._provider, basemap)
+                item.setSortKey(idx)
                 sip.transferto(item, self)
                 children.append(item)
         elif provider_type == _WMS_GROUP_KEY:
-            for layer_data in self._provider.get("layers", []):
+            items = sorted(
+                self._provider.get("layers", []),
+                key=_sort_key_by_tag,
+            )
+            for idx, layer_data in enumerate(items):
                 title = layer_data.get("layer_title") or layer_data.get(
                     "layer_name"
                 )
                 if not title:
                     continue
                 item = WmsLayerItem(self, self._provider, layer_data)
+                item.setSortKey(idx)
                 sip.transferto(item, self)
                 children.append(item)
         return children
@@ -286,12 +331,15 @@ class BasemapLayerItem(QgsDataItem):
         self._provider = provider
         self._basemap = basemap
 
-        # Vector tiles get a small visual cue via the protocol badge text.
         tile_type = basemap.get("tile_type", "raster")
+        tags = basemap.get("tags", [])
+        tag_prefix = " · ".join(tags) + " · " if tags else ""
         if tile_type == "vector":
-            self.setToolTip(_tr("Vector tile layer"))
+            self.setIcon(QgsApplication.getThemeIcon("mIconVectorTileLayer.svg"))
+            self.setToolTip(tag_prefix + _tr("Vector Tile"))
         else:
-            self.setToolTip(_tr("Raster tile layer"))
+            self.setIcon(QgsApplication.getThemeIcon("mIconXyz.svg"))
+            self.setToolTip(tag_prefix + _tr("XYZ Tile"))
 
     # ---- interaction ------------------------------------------------------
 
@@ -351,11 +399,14 @@ class WmsLayerItem(QgsDataItem):
         self.setState(_STATE_POPULATED)
         self._provider = provider
         self._layer_data = layer_data
+        self.setIcon(QgsApplication.getThemeIcon("mIconRaster.svg"))
 
+        tags = layer_data.get("tags", [])
+        tag_prefix = " · ".join(tags) + " · " if tags else ""
         service_type = layer_data.get(
             "service_type", provider.get("service_type", "wms")
         )
-        self.setToolTip(service_type.upper())
+        self.setToolTip(tag_prefix + service_type.upper())
 
     def handleDoubleClick(self):
         layer_loader.load_wms_layer(self._provider, self._layer_data)
