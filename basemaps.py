@@ -51,13 +51,77 @@ class BasemapsPlugin:
         self.iface.addPluginToMenu(self.menu, action)
         self.actions.append(action)
 
+        # Register the Browser panel integration. Guarded so reloading the
+        # plugin (e.g. via Plugin Reloader) never produces duplicate nodes.
+        self._register_browser_provider()
+
     def unload(self):
         for action in self.actions:
             self.iface.removePluginMenu(self.menu, action)
             self.iface.removeToolBarIcon(action)
 
+        self._unregister_browser_provider()
+
         if self.translator:
             QCoreApplication.removeTranslator(self.translator)
+
+    # ------------------------------------------------------------------
+    # Browser panel integration
+    # ------------------------------------------------------------------
+
+    def _register_browser_provider(self) -> None:
+        """Register the Basemaps Browser data item provider.
+
+        Idempotent: if a provider with the same name is already registered
+        (e.g. after a plugin reload), it is removed first so QGIS never
+        shows two ``Basemaps`` nodes.
+        """
+        try:
+            from qgis.core import QgsApplication
+
+            from .browser_provider import (
+                PROVIDER_NAME,
+                BasemapsDataItemProvider,
+            )
+
+            registry = QgsApplication.dataItemProviderRegistry()
+
+            # Remove any previously-registered instance to avoid duplicates.
+            existing = None
+            for provider in registry.providers():
+                if provider.name() == PROVIDER_NAME:
+                    existing = provider
+                    break
+            if existing is not None:
+                registry.removeProvider(existing)
+
+            self._browser_provider = BasemapsDataItemProvider(icon=IconBasemaps)
+            registry.addProvider(self._browser_provider)
+        except Exception as e:
+            # Browser integration is a convenience feature; never let it
+            # break plugin loading.
+            from .messageTool import Logger
+
+            Logger.warning(
+                f"Failed to register Basemaps Browser provider: {e}",
+                notify_user=False,
+            )
+
+    def _unregister_browser_provider(self) -> None:
+        """Remove the Browser data item provider if it is still registered."""
+        try:
+            from qgis.core import QgsApplication
+
+            from .browser_provider import PROVIDER_NAME
+
+            registry = QgsApplication.dataItemProviderRegistry()
+            for provider in list(registry.providers()):
+                if provider.name() == PROVIDER_NAME:
+                    registry.removeProvider(provider)
+        except Exception:
+            pass
+        finally:
+            self._browser_provider = None
 
     def run(self):
         if not self.dialog:
