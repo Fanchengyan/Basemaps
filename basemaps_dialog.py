@@ -425,6 +425,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.btnEditBasemap.clicked.connect(self.edit_xyz_basemap)
         self.btnRemoveBasemap.clicked.connect(self.remove_xyz_basemap)
         self.btnLoadBasemap.clicked.connect(self.load_xyz_basemap)
+        self.btnLoadBasemap.setToolTip(
+            self.tr("Load selected basemap(s)\n(or double-click a layer)")
+        )
         self.listProviders.itemSelectionChanged.connect(self.on_provider_changed)
         self.listBasemaps.itemSelectionChanged.connect(
             self.on_basemap_selection_changed
@@ -432,6 +435,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.listBasemapsGrid.itemSelectionChanged.connect(
             self.on_basemap_grid_selection_changed
         )
+        self.listBasemaps.itemDoubleClicked.connect(self.load_xyz_basemap)
+        self.listBasemapsGrid.itemDoubleClicked.connect(self.load_xyz_basemap)
 
         # WMS connections
         self.btnAddWmsProvider.clicked.connect(self.add_wms_provider)
@@ -440,6 +445,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.btnRefreshWmsLayers.clicked.connect(self.refresh_wms_layers)
         self.btnEditWmsLayer.setVisible(False)
         self.btnLoadWmsLayer.clicked.connect(self.load_wms_layer)
+        self.btnLoadWmsLayer.setToolTip(
+            self.tr("Load selected layer(s)\n(or double-click a layer)")
+        )
         self.listWmsProviders.itemSelectionChanged.connect(self.on_wms_provider_changed)
         self.treeWmsLayers.itemSelectionChanged.connect(
             self.on_wms_layer_selection_changed
@@ -447,6 +455,8 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.listWmsLayersGrid.itemSelectionChanged.connect(
             self.on_wms_layer_grid_selection_changed
         )
+        self.treeWmsLayers.itemDoubleClicked.connect(self.load_wms_layer)
+        self.listWmsLayersGrid.itemDoubleClicked.connect(self.load_wms_layer)
 
         # WMS layer context menus
         self.treeWmsLayers.setContextMenuPolicy(custom_context_menu)
@@ -1584,6 +1594,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                 item = QListWidgetItem(basemap["name"])
                 item.setIcon(provider_icon)
                 item.setData(user_role, basemap)
+                item.setToolTip(
+                    self.tr("Double-click to load")
+                )
                 self.listBasemaps.addItem(item)
 
                 grid_item = QListWidgetItem(basemap["name"])
@@ -1690,6 +1703,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
 
                 layer_item = QTreeWidgetItem([display_name])
                 layer_item.setIcon(0, provider_icon)
+                layer_item.setToolTip(
+                    0, self.tr("Double-click to load")
+                )
                 self.treeWmsLayers.addTopLevelItem(layer_item)
 
                 crs_list = layer.get("crs", [])
@@ -1780,6 +1796,9 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             item = QListWidgetItem(basemap["name"])
             item.setIcon(provider_icon)
             item.setData(user_role, basemap)
+            item.setToolTip(
+                self.tr("Double-click to load")
+            )
             self.listBasemaps.addItem(item)
 
     def on_basemap_selection_changed(self):
