@@ -3676,7 +3676,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             display_lw = self._truncate_url(layer_website)
             parts.append(
                 self._info_row(
-                    "🌐 " + self.tr("Website"),
+                    "🌐︎ " + self.tr("Website"),
                     f'<a href="{self._esc(layer_website)}" '
                     f'title="{self._esc(layer_website)}" '
                     f'style="color:#3498DB;">{self._esc(display_lw)}</a>',
@@ -3710,10 +3710,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Provider section
         if provider_data:
             parts.append(
-                '<hr style="border:none;border-top:1px solid #DCE4EC;margin:8px 0;">'
-            )
-            parts.append(
-                '<h3 style="margin:0 0 4px 0;color:#2C3E50;font-size:12px;">'
+                '<h3 style="margin:10px 0 4px 0;color:#2C3E50;font-size:12px;">'
                 + self.tr("Provider Information")
                 + "</h3>"
             )
@@ -3745,7 +3742,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             display_website = self._truncate_url(website)
             parts.append(
                 self._info_row(
-                    "🌐 " + self.tr("Website"),
+                    "🌐︎ " + self.tr("Website"),
                     f'<a href="{self._esc(website)}" '
                     f'title="{self._esc(website)}" '
                     f'style="color:#3498DB;">{self._esc(display_website)}</a>',
@@ -3810,7 +3807,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             display_website = self._truncate_url(website)
             parts.append(
                 self._info_row(
-                    "🌐 " + self.tr("Website"),
+                    "🌐︎ " + self.tr("Website"),
                     f'<a href="{self._esc(website)}" '
                     f'title="{self._esc(website)}" '
                     f'style="color:#3498DB;">{self._esc(display_website)}</a>',
