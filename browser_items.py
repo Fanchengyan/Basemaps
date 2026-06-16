@@ -190,12 +190,12 @@ def _format_tooltip(
     scale = 2
     src_scaled = src.scaled(
         img_w, img_h,
-        Qt.IgnoreAspectRatio, Qt.SmoothTransformation,
+        Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation,
     )
 
     out_w, out_h = img_w + outer * 2, img_h + outer * 2
     pix = QPixmap(out_w * scale, out_h * scale)
-    pix.fill(Qt.transparent)
+    pix.fill(Qt.GlobalColor.transparent)
 
     painter = QPainter(pix)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -224,11 +224,11 @@ def _format_tooltip(
         tw = fm.horizontalAdvance(text) if hasattr(fm, "horizontalAdvance") else fm.boundingRect(text).width()
         w = tw + pad_h * 2
         h = fm.height() + pad_v * 2
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(bg))
         painter.drawRoundedRect(x, y, w, h, radius, radius)
         painter.setPen(QColor("#ffffff"))
-        painter.drawText(x, y, w, h, Qt.AlignHCenter | Qt.AlignVCenter, text)
+        painter.drawText(x, y, w, h, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter, text)
         return w
 
     badge_h = fm.height() + pad_v * 2
@@ -253,7 +253,7 @@ def _format_tooltip(
     import base64
 
     buf = QBuffer()
-    buf.open(QIODevice.WriteOnly)
+    buf.open(QIODevice.OpenModeFlag.WriteOnly)
     pix.save(buf, "PNG")
     b64 = base64.b64encode(buf.data().data()).decode("ascii")
     data_uri = f"data:image/png;base64,{b64}"
@@ -383,10 +383,9 @@ class ProviderCollectionItem(QgsDataCollectionItem):
         self._provider = provider
         self.setIcon(_provider_icon(provider.get("icon", "")))
 
-    def createChildren(self):
-        from qgis.PyQt import sip
-
-        children = []
+    def _build_children(self) -> list:
+        """Build the list of child layer items from provider data."""
+        children: list = []
         provider_type = self._provider.get("type")
         if provider_type == _XYZ_GROUP_KEY:
             items = sorted(
@@ -398,7 +397,6 @@ class ProviderCollectionItem(QgsDataCollectionItem):
                     continue
                 item = BasemapLayerItem(self, self._provider, basemap)
                 item.setSortKey(idx)
-                sip.transferto(item, self)
                 children.append(item)
         elif provider_type == _WMS_GROUP_KEY:
             items = sorted(
@@ -411,9 +409,29 @@ class ProviderCollectionItem(QgsDataCollectionItem):
                     continue
                 item = WmsLayerItem(self, self._provider, layer_data)
                 item.setSortKey(idx)
-                sip.transferto(item, self)
                 children.append(item)
         return children
+
+    def createChildren(self):
+        return self._build_children()
+
+    def populate(self, *args):
+        """Override to manually add children after framework populate.
+
+        In QGIS 4 the internal populate/addChildItem flow changed such that
+        createChildren() results may not be wired into the tree for custom
+        QgsDataCollectionItem subclasses.  Calling addChildItem() ourselves
+        after super().populate() guarantees the layers appear.
+        """
+        if self.state() == _STATE_POPULATED:
+            return
+        super().populate(*args)
+        # Only add if the framework did not already populate (children count
+        # would still be 0 after a failed framework populate).
+        if not self.children():
+            for child in self._build_children():
+                self.addChildItem(child, refresh=False)
+            self.setState(_STATE_POPULATED)
 
 
 # ---------------------------------------------------------------------------
