@@ -136,6 +136,56 @@ def _provider_icon(icon_value: str) -> QIcon:
     return QIcon()
 
 
+# Tag → badge colour. Kept in sync with ui.basemap_delegate.TAG_COLORS so the
+# Browser tooltip matches the gallery card badges.
+_TAG_COLORS: dict[str, str] = {
+    "Satellite": "#4A90E2",
+    "Streets": "#E67E22",
+    "Terrain": "#27AE60",
+    "Thematic": "#8E44AD",
+    "Overlay": "#1ABC9C",
+    "Overlay/Hydrography": "#3498DB",
+    "Overlay/Transportation": "#F39C12",
+    "Overlay/Labels": "#E91E63",
+    "Overlay/Boundaries": "#795548",
+}
+
+
+def _format_tooltip(
+    preview: Path | None,
+    tags: list[str],
+    type_label: str,
+) -> str:
+    """Build a styled rich-text tooltip for a Browser panel leaf item.
+
+    Qt's tooltip renderer supports a CSS2 subset (tables, borders, padding,
+    background colours) but not box-shadow and only unreliable border-radius,
+    so the preview is framed with a plain border + spacing instead.
+    """
+    tag_badges = "".join(
+        f'<span style="background-color:{_TAG_COLORS.get(t, "#999")};'
+        f'color:#ffffff;padding:1px 5px;margin-right:3px;'
+        f'font-size:9px;font-weight:600;">{_tr(t)}</span>'
+        for t in tags
+    )
+    type_chip = (
+        f'<span style="background-color:#E8EDF3;color:#3A4A5C;padding:1px 5px;'
+        f'font-size:9px;font-weight:600;">{_tr(type_label)}</span>'
+    )
+    meta_row = f"<td>{tag_badges}</td><td align=\"right\">{type_chip}</td>"
+    meta_table = (
+        f'<table width="148" cellspacing="0" cellpadding="2"><tr>{meta_row}</tr></table>'
+    )
+    if preview:
+        img = (
+            f'<img src="{preview}" width="148" height="106" '
+            f'style="border:1px solid #D0D7DE;padding:0;">'
+        )
+        # 6px gap between the framed preview and the meta row.
+        return f'{img}<div style="height:6px;"></div>{meta_table}'
+    return meta_table
+
+
 def _preview_path(provider: dict[str, Any], layer_name: str) -> Path | None:
     """Return the cached preview image path, or None if it does not exist."""
     source = provider.get("source_file", "")
@@ -352,17 +402,14 @@ class BasemapLayerItem(QgsDataItem):
         self._basemap = basemap
 
         tile_type = basemap.get("tile_type", "raster")
-        tags = " · ".join(basemap.get("tags", []))
-        type_label = _tr("Vector Tile") if tile_type == "vector" else _tr("XYZ Tile")
+        tags = basemap.get("tags", [])
+        type_label = "Vector Tile" if tile_type == "vector" else "XYZ Tile"
         if tile_type == "vector":
             self.setIcon(QgsApplication.getThemeIcon("mIconVectorTileLayer.svg"))
         else:
             self.setIcon(QgsApplication.getThemeIcon("mIconXyz.svg"))
-        tip = f'<table width="140"><tr><td>{tags}</td><td align="right">{type_label}</td></tr></table>'
         preview = _preview_path(provider, basemap.get("name", ""))
-        if preview:
-            tip = f'<img src="{preview}" width="140" height="100"><br>{tip}'
-        self.setToolTip(tip)
+        self.setToolTip(_format_tooltip(preview, tags, type_label))
 
     # ---- interaction ------------------------------------------------------
 
@@ -424,15 +471,12 @@ class WmsLayerItem(QgsDataItem):
         self._layer_data = layer_data
         self.setIcon(QgsApplication.getThemeIcon("mIconRaster.svg"))
 
-        tags = " · ".join(layer_data.get("tags", []))
+        tags = layer_data.get("tags", [])
         service_type = layer_data.get(
             "service_type", provider.get("service_type", "wms")
         )
-        tip = f'<table width="140"><tr><td>{tags}</td><td align="right">{service_type.upper()}</td></tr></table>'
         preview = _preview_path(provider, title)
-        if preview:
-            tip = f'<img src="{preview}" width="140" height="100"><br>{tip}'
-        self.setToolTip(tip)
+        self.setToolTip(_format_tooltip(preview, tags, service_type.upper()))
 
     def handleDoubleClick(self):
         layer_loader.load_wms_layer(self._provider, self._layer_data)
