@@ -158,46 +158,44 @@ def _format_tooltip(
 ) -> str:
     """Build a styled rich-text tooltip for a Browser panel leaf item.
 
-    Qt's tooltip renderer (QTextDocument) supports border-radius on table
-    cells but not on inline <span>, and nested inline-tables are unreliable.
-    So chips are laid out as sibling cells in one table — each cell is a
-    rounded, coloured block. The preview is framed with a soft light border
-    plus padding instead of a hard black line.
+    Qt's tooltip renderer (QTextDocument) is a strict CSS2 subset: it
+    silently ignores border-radius on both <img> and <td>, can override
+    border colours via the host stylesheet, and has limited layout support.
+    We only use properties that are reliably honoured: background-color,
+    padding, font-weight, border (colour can't be guaranteed) and
+    cellspacing for inter-chip gaps.
     """
-    def _chip_cell(text: str, bg: str, fg: str = "#ffffff") -> str:
-        # One rounded chip = one td. The parent table uses cellspacing to add
-        # inter-chip whitespace (cellspacing sits outside the cell background,
-        # so it reads as a gap rather than stretching the chip).
+    def _chip(text: str, bg: str, fg: str = "#ffffff") -> str:
         return (
-            f'<td style="background-color:{bg};color:{fg};padding:2px 6px;'
-            f'border-radius:8px;font-size:9px;font-weight:600;">{_tr(text)}</td>'
+            f'<td style="background-color:{bg};color:{fg};'
+            f'border:0;padding:2px 5px;font-size:9px;font-weight:600;">'
+            f'{_tr(text)}</td>'
         )
 
     tag_cells = "".join(
-        _chip_cell(t, _TAG_COLORS.get(t, "#999")) for t in tags
+        _chip(t, _TAG_COLORS.get(t, "#999")) for t in tags
     )
-    # Service/type chip: black background, white text (per request).
-    type_cell = _chip_cell(type_label, "#000000")
+    type_cell = _chip(type_label, "#000000")
 
-    # Single meta row: [tag][tag]... | <spacer> | [type]. cellspacing=4 gives
-    # the rounded chips a little air between them; the 100%-width spacer cell
-    # right-aligns the type chip.
+    # cellspacing=2 gives a compact but readable gap between chips;
+    # no spacer td — type badge sits right after the last tag naturally.
     meta_table = (
-        f'<table width="148" cellspacing="4" cellpadding="0"><tr>'
-        f'{tag_cells}'
-        f'<td width="100%"></td>'  # flexible spacer, right-aligns type
-        f'{type_cell}'
+        f'<table cellspacing="2" cellpadding="0" border="0"><tr>'
+        f'{tag_cells}{type_cell}'
         f'</tr></table>'
     )
     if preview:
-        # Soft framing: light border + inner padding band so the image edge
-        # isn't a hard black line, then a 7px gap to the meta row.
-        img = (
-            f'<img src="{preview}" width="148" height="106" '
-            f'style="border:1px solid #C9D2DD;padding:2px;background-color:#F4F6F9;'
-            f'border-radius:6px;">'
+        # Wrap <img> in a borderless table so the host stylesheet can't
+        # inject a black border on the <img> tag; img itself gets border:0
+        # for safety.
+        img_frame = (
+            f'<table cellspacing="0" cellpadding="0" border="0">'
+            f'<tr><td style="border:0;">'
+            f'<img src="{preview}" width="152" height="112" '
+            f'style="border:0;">'
+            f'</td></tr></table>'
         )
-        return f'{img}<div style="height:7px;"></div>{meta_table}'
+        return f'{img_frame}<div style="height:6px;"></div>{meta_table}'
     return meta_table
 
 
