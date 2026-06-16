@@ -6,27 +6,27 @@ xyz:
     terms_of_use: https://carto.com/legal/
     description: CARTO provides beautifully styled basemaps built on OpenStreetMap data.
     basemaps:
-      - name: CartoDB Light All
+      - name: CartoDB Light (All)
         url: https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png
         tags:
           - Streets
-      - name: CartoDB Dark All
+      - name: CartoDB Dark (All)
         url: https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png
         tags:
           - Streets
-      - name: CartoDB Light No Labels
+      - name: CartoDB Light (No Labels)
         url: https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png
         tags:
           - Streets
-      - name: CartoDB Light Only Labels
+      - name: CartoDB Light (Only Labels)
         url: https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png
         tags:
           - Overlay/Labels
-      - name: CartoDB Dark No Labels
+      - name: CartoDB Dark (No Labels)
         url: https://basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png
         tags:
           - Streets
-      - name: CartoDB Dark Only Labels
+      - name: CartoDB Dark (Only Labels)
         url: https://basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png
         tags:
           - Overlay/Labels
@@ -34,15 +34,15 @@ xyz:
         url: https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png
         tags:
           - Streets
-      - name: CartoDB Voyager No Labels
+      - name: CartoDB Voyager (No Labels)
         url: https://basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}.png
         tags:
           - Streets
-      - name: CartoDB Voyager Only Labels
+      - name: CartoDB Voyager (Only Labels)
         url: https://basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png
         tags:
           - Overlay/Labels
-      - name: CartoDB Voyager Labels Under
+      - name: CartoDB Voyager (Labels Under)
         url: https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png
         tags:
           - Streets

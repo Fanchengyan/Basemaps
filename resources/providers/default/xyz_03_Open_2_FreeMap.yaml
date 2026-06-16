@@ -1,0 +1,44 @@
+xyz:
+  OpenFreeMap:
+    icon: OpenFreeMap.jpg
+    website: https://openfreemap.org/
+    copyright: OpenFreeMap © OpenMapTiles Data from OpenStreetMap
+    terms_of_use: https://openfreemap.org/
+    description: OpenFreeMap lets you display custom maps on your website and apps
+      for free.
+    basemaps:
+    - name: OpenFreeMap Bright
+      url: https://tiles.openfreemap.org/planet/latest/{z}/{x}/{y}.pbf
+      tags:
+      - Streets
+      copyright: OpenFreeMap © OpenMapTiles Data from OpenStreetMap
+      style_url: https://tiles.openfreemap.org/styles/bright
+      tile_type: vector
+    - name: OpenFreeMap Liberty
+      url: https://tiles.openfreemap.org/planet/latest/{z}/{x}/{y}.pbf
+      tags:
+      - Streets
+      copyright: OpenFreeMap © OpenMapTiles Data from OpenStreetMap
+      style_url: https://tiles.openfreemap.org/styles/liberty
+      tile_type: vector
+    - name: OpenFreeMap Positron
+      url: https://tiles.openfreemap.org/planet/latest/{z}/{x}/{y}.pbf
+      tags:
+      - Streets
+      copyright: OpenFreeMap © OpenMapTiles Data from OpenStreetMap
+      style_url: https://tiles.openfreemap.org/styles/positron
+      tile_type: vector
+    - name: OpenFreeMap Dark
+      url: https://tiles.openfreemap.org/planet/latest/{z}/{x}/{y}.pbf
+      tags:
+      - Streets
+      copyright: OpenFreeMap © OpenMapTiles Data from OpenStreetMap
+      style_url: https://tiles.openfreemap.org/styles/dark
+      tile_type: vector
+    - name: OpenFreeMap Fiord
+      url: https://tiles.openfreemap.org/planet/latest/{z}/{x}/{y}.pbf
+      tags:
+      - Streets
+      copyright: OpenFreeMap © OpenMapTiles Data from OpenStreetMap
+      style_url: https://tiles.openfreemap.org/styles/fiord
+      tile_type: vector

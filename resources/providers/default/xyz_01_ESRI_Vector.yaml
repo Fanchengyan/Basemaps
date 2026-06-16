@@ -6,12 +6,64 @@ xyz:
     terms_of_use: https://www.esri.com/en-us/legal/terms/full-master-agreement
     description: Esri-provided Vector tiles offering global street maps, terrain, and thematic basemaps.
     basemaps:
-      - name: World Basemap v2
+      - name: World Street Map
         url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
         tags:
           - Streets
         tile_type: vector
         style_url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/resources/styles/root.json
+      - name: World Street Map (Night)
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Streets
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/86f556a2d1fd468181855a35e344567f/resources/styles/root.json?f=pjson
+      - name: Nova
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Streets
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/75f4dfdff19e445395653121a95a85db/resources/styles/root.json?f=pjson
+      - name: Modern Antique
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Streets
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/effe3475f05a4d608e66fd6eeb2113c0/resources/styles/root.json?f=pjson
+      - name: Mid-Century
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Streets
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/7675d44bb1e4428aa2c30a9b68f97822/resources/styles/root.json?f=pjson
+      - name: Community
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Streets
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/273bf8d5c8ac400183fc24e109d20bcf/resources/styles/root.json?f=pjson
+      - name: Colored Pencil
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Streets
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/4cf7e1fb9f254dcda9c8fbadb15cf0f8/resources/styles/root.json?f=pjson
+      - name: Newspaper
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Streets
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/dfb04de5f3144a80bc3f9f336228d24a/resources/styles/root.json?f=pjson
+      - name: Open Street Map v2
+        url: https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Streets
+        tile_type: vector
+        style_url: https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer/resources/styles/root.json
+        website: https://www.arcgis.com/home/item.html?id=2ac624ef5ab445c1a69d21200ce5bac6
+        copyright:
+          Map data (c) OpenStreetMap contributors, Microsoft, Facebook, Google,
+          Esri Community Maps contributors, Map layer by Esri
       - name: Environment Surface Water and Label
         url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
         tags:
@@ -30,24 +82,42 @@ xyz:
           - Overlay/Labels
         tile_type: vector
         style_url: https://cdn.arcgis.com/sharing/rest/content/items/8b8862d9cc894f5db44231a67ee0e41b/resources/styles/root.json?f=pjson
-      - name: Environment Base
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Thematic
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/005b8960ddd04ae781df8d471b6726b3/resources/styles/root.json?f=pjson
       - name: World Contours v2
         url: https://basemaps.arcgis.com/arcgis/rest/services/World_Contours_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
         tags:
           - Overlay
         tile_type: vector
         style_url: https://cdn.arcgis.com/sharing/rest/content/items/51ca3ce6a16d4080ad955dacd6dd2fe2/resources/styles/root.json?f=pjson
+      - name: National Geographic Style
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Thematic
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/3d1a30626bbc46c582f148b9252676ce/resources/styles/root.json?f=pjson
+      - name: National Geographic Style (Local Language)
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Thematic
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/684018c92e9b424ca8e900da8dad8b23/resources/styles/root.json?f=pjson
       - name: Outdoor
         url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
         tags:
           - Thematic
         tile_type: vector
         style_url: https://cdn.arcgis.com/sharing/rest/content/items/659e7c1b1e374f6c8a89eefe17b23380/resources/styles/root.json?f=pjson
+      - name: Charted Territory
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Thematic
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/1c365daf37a744fbad748b67aa69dac8/resources/styles/root.json?f=pjson
+      - name: Environment Base
+        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
+        tags:
+          - Thematic
+        tile_type: vector
+        style_url: https://cdn.arcgis.com/sharing/rest/content/items/005b8960ddd04ae781df8d471b6726b3/resources/styles/root.json?f=pjson
       - name: World Topographic Map (with Contours and Hillshade)
         url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
         tags:
@@ -60,24 +130,6 @@ xyz:
           - Terrain
         tile_type: vector
         style_url: https://cdn.arcgis.com/sharing/rest/content/items/90dd6371b5ba4685aaf8c94abcca099e/resources/styles/root.json?f=pjson
-      - name: Charted Territory
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Thematic
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/1c365daf37a744fbad748b67aa69dac8/resources/styles/root.json?f=pjson
-      - name: Colored Pencil
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Streets
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/4cf7e1fb9f254dcda9c8fbadb15cf0f8/resources/styles/root.json?f=pjson
-      - name: Community
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Streets
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/273bf8d5c8ac400183fc24e109d20bcf/resources/styles/root.json?f=pjson
       - name: Dark Gray Canvas
         url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
         tags:
@@ -198,39 +250,3 @@ xyz:
           - Overlay/Labels
         tile_type: vector
         style_url: https://cdn.arcgis.com/sharing/rest/content/items/3ffec1551cd14606a286622c634b0bb4/resources/styles/root.json?f=pjson
-      - name: Mid-Century
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Streets
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/7675d44bb1e4428aa2c30a9b68f97822/resources/styles/root.json?f=pjson
-      - name: Modern Antique
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Streets
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/effe3475f05a4d608e66fd6eeb2113c0/resources/styles/root.json?f=pjson
-      - name: National Geographic Style
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Streets
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/3d1a30626bbc46c582f148b9252676ce/resources/styles/root.json?f=pjson
-      - name: National Geographic Style (Local Language)
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Streets
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/684018c92e9b424ca8e900da8dad8b23/resources/styles/root.json?f=pjson
-      - name: Newspaper
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Streets
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/dfb04de5f3144a80bc3f9f336228d24a/resources/styles/root.json?f=pjson
-      - name: Nova
-        url: https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf
-        tags:
-          - Streets
-        tile_type: vector
-        style_url: https://cdn.arcgis.com/sharing/rest/content/items/75f4dfdff19e445395653121a95a85db/resources/styles/root.json?f=pjson

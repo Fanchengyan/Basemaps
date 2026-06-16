@@ -20,3 +20,28 @@ xyz:
         tags:
           - Streets
         tile_type: raster
+      - name: Bing Hillshade
+        url: http://ecn.t3.tiles.virtualearth.net/tiles/r{q}.png?g=1&shading=hill
+        tags:
+          - Terrain
+        tile_type: raster
+      - name: Bing Road (Dense Labels)
+        url: https://ecn.dynamic.t0.tiles.virtualearth.net/comp/CompositionHandler/{q}?mkt=en-us&it=G,VE,BX,L,LA
+        tags:
+          - Streets
+        tile_type: raster
+      - name: Bing Hillshade (Dense Labels)
+        url: https://ecn.dynamic.t0.tiles.virtualearth.net/comp/CompositionHandler/{q}?mkt=en-us&it=G,VE,BX,L,LA&shading=hill
+        tags:
+          - Terrain
+        tile_type: raster
+      - name: Bing Road (No Labels)
+        url: https://ecn.dynamic.t0.tiles.virtualearth.net/comp/CompositionHandler/{q}?mkt=en-us&it=G,VE,BX
+        tags:
+          - Streets
+        tile_type: raster
+      - name: Bing Hillshade (No Labels)
+        url: https://ecn.dynamic.t0.tiles.virtualearth.net/comp/CompositionHandler/{q}?mkt=en-us&it=G,VE,BX&shading=hill
+        tags:
+          - Terrain
+        tile_type: raster

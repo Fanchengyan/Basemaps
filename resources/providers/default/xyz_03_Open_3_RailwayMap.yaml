@@ -10,7 +10,7 @@ xyz:
         url: https://tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png
         tags:
           - Overlay/Transportation
-      - name: "Max Speed\r"
+      - name: Max Speed
         url: https://tiles.openrailwaymap.org/maxspeed/{z}/{x}/{y}.png
         tags:
           - Overlay/Transportation

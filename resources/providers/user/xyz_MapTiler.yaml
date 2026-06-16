@@ -1,12 +1,13 @@
 xyz:
   MapTiler:
     icon: MapTiler.svg
-    website: https://www.maptiler.com/
-    copyright: "© MapTiler © OpenStreetMap contributors"
-    terms_of_use: https://www.maptiler.com/terms/
-    description: MapTiler provides online map services including raster and vector tiles, satellite imagery, and terrain data with worldwide coverage.
     token: ''
     token_param: key
+    website: https://www.maptiler.com/
+    copyright: © MapTiler © OpenStreetMap contributors
+    terms_of_use: https://www.maptiler.com/terms/
+    description: MapTiler provides online map services including raster and vector
+      tiles, satellite imagery, and terrain data with worldwide coverage.
     basemaps:
     - name: MapTiler Base
       url: https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png
