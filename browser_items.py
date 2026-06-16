@@ -46,11 +46,10 @@ from qgis.core import (
     QgsDataSourceUri,
     QgsMimeDataUtils,
 )
-from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QBuffer, QCoreApplication, QIODevice, Qt
+from qgis.PyQt.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPixmap
 
-from . import config_loader
-from . import layer_loader
+from . import config_loader, layer_loader
 
 # Qt5/Qt6 + QGIS enum-scope compatibility. The BrowserItemType and
 # BrowserItemState enums were moved into the Qgis scope in QGIS 3.30+.
@@ -158,45 +157,110 @@ def _format_tooltip(
 ) -> str:
     """Build a styled rich-text tooltip for a Browser panel leaf item.
 
-    Qt's tooltip renderer (QTextDocument) is a strict CSS2 subset: it
-    silently ignores border-radius on both <img> and <td>, can override
-    border colours via the host stylesheet, and has limited layout support.
-    We only use properties that are reliably honoured: background-color,
-    padding, font-weight, border (colour can't be guaranteed) and
-    cellspacing for inter-chip gaps.
+    When a preview image exists, tag and type badges are painted directly
+    onto the image via :class:`QPainter` so they sit inside the image
+    (1 px from the bottom and both sides).  The composited image is
+    embedded as a base64 data-URI — this avoids QTextDocument's inability
+    to overlay table rows via negative margins.
     """
+
     def _chip(text: str, bg: str, fg: str = "#ffffff") -> str:
         return (
-            f'<td style="background-color:{bg};color:{fg};'
-            f'border:0;padding:2px 5px;font-size:9px;font-weight:600;">'
-            f'{_tr(text)}</td>'
+            f'<span style="background-color:{bg};color:{fg};'
+            f"font-size:9px;font-weight:600;"
+            f'padding:2px 4px;margin-right:2px;">'
+            f"{_tr(text)}</span>"
         )
 
-    tag_cells = "".join(
-        _chip(t, _TAG_COLORS.get(t, "#999")) for t in tags
-    )
-    type_cell = _chip(type_label, "#000000")
+    tag_spans = "".join(_chip(t, _TAG_COLORS.get(t, "#999")) for t in tags)
+    type_span = _chip(type_label, "#000000").replace("margin-right:2px;", "")
 
-    # cellspacing=2 gives a compact but readable gap between chips;
-    # no spacer td — type badge sits right after the last tag naturally.
-    meta_table = (
-        f'<table cellspacing="2" cellpadding="0" border="0"><tr>'
-        f'{tag_cells}{type_cell}'
-        f'</tr></table>'
+    # No preview: compact badge row (no image to overlay onto).
+    if not preview:
+        return f'<p style="margin:0;"><nobr>{tag_spans}{type_span}</nobr></p>'
+
+    # --- Paint badges onto a scaled copy of the preview image. ---------------
+    src = QPixmap(str(preview))
+    if src.isNull():
+        return f'<p style="margin:0;"><nobr>{tag_spans}{type_span}</nobr></p>'
+
+    # Logical (display) sizes — these stay constant in the HTML output.
+    img_w, img_h, outer = 140, 100, 1
+    # 2x rendering for crisp text; pixmap is twice the logical size.
+    scale = 2
+    src_scaled = src.scaled(
+        img_w, img_h,
+        Qt.IgnoreAspectRatio, Qt.SmoothTransformation,
     )
-    if preview:
-        # Wrap <img> in a borderless table so the host stylesheet can't
-        # inject a black border on the <img> tag; img itself gets border:0
-        # for safety.
-        img_frame = (
-            f'<table cellspacing="0" cellpadding="0" border="0">'
-            f'<tr><td style="border:0;">'
-            f'<img src="{preview}" width="152" height="112" '
-            f'style="border:0;">'
-            f'</td></tr></table>'
-        )
-        return f'{img_frame}<div style="height:6px;"></div>{meta_table}'
-    return meta_table
+
+    out_w, out_h = img_w + outer * 2, img_h + outer * 2
+    pix = QPixmap(out_w * scale, out_h * scale)
+    pix.fill(Qt.transparent)
+
+    painter = QPainter(pix)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+    painter.scale(scale, scale)
+
+    # Draw image with rounded corners via clip path.
+    from qgis.PyQt.QtGui import QPainterPath
+
+    clip = QPainterPath()
+    clip.addRoundedRect(float(outer), float(outer), float(img_w), float(img_h), 6.0, 6.0)
+    painter.setClipPath(clip)
+    painter.drawPixmap(outer, outer, src_scaled)
+    painter.setClipping(False)
+
+    badge_font = QFont()
+    badge_font.setPointSize(8)
+    badge_font.setBold(True)
+    painter.setFont(badge_font)
+    fm = QFontMetrics(badge_font)
+
+    pad_h, pad_v, margin, radius = 5, 2, 3, 3
+
+    def _draw_badge(x: int, y: int, text: str, bg: str) -> int:
+        """Draw one rounded badge at *(x, y)*; return its full width."""
+        tw = fm.horizontalAdvance(text) if hasattr(fm, "horizontalAdvance") else fm.boundingRect(text).width()
+        w = tw + pad_h * 2
+        h = fm.height() + pad_v * 2
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(bg))
+        painter.drawRoundedRect(x, y, w, h, radius, radius)
+        painter.setPen(QColor("#ffffff"))
+        painter.drawText(x, y, w, h, Qt.AlignHCenter | Qt.AlignVCenter, text)
+        return w
+
+    badge_h = fm.height() + pad_v * 2
+    badge_y = outer + img_h - badge_h - margin
+
+    # Tag badges — bottom-left of image.
+    x = outer + margin
+    for tag in tags:
+        display = _tr(tag)
+        display = display[display.find("/") + 1 :] if "/" in display else display
+        _draw_badge(x, badge_y, display, _TAG_COLORS.get(tag, "#999"))
+        tw = fm.horizontalAdvance(display) if hasattr(fm, "horizontalAdvance") else fm.boundingRect(display).width()
+        x += tw + pad_h * 2 + 2
+
+    # Type badge — bottom-right of image.
+    type_tw = fm.horizontalAdvance(type_label) if hasattr(fm, "horizontalAdvance") else fm.boundingRect(type_label).width()
+    _draw_badge(outer + img_w - margin - type_tw - pad_h * 2, badge_y, type_label, "#000000")
+
+    painter.end()
+
+    # Embed the composited image as a base64 data-URI.
+    import base64
+
+    buf = QBuffer()
+    buf.open(QIODevice.WriteOnly)
+    pix.save(buf, "PNG")
+    b64 = base64.b64encode(buf.data().data()).decode("ascii")
+    data_uri = f"data:image/png;base64,{b64}"
+
+    return (
+        f'<img src="{data_uri}" width="{out_w}" height="{out_h}">'
+    )
 
 
 def _preview_path(provider: dict[str, Any], layer_name: str) -> Path | None:
@@ -342,9 +406,7 @@ class ProviderCollectionItem(QgsDataCollectionItem):
                 key=_sort_key_by_tag,
             )
             for idx, layer_data in enumerate(items):
-                title = layer_data.get("layer_title") or layer_data.get(
-                    "layer_name"
-                )
+                title = layer_data.get("layer_title") or layer_data.get("layer_name")
                 if not title:
                     continue
                 item = WmsLayerItem(self, self._provider, layer_data)
@@ -470,9 +532,7 @@ class WmsLayerItem(QgsDataItem):
         provider: dict[str, Any],
         layer_data: dict[str, Any],
     ) -> None:
-        title = layer_data.get("layer_title") or layer_data.get(
-            "layer_name", "layer"
-        )
+        title = layer_data.get("layer_title") or layer_data.get("layer_name", "layer")
         super().__init__(
             _LAYER_TYPE,
             parent,
@@ -517,22 +577,16 @@ class WmsLayerItem(QgsDataItem):
                 uri.setParam("format", self._layer_data["format"][0])
             uri.setParam(
                 "styles",
-                self._layer_data["styles"][0]
-                if self._layer_data.get("styles")
-                else "",
+                self._layer_data["styles"][0] if self._layer_data.get("styles") else "",
             )
         else:
             uri.setParam("url", url)
             uri.setParam("layers", self._layer_data.get("layer_name", ""))
-            uri.setParam(
-                "format", (self._layer_data.get("format") or ["image/png"])[0]
-            )
+            uri.setParam("format", (self._layer_data.get("format") or ["image/png"])[0])
             uri.setParam("crs", (self._layer_data.get("crs") or ["EPSG:3857"])[0])
             uri.setParam(
                 "styles",
-                self._layer_data["styles"][0]
-                if self._layer_data.get("styles")
-                else "",
+                self._layer_data["styles"][0] if self._layer_data.get("styles") else "",
             )
 
         encoded = str(uri.encodedUri(), "utf-8")
