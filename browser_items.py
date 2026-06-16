@@ -50,6 +50,7 @@ from qgis.PyQt.QtCore import QBuffer, QCoreApplication, QIODevice, Qt
 from qgis.PyQt.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPixmap
 
 from . import config_loader, layer_loader
+from .icon_utils import make_rounded_icon
 
 # Qt5/Qt6 + QGIS enum-scope compatibility. The BrowserItemType and
 # BrowserItemState enums were moved into the Qgis scope in QGIS 3.30+.
@@ -120,7 +121,7 @@ def _tr(message: str) -> str:
 
 
 def _provider_icon(icon_value: str) -> QIcon:
-    """Resolve a provider ``icon`` value to a QIcon.
+    """Resolve a provider ``icon`` value to a rounded-rectangle QIcon.
 
     The value may be either an absolute/relative filesystem path or a
     path relative to the plugin resources directory (e.g.
@@ -131,7 +132,7 @@ def _provider_icon(icon_value: str) -> QIcon:
         if not candidate.is_absolute():
             candidate = _ICONS_DIR / icon_value
         if candidate.exists():
-            return QIcon(str(candidate))
+            return make_rounded_icon(candidate, size=18)
     return QIcon()
 
 

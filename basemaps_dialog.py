@@ -66,6 +66,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from . import config_loader
+from .icon_utils import make_rounded_icon
 from .messageTool import Logger, MessageBox
 from .preview_manager import PreviewManager
 from .ui import IconBasemaps, UIBasemapsBase
@@ -1193,15 +1194,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self.listWmsProviders.clear()
 
         # Set list icon size
-        self.listProviders.setIconSize(QSize(15, 15))
-        self.listWmsProviders.setIconSize(QSize(15, 15))
+        self.listProviders.setIconSize(QSize(18, 18))
+        self.listWmsProviders.setIconSize(QSize(18, 18))
 
         def create_scaled_icon(icon_path):
             if icon_path.exists():
-                original_icon = QIcon(str(icon_path))
-                pixmap = original_icon.pixmap(QSize(15, 15))
-                return QIcon(pixmap)
-            return IconBasemaps
+                return make_rounded_icon(icon_path, size=18)
+            return make_rounded_icon(IconBasemaps, size=18)
 
         # Add providers to corresponding lists
         for i, provider in enumerate(self.providers_data):
@@ -1552,7 +1551,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         # Clear immediately so old content disappears; populate deferred
         self.listBasemaps.clear()
         self.listBasemapsGrid.clear()
-        self.listBasemaps.setIconSize(QSize(16, 16))
+        self.listBasemaps.setIconSize(QSize(20, 20))
         self.btnEditBasemap.setEnabled(False)
         self.btnRemoveBasemap.setEnabled(False)
 
@@ -1562,11 +1561,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         token = provider.get("token", "")
         token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
         is_default_provider = self._is_default_provider(provider)
-        provider_icon = IconBasemaps
+        provider_icon = make_rounded_icon(IconBasemaps, size=20)
         if "icon" in provider:
             icon_file = self.icons_dir / provider["icon"]
             if icon_file.exists():
-                provider_icon = QIcon(str(icon_file))
+                provider_icon = make_rounded_icon(icon_file, size=20)
 
         basemaps = [
             bm
@@ -1673,11 +1672,11 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         token = provider.get("token", "")
         token_param = provider.get("token_param", DEFAULT_TOKEN_PARAM)
         is_default = self._is_default_provider(provider)
-        provider_icon = IconBasemaps
+        provider_icon = make_rounded_icon(IconBasemaps, size=20)
         if "icon" in provider:
             icon_file = self.icons_dir / provider["icon"]
             if icon_file.exists():
-                provider_icon = QIcon(str(icon_file))
+                provider_icon = make_rounded_icon(icon_file, size=20)
         preview_url_base = self._append_token(provider["url"], token, token_param)
         provider_service_type = provider.get("service_type", "wms")
 
@@ -1777,18 +1776,18 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             return
 
         # Set basemap list icon size
-        self.listBasemaps.setIconSize(QSize(16, 16))
+        self.listBasemaps.setIconSize(QSize(20, 20))
 
         # Get provider icon
         provider = provider_data["data"]
         if "icon" in provider:
             icon_file = self.icons_dir / provider["icon"]
             if icon_file.exists():
-                provider_icon = QIcon(str(icon_file))
+                provider_icon = make_rounded_icon(icon_file, size=20)
             else:
-                provider_icon = IconBasemaps
+                provider_icon = make_rounded_icon(IconBasemaps, size=20)
         else:
-            provider_icon = IconBasemaps
+            provider_icon = make_rounded_icon(IconBasemaps, size=20)
 
         # Update basemap list
         self.listBasemaps.clear()
@@ -3699,7 +3698,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             if provider_data:
                 icon_file = self.icons_dir / provider_data.get("icon", "")
                 if icon_file.exists():
-                    self._panel_preview.setPixmap(QIcon(str(icon_file)).pixmap(48, 48))
+                    self._panel_preview.setPixmap(make_rounded_icon(icon_file, 48).pixmap(48, 48))
 
         # ── Info HTML ────────────────────────────────────────────
         parts: list[str] = []
@@ -3892,7 +3891,7 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         self._panel_preview.clear()
         icon_file = self.icons_dir / provider_data.get("icon", "")
         if icon_file.exists():
-            self._panel_preview.setPixmap(QIcon(str(icon_file)).pixmap(48, 48))
+            self._panel_preview.setPixmap(make_rounded_icon(icon_file, 48).pixmap(48, 48))
 
         parts: list[str] = []
         parts.append(
