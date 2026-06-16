@@ -319,6 +319,12 @@ def _build_provider_yaml_data(provider: dict[str, Any]) -> dict[str, Any]:
     if "token_param" in provider:
         provider_config["token_param"] = provider["token_param"]
 
+    # Preserve optional provider metadata fields (must mirror _convert_yaml_to_providers
+    # so add/edit/save cycles do not silently drop website/copyright/terms/description).
+    for meta_field in ("website", "copyright", "terms_of_use", "description"):
+        if meta_field in provider:
+            provider_config[meta_field] = provider[meta_field]
+
     if provider_type == "xyz":
         basemaps = provider.get("basemaps", [])
         normalized_basemaps = []
