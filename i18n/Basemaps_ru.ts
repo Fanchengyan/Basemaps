@@ -1,125 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1">
+
 <context>
     <name>BasemapInputDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="4339"/>
+        <location filename="../basemaps_dialog.py" line="4344"/>
         <source>Add/Edit Basemap</source>
         <translation>Добавить/Изменить базовую карту</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4347"/>
+        <location filename="../basemaps_dialog.py" line="4352"/>
         <source>Name:</source>
         <translation>Имя:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4359"/>
+        <location filename="../basemaps_dialog.py" line="4364"/>
         <source>Tile Type:</source>
         <translation>Тип тайла:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4361"/>
+        <location filename="../basemaps_dialog.py" line="4366"/>
         <source>Raster (XYZ)</source>
         <translation>Растр (XYZ)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4361"/>
+        <location filename="../basemaps_dialog.py" line="4366"/>
         <source>Vector</source>
         <translation>Вектор</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4528"/>
+        <location filename="../basemaps_dialog.py" line="4545"/>
         <source>Source URL:</source>
         <translation>URL источника:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4528"/>
+        <location filename="../basemaps_dialog.py" line="4545"/>
         <source>URL:</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4383"/>
+        <location filename="../basemaps_dialog.py" line="4389"/>
         <source>Style URL:</source>
         <translation>URL стиля:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4395"/>
+        <location filename="../basemaps_dialog.py" line="4401"/>
         <source>Layer Settings</source>
         <translation>Настройки слоя</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4400"/>
+        <location filename="../basemaps_dialog.py" line="4406"/>
         <source>Layer Name:</source>
         <translation>Имя слоя:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4410"/>
+        <location filename="../basemaps_dialog.py" line="4416"/>
         <source>Layer Title:</source>
         <translation>Заголовок слоя:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4420"/>
+        <location filename="../basemaps_dialog.py" line="4426"/>
         <source>CRS:</source>
         <translation>СК:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4422"/>
+        <location filename="../basemaps_dialog.py" line="4428"/>
         <source>EPSG:4326</source>
         <translation>EPSG:4326</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4431"/>
+        <location filename="../basemaps_dialog.py" line="4437"/>
         <source>Format:</source>
         <translation>Формат:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4433"/>
+        <location filename="../basemaps_dialog.py" line="4439"/>
         <source>image/png</source>
         <translation>image/png</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4433"/>
+        <location filename="../basemaps_dialog.py" line="4439"/>
         <source>image/jpeg</source>
         <translation>image/jpeg</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4433"/>
+        <location filename="../basemaps_dialog.py" line="4439"/>
         <source>image/tiff</source>
         <translation>image/tiff</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4452"/>
+        <location filename="../basemaps_dialog.py" line="4458"/>
         <source>Tag:</source>
         <translation>Тег:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4469"/>
+        <location filename="../basemaps_dialog.py" line="4475"/>
         <source>Layer Metadata (optional)</source>
         <translation>Метаданные слоя (необязательно)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4474"/>
+        <location filename="../basemaps_dialog.py" line="4480"/>
         <source>Website:</source>
         <translation>Веб-сайт:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4485"/>
+        <location filename="../basemaps_dialog.py" line="4491"/>
         <source>Copyright:</source>
         <translation>Авторское право:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4496"/>
+        <location filename="../basemaps_dialog.py" line="4502"/>
         <source>Terms of Use:</source>
         <translation>Условия использования:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4507"/>
+        <location filename="../basemaps_dialog.py" line="4513"/>
         <source>Description:</source>
         <translation>Описание:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4509"/>
+        <location filename="../basemaps_dialog.py" line="4515"/>
         <source>Brief description of the layer...</source>
         <translation>Краткое описание слоя...</translation>
     </message>
@@ -382,62 +383,62 @@ Error: {}</source>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>All</source>
-        <translation type="obsolete">Все</translation>
+        <translation>Все</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Satellite</source>
-        <translation type="obsolete">Спутник</translation>
+        <translation>Спутник</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Streets</source>
-        <translation type="obsolete">Улицы</translation>
+        <translation>Улицы</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Terrain</source>
-        <translation type="obsolete">Рельеф</translation>
+        <translation>Рельеф</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Thematic</source>
-        <translation type="obsolete">Тематическая</translation>
+        <translation>Тематическая</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Overlay</source>
-        <translation type="obsolete">Наложение</translation>
+        <translation>Наложение</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Overlay/Hydrography</source>
-        <translation type="obsolete">Наложение/Гидрография</translation>
+        <translation>Наложение/Гидрография</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Overlay/Transportation</source>
-        <translation type="obsolete">Наложение/Транспорт</translation>
+        <translation>Наложение/Транспорт</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Overlay/Labels</source>
-        <translation type="obsolete">Наложение/Подписи</translation>
+        <translation>Наложение/Подписи</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Overlay/Boundaries</source>
-        <translation type="obsolete">Наложение/Границы</translation>
+        <translation>Наложение/Границы</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>Default Providers ────────────────</source>
-        <translation type="obsolete">Провайдеры по умолчанию ────────────────</translation>
+        <translation>Провайдеры по умолчанию ────────────────</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
         <source>User Providers ─────────────────</source>
-        <translation type="obsolete">Пользовательские провайдеры ─────────────────</translation>
+        <translation>Пользовательские провайдеры ─────────────────</translation>
     </message>
     <message>
         <location filename="../basemaps_dialog.py" line="485"/>
@@ -675,27 +676,27 @@ Error: {}</source>
         <translation>неизвестная ошибка</translation>
     </message>
     <message>
-        <location filename="../messageTool.py" line="319"/>
+        <location filename="../messageTool.py" line="317"/>
         <source>Info</source>
         <translation>Информация</translation>
     </message>
     <message>
-        <location filename="../messageTool.py" line="422"/>
+        <location filename="../messageTool.py" line="420"/>
         <source>Warning</source>
         <translation>Предупреждение</translation>
     </message>
     <message>
-        <location filename="../messageTool.py" line="506"/>
+        <location filename="../messageTool.py" line="504"/>
         <source>Question</source>
         <translation>Вопрос</translation>
     </message>
     <message>
-        <location filename="../messageTool.py" line="447"/>
+        <location filename="../messageTool.py" line="445"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../messageTool.py" line="472"/>
+        <location filename="../messageTool.py" line="470"/>
         <source>Information</source>
         <translation>Информация</translation>
     </message>
@@ -733,17 +734,17 @@ Error: {}</source>
         <translation>URL:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4175"/>
+        <location filename="../basemaps_dialog.py" line="4180"/>
         <source>Select Icon File</source>
         <translation>Выберите файл иконки</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4175"/>
+        <location filename="../basemaps_dialog.py" line="4180"/>
         <source>Image Files (*.png *.jpg *.svg *.ico);;All Files (*)</source>
         <translation>Изображения (*.png *.jpg *.svg *.ico);;Все файлы (*)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4194"/>
+        <location filename="../basemaps_dialog.py" line="4199"/>
         <source>Authentication</source>
         <translation>Аутентификация</translation>
     </message>
@@ -777,21 +778,29 @@ Error: {}</source>
         <source>Brief description of the provider...</source>
         <translation>Краткое описание провайдера...</translation>
     </message>
+    <message>
+        <location filename="../basemaps_dialog.py" line="4091"/>
+        <source>Default:</source>
+        <translation>По умолчанию:</translation>
+    </message>
+</context>
+<context>
+    <name>QCoreApplication</name>
 </context>
 <context>
     <name>TagEditDialog</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="4593"/>
+        <location filename="../basemaps_dialog.py" line="4612"/>
         <source>Edit Tags</source>
         <translation>Редактировать теги</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4608"/>
+        <location filename="../basemaps_dialog.py" line="4627"/>
         <source>Tag:</source>
         <translation>Тег:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4624"/>
+        <location filename="../basemaps_dialog.py" line="4643"/>
         <source>Save tags to</source>
         <translation>Сохранить теги в</translation>
     </message>
@@ -806,17 +815,17 @@ Error: {}</source>
         <translation type="obsolete">Исходный файл провайдера</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4630"/>
+        <location filename="../basemaps_dialog.py" line="4649"/>
         <source>Warning: edits in provider config files will be lost when the plugin is updated.</source>
         <translation>Предупреждение: изменения в файлах конфигурации провайдера будут потеряны при обновлении плагина.</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4626"/>
+        <location filename="../basemaps_dialog.py" line="4645"/>
         <source>Sidecar file (recommended, safer for updates)</source>
         <translation>Сопутствующий файл (рекомендуется, безопаснее при обновлениях)</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4629"/>
+        <location filename="../basemaps_dialog.py" line="4648"/>
         <source>Original file</source>
         <translation>Исходный файл</translation>
     </message>
@@ -824,32 +833,32 @@ Error: {}</source>
 <context>
     <name>TokenAuthWidget</name>
     <message>
-        <location filename="../basemaps_dialog.py" line="4237"/>
+        <location filename="../basemaps_dialog.py" line="4242"/>
         <source>Authentication</source>
         <translation>Аутентификация</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4250"/>
+        <location filename="../basemaps_dialog.py" line="4255"/>
         <source>Provider:</source>
         <translation>Провайдер:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4261"/>
+        <location filename="../basemaps_dialog.py" line="4266"/>
         <source>Token:</source>
         <translation>Токен:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4263"/>
+        <location filename="../basemaps_dialog.py" line="4268"/>
         <source>API token / key</source>
         <translation>API токен / ключ</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4270"/>
+        <location filename="../basemaps_dialog.py" line="4275"/>
         <source>Token Parameter:</source>
         <translation>Параметр токена:</translation>
     </message>
     <message>
-        <location filename="../basemaps_dialog.py" line="4329"/>
+        <location filename="../basemaps_dialog.py" line="4334"/>
         <source>Authentication is enabled but no API token/key is set. Please click the Edit button on the provider to set it.</source>
         <translation>Аутентификация включена, но API токен/ключ не установлен. Нажмите кнопку редактирования провайдера, чтобы установить его.</translation>
     </message>

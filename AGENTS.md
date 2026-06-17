@@ -255,6 +255,42 @@ lrelease-qt6 i18n/Basemaps.pro
 
 **Note**: The `i18n/Basemaps.pro` file lists all source files with translatable strings. When adding new Python files with user-facing messages, add them to the `SOURCES` list in this file.
 
+### Tag Translation Special Case
+
+Tag strings (`All`, `Satellite`, `Streets`, `Terrain`, `Thematic`, `Overlay`, `Overlay/Hydrography`, `Overlay/Transportation`, `Overlay/Labels`, `Overlay/Boundaries`) are defined as Python constants in `basemaps_dialog.py` (`AVAILABLE_TAGS`, `ASSIGNABLE_TAGS`), not `tr()` literals. `pylupdate5` cannot extract them and marks them `type="obsolete"` in `.ts` files. At runtime, `QCoreApplication.translate("BasemapsDialog", tag)` requires these strings to be active (not obsolete).
+
+**Required 3-step workflow after every `pylupdate5` run:**
+
+```bash
+# 1. Extract new strings
+pylupdate5 i18n/Basemaps.pro
+
+# 2. Restore tag translations from obsolete (must run after every pylupdate5)
+conda run -n qgis39 python3 -c "
+import re, os
+I18N = 'i18n'
+TAGS = ['All','Satellite','Streets','Terrain','Thematic','Overlay',
+        'Overlay/Hydrography','Overlay/Transportation','Overlay/Labels','Overlay/Boundaries',
+        'Default Providers ────────────────','User Providers ─────────────────']
+for lang in ['zh','ja','fr','de','ru','ko','ar','es','pt','hi','bn']:
+    for prefix in [f'basemaps_{lang}.ts', f'Basemaps_{lang}.ts']:
+        fp = os.path.join(I18N, prefix)
+        if not os.path.exists(fp): continue
+        c = open(fp, encoding='utf-8').read()
+        for t in TAGS:
+            c = c.replace(f'<source>{t}</source>\n        <translation type=\"obsolete\">',
+                          f'<source>{t}</source>\n        <translation>')
+        # Also remove any @default context block (bad entries from tr() misuse)
+        c = re.sub(r'<context>\s*<name>@default</name>.*?</context>', '', c, flags=re.DOTALL)
+        open(fp, 'w', encoding='utf-8').write(c)
+"
+
+# 3. Compile
+lrelease i18n/Basemaps.pro
+```
+
+**Do NOT skip step 2** — without it, tag badges in the gallery view will display untranslated English strings.
+
 ## Preview System
 
 Preview thumbnails are managed by [`preview_manager.py`](preview_manager.py):
