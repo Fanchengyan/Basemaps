@@ -108,8 +108,33 @@ See [`basemaps_dialog.py`](basemaps_dialog.py) and [`messageTool.py`](messageToo
 
 - **PyYAML**: YAML configuration parsing (required, no JSON fallback)
 - **owslib**: WMS/WMTS capabilities parsing (`owslib.wms.WebMapService`, `owslib.wmts.WebMapTileService`)
-- **requests**: HTTP requests for WMS/WMTS services
 - Standard QGIS/Qt APIs (`qgis.core`, `qgis.PyQt`)
+
+## Network Requests
+
+**All HTTP requests must use QGIS's built-in Qt network stack.** Do **not** use Python's `requests`, `urllib.request`, or any other Python-level HTTP library.
+
+- **`QgsBlockingNetworkRequest`**: Primary HTTP client for synchronous requests from any thread (main thread or `QgsTask` worker threads). Supports HTTP/2, TLS 1.3, and uses QGIS proxy/auth configuration automatically.
+- **`QNetworkRequest`** / **`QUrl`**: Used to construct request objects passed to `QgsBlockingNetworkRequest`.
+- **OWSLib**: Used for WMS/WMTS XML parsing only — always pre-fetch the capabilities XML with `QgsBlockingNetworkRequest` and pass it via the `xml=` parameter so OWSLib never makes its own HTTP requests.
+
+Typical pattern:
+
+```python
+from qgis.core import QgsBlockingNetworkRequest
+from qgis.PyQt.QtNetwork import QNetworkRequest
+from qgis.PyQt.QtCore import QUrl
+
+req = QgsBlockingNetworkRequest()
+qreq = QNetworkRequest(QUrl(url))
+qreq.setRawHeader(b"User-Agent", b"...")
+error = req.get(qreq, True)
+if error != QgsBlockingNetworkRequest.NoError:
+    raise RuntimeError(f"Network error {error}: {req.errorMessage()}")
+content = bytes(req.reply().content()).decode("utf-8")
+```
+
+**Why**: Python's `requests` and `urllib` do not support HTTP/2. Some tile servers (e.g. EOX) negotiate HTTP/2 exclusively, causing `SSLEOFError` / `UNEXPECTED_EOF_WHILE_READING` failures with Python HTTP libraries. Qt's network stack handles HTTP/2 transparently.
 
 ## Configuration File Format
 
@@ -163,11 +188,12 @@ When users add WMS/WMTS providers, capabilities are fetched asynchronously:
 1. **[`wms_fetch_task.py:91`](wms_fetch_task.py#L91)**: `WMSFetchTask` extends `QgsTask` for background processing
 2. Runs in worker thread via `QgsApplication.taskManager().addTask()`
 3. Auto-detects service type (WMS vs WMTS) from URL
-4. **Dual parsing strategy**:
-   - Try OWSLib first (standard-compliant services)
+4. **Capabilities XML is fetched with `QgsBlockingNetworkRequest`** (Qt network stack, supports HTTP/2), then passed to parsers
+5. **Dual parsing strategy**:
+   - Try OWSLib first (standard-compliant services) — XML passed via `xml=` parameter
    - Fallback to [`wmts_parser.py`](wmts_parser.py) ElementTree parser (handles non-standard XML, namespace issues)
-5. Emits `finished` signal with `FetchResult` dataclass on completion
-6. UI remains responsive during network operations
+6. Emits `finished` signal with `FetchResult` dataclass on completion
+7. UI remains responsive during network operations
 
 ## Logging and Messaging
 
