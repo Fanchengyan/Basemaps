@@ -449,9 +449,9 @@ def _mime_uri(
     "xyz" for vector tiles). ``layer_type`` matches the string codes used by
     QGIS mime handling ("raster" or "vector-tile").
 
-    Note: for vector tile layers, native drag-drop loads the tile without its
-    remote style (the background style download only runs via double-click).
-    The dragged layer is still a valid, loadable vector tile layer.
+    For vector tile layers, the URI should include a ``styleUrl`` parameter
+    (with the remote style JSON URL) so that QGIS loads the style when the
+    layer is created from the drag-and-drop MIME data.
     """
     mime = QgsMimeDataUtils.Uri()
     mime.name = name
@@ -524,6 +524,12 @@ class BasemapLayerItem(QgsDataItem):
         uri = QgsDataSourceUri()
         uri.setParam("type", "xyz")
         uri.setParam("url", url)
+        if tile_type == "vector":
+            style_url = layer_loader.append_token(
+                self._basemap.get("style_url", ""), token, token_param
+            )
+            if style_url:
+                uri.setParam("styleUrl", style_url)
         encoded = str(uri.encodedUri(), "utf-8")
 
         if tile_type == "vector":
