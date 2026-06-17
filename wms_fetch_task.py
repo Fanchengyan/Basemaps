@@ -23,11 +23,11 @@ from enum import Enum
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, Literal
 
-import requests
 from owslib.wms import WebMapService
 from owslib.wmts import WebMapTileService
-from qgis.core import QgsTask
-from qgis.PyQt.QtCore import QCoreApplication, QObject, pyqtSignal
+from qgis.core import QgsBlockingNetworkRequest, QgsTask
+from qgis.PyQt.QtCore import QCoreApplication, QObject, QUrl, pyqtSignal
+from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from . import wmts_parser
 from .messageTool import Logger
@@ -309,6 +309,32 @@ class WMSFetchTask(QgsTask):
         # Fallback to ElementTree
         return self._fetch_wmts_with_elementtree()
 
+    def _fetch_xml(self) -> str:
+        """Fetch capabilities XML using Qt network stack.
+
+        Uses QgsBlockingNetworkRequest instead of Python ``requests`` so
+        that HTTP/2-capable servers (e.g. EOX) can be reached without
+        ``SSLEOFError`` failures.
+
+        Returns
+        -------
+        str
+            The decoded XML text.
+
+        Raises
+        ------
+        RuntimeError
+            If the network request fails.
+        """
+        req = QgsBlockingNetworkRequest()
+        qreq = QNetworkRequest(QUrl(self.url))
+        error = req.get(qreq, True)
+        if error != QgsBlockingNetworkRequest.NoError:
+            raise RuntimeError(
+                f"QgsBlockingNetworkRequest error {error}: {req.errorMessage()}"
+            )
+        return bytes(req.reply().content()).decode("utf-8")
+
     def _fetch_wmts_with_owslib(self) -> tuple[list[dict], ServiceType]:
         """Fetch WMTS layers using OWSLib.
 
@@ -317,9 +343,7 @@ class WMSFetchTask(QgsTask):
         tuple[list[dict], ServiceType]
             Tuple of (layers list, ServiceType.WMTS).
         """
-        response = requests.get(self.url, timeout=self.timeout)
-        response.raise_for_status()
-        xml_content = response.text
+        xml_content = self._fetch_xml()
 
         # Fix namespace issues
         xml_fixed = self._fix_wmts_namespaces(xml_content)
@@ -375,10 +399,9 @@ class WMSFetchTask(QgsTask):
         tuple[list[dict], ServiceType]
             Tuple of (layers list, ServiceType.WMTS).
         """
-        response = requests.get(self.url, timeout=self.timeout)
-        response.raise_for_status()
+        xml_content = self._fetch_xml()
 
-        layers = wmts_parser.parse_wmts_capabilities(response.content)
+        layers = wmts_parser.parse_wmts_capabilities(xml_content.encode("utf-8"))
         return layers, ServiceType.WMTS
 
     def _fetch_wms_layers(self) -> tuple[list[dict], ServiceType]:
@@ -391,7 +414,8 @@ class WMSFetchTask(QgsTask):
         """
         self.setProgress(50)
 
-        wms = WebMapService(self.url, timeout=self.timeout)
+        xml_content = self._fetch_xml()
+        wms = WebMapService(self.url, xml=BytesIO(xml_content.encode("utf-8")))
 
         layers = []
         for layer_name, layer in wms.contents.items():

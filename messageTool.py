@@ -265,12 +265,10 @@ class MessageBar:
         --------
         >>> MessageBar.show("Success", "Layer loaded", Qgis.Success, duration=5)
         """
-        iface.messageBar().pushMessage(
-            title,
-            text,
-            level=level,
-            duration=duration,
-        )
+        # SIP6 in QGIS 4.x rejects plain int for the level enum; normalise.
+        if not isinstance(level, Qgis.MessageLevel):
+            level = Qgis.MessageLevel(int(level))
+        iface.messageBar().pushMessage(title, text, level, duration)
 
 
 class MessageBox:

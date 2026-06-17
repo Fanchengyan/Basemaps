@@ -9,8 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-import requests
 from qgis.core import (
+    QgsBlockingNetworkRequest,
     QgsCoordinateReferenceSystem,
     QgsDataSourceUri,
     QgsMapRendererSequentialJob,
@@ -2090,18 +2090,22 @@ class PreviewManager(QObject):
     @staticmethod
     def _fetch_json_payload(url: str) -> dict | None:
         """Fetch a JSON document for vector preview styling."""
-        headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            ),
-            "Accept": "application/json, text/plain, */*",
-        }
         try:
-            response = requests.get(url, timeout=15, headers=headers)
-            response.raise_for_status()
-            payload = response.json()
+            req = QgsBlockingNetworkRequest()
+            qreq = QNetworkRequest(QUrl(url))
+            qreq.setRawHeader(
+                b"User-Agent",
+                b"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                b"AppleWebKit/537.36 (KHTML, like Gecko) "
+                b"Chrome/120.0.0.0 Safari/537.36",
+            )
+            qreq.setRawHeader(b"Accept", b"application/json, text/plain, */*")
+            error = req.get(qreq, True)
+            if error != QgsBlockingNetworkRequest.NoError:
+                raise RuntimeError(
+                    f"Network error {error}: {req.errorMessage()}"
+                )
+            payload = json.loads(bytes(req.reply().content()))
         except Exception as exc:
             Logger.warning(f"Failed to fetch vector style metadata {url}: {exc}")
             return None

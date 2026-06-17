@@ -35,6 +35,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 from qgis.core import (
+    Qgis,
     QgsApplication,
     QgsBlockingNetworkRequest,
     QgsDataSourceUri,
@@ -130,7 +131,7 @@ def _report_load_failure(name: str, detail: str = "") -> None:
     MessageBar.show(
         QCoreApplication.translate("BasemapsBrowser", "Basemaps"),
         text,
-        level=3,  # Qgis.Critical
+        level=Qgis.MessageLevel.Critical,
         duration=10,
     )
 
