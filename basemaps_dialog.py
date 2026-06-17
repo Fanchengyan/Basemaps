@@ -4076,7 +4076,7 @@ class ProviderInputDialog(QDialog):
 
         # Name input
         name_layout = QHBoxLayout()
-        name_label = QLabel(self.tr("Name:"))
+        name_label = QLabel(self.tr("Name:") + '<span style="color:red">*</span>')
         self.name_edit = QLineEdit()
         if provider:
             self.name_edit.setText(provider.get("name", ""))
@@ -4088,7 +4088,7 @@ class ProviderInputDialog(QDialog):
         icon_layout = QHBoxLayout()
         icon_label = QLabel(self.tr("Icon:"))
         self.icon_edit = QLineEdit()
-        self.icon_edit.setPlaceholderText("basemaps.svg")
+        self.icon_edit.setPlaceholderText(self.tr("Default:") + " basemaps.svg")
         if provider:
             self.icon_edit.setText(provider.get("icon", ""))
         self.icon_button = QPushButton(self.tr("Browse..."))
@@ -4167,6 +4167,11 @@ class ProviderInputDialog(QDialog):
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
         _translate_button_box(button_box)
+        self._ok_button = button_box.button(button_ok)
+        self._ok_button.setEnabled(bool(self.name_edit.text().strip()))
+        self.name_edit.textChanged.connect(
+            lambda: self._ok_button.setEnabled(bool(self.name_edit.text().strip()))
+        )
         button_box.accepted.connect(self._validate_and_accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
@@ -4344,7 +4349,7 @@ class BasemapInputDialog(QDialog):
 
         # Name input
         name_layout = QHBoxLayout()
-        name_label = QLabel(self.tr("Name:"))
+        name_label = QLabel(self.tr("Name:") + '<span style="color:red">*</span>')
         self.name_edit = QLineEdit()
         if self.basemap:
             self.name_edit.setText(self.basemap["name"])
@@ -4368,8 +4373,9 @@ class BasemapInputDialog(QDialog):
 
         # Source URL input
         url_layout = QHBoxLayout()
+        _url_required = '<span style="color:red">*</span>'
         self.url_label = QLabel(
-            self.tr("Source URL:") if is_vector else self.tr("URL:")
+            (self.tr("Source URL:") if is_vector else self.tr("URL:")) + _url_required
         )
         self.url_edit = QLineEdit()
         if self.basemap:
@@ -4518,14 +4524,27 @@ class BasemapInputDialog(QDialog):
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
         _translate_button_box(button_box)
+        self._ok_button = button_box.button(button_ok)
+        self._update_ok_state()
+        self.name_edit.textChanged.connect(self._update_ok_state)
+        self.url_edit.textChanged.connect(self._update_ok_state)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
 
+    def _update_ok_state(self) -> None:
+        """Enable OK only when both Name and URL are non-empty."""
+        has_name = bool(self.name_edit.text().strip())
+        has_url = bool(self.url_edit.text().strip())
+        self._ok_button.setEnabled(has_name and has_url)
+
     def _on_tile_type_changed(self, index: int) -> None:
         """Toggle visibility of style URL field based on tile type selection."""
         is_vector = index == 1
-        self.url_label.setText(self.tr("Source URL:") if is_vector else self.tr("URL:"))
+        _required = '<span style="color:red">*</span>'
+        self.url_label.setText(
+            (self.tr("Source URL:") if is_vector else self.tr("URL:")) + _required
+        )
         self._set_style_url_visible(is_vector)
 
     def _set_style_url_visible(self, visible: bool) -> None:
