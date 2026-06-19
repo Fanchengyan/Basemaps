@@ -47,6 +47,10 @@ xyz:
         url: http://services.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}
         tags:
           - Terrain
+      - name: World Hillshade (Dark)
+        url: https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade_Dark/MapServer/tile/{z}/{y}/{x}
+        tags:
+          - Terrain
       - name: World Shaded Relief
         url: https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}
         tags:
@@ -66,12 +70,16 @@ xyz:
       - name: Artificial Sky Brightness
         url: https://tiles.arcgis.com/tiles/b3fMqPOmotX6SV4k/arcgis/rest/services/ArtificialSkyBrightness/MapServer/tile/{z}/{y}/{x}
         tags:
-        - Thematic
+          - Thematic
         tile_type: raster
       - name: World Reference Overlay
         url: https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer/tile/{z}/{y}/{x}
         tags:
           - Overlay/Labels
+      - name: World Ocean Reference Overlay
+        url: https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}
+        tags:
+          - Overlay/Labels     
       - name: World Transportation
         url: https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}
         tags:
