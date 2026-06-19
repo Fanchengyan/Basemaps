@@ -15,6 +15,7 @@ Basemaps/
 ├── basemaps_dialog.py       # Dialog classes + VectorTileLoadTask (QgsTask)
 ├── config_loader.py         # YAML configuration loader + tag overrides
 ├── preview_manager.py       # Preview thumbnail fetching, caching, rendering
+├── style_cache.py           # Persistent cache for vector tile style JSON (ETag-based)
 ├── wms_fetch_task.py        # Background WMS/WMTS capabilities fetching (QgsTask)
 ├── wmts_parser.py           # ElementTree-based WMTS XML parser (fallback)
 ├── messageTool.py           # Logger, MessageBar, MessageBox wrappers
@@ -30,6 +31,9 @@ Basemaps/
 │   ├── previews/            # Cached preview thumbnails (PNG)
 │   │   ├── default/{xyz,wms}/
 │   │   └── user/{xyz,wms}/
+│   ├── styles/              # Cached vector tile style JSON files
+│   │   ├── default/         # Default provider styles (.json + .meta)
+│   │   └── user/            # User provider styles (.json + .meta)
 │   ├── icons/               # Provider icons (SVG/PNG)
 │   └── tag_overrides.yaml   # Persisted user tag edits (separate file mode)
 └── i18n/                    # Translations (11 languages: zh, ja, ko, fr, de, ru, ar, es, pt, hi, bn)
@@ -48,6 +52,7 @@ Basemaps/
   - `VectorTileLoadTask` — `QgsTask` that downloads vector tile style JSON in background
 - **[`config_loader.py`](config_loader.py)**: YAML config loading/saving, converts YAML type-based structure to providers list, tag overrides persistence, provider file rename/delete management
 - **[`preview_manager.py`](preview_manager.py)**: Preview thumbnail system (1,783 lines). Multi-zoom tile fetching with retry, composite tile merging, vector tile off-screen rendering, WMTS capabilities caching, auth query param propagation, blank preview detection, placeholder generation
+- **[`style_cache.py`](style_cache.py)**: Persistent cache for vector tile style JSON files. `StyleCache` class manages `resources/styles/{default|user}/` with `.json` + `.meta` file pairs. ETag-based conditional requests (`If-None-Match`) for background freshness validation. URL rewriting for relative sprite/glyph/sources paths. Module-level lazy singleton via `get_style_cache()`
 - **[`wms_fetch_task.py`](wms_fetch_task.py)**: Asynchronous WMS/WMTS capabilities fetching using `QgsTask`, auto-detects service type, dual parsing (OWSLib + `wmts_parser`), namespace fixing for ArcGIS
 - **[`wmts_parser.py`](wmts_parser.py)**: ElementTree-based WMTS XML parser, namespace-aware, used as fallback when OWSLib fails on non-standard/ArcGIS XML
 - **[`messageTool.py`](messageTool.py)**: `Logger` (QgsMessageLog), `MessageBar`, `MessageBox` with Qt5/Qt6 compatibility
@@ -66,10 +71,13 @@ Basemaps/
 8. **WMS/WMTS fetch**: User adds WMS/WMTS provider → `WMSFetchTask` fetches capabilities asynchronously:
    - Primary: `owslib.wms.WebMapService` or `owslib.wmts.WebMapTileService`
    - Fallback: `wmts_parser.parse_wmts_capabilities()` for non-standard XML
-9. **Vector tile loading**: User loads a vector basemap → `VectorTileLoadTask` downloads style JSON in background, then `QgsVectorTileLayer` loads with the style on the main thread
+9. **Vector tile loading**: User loads a vector basemap → `VectorTileLoadTask` checks `StyleCache` for a cached style:
+   - **Cache hit**: Uses cached `file://` path immediately, then spawns a background `_StyleCacheValidationTask` (ETag conditional GET). If 304 → silent. If 200 → updates cache and notifies user via `MessageBar`
+   - **Cache miss**: Downloads style JSON, rewrites relative URLs to absolute, saves to `resources/styles/` with ETag metadata, then loads the layer
+   - `QgsVectorTileLayer` loads with the local style on the main thread via `loadDefaultStyle()`
 10. User clicks Load → creates `QgsRasterLayer` (raster) or `QgsVectorTileLayer` (vector) from datasource URI
 11. User modifications save to individual YAML files in `resources/providers/user/`; tag edits save to `tag_overrides.yaml` or directly to the provider file depending on user preference
-12. Provider deletions remove the corresponding YAML file; renames clean up old filenames via `source_file` tracking
+12. Provider deletions remove the corresponding YAML file, preview images, and cached style files; renames clean up old filenames via `source_file` tracking
 
 ## Development
 
@@ -301,6 +309,60 @@ Preview thumbnails are managed by [`preview_manager.py`](preview_manager.py):
 4. **Caching**: PNG files stored in `resources/previews/{default|user}/{xyz|wms}/`, keyed by provider/basemap name
 5. **Network queue**: Configurable concurrency based on CPU count (min 2, max 8), single-tile and composite-tile queues
 6. **Vector style pipeline**: Fetches style JSON, detects Mapbox style vs TileJSON, builds generic styles from TileJSON with color palettes per source layer
+
+## Vector Tile Style Cache
+
+Vector tile style JSON files are cached locally by [`style_cache.py`](style_cache.py) to avoid re-downloading on every load.
+
+### Cache Structure
+
+```
+resources/styles/
+    default/
+        EsriVector_WorldStreetMap.json     # Style document (relative URLs rewritten to absolute)
+        EsriVector_WorldStreetMap.meta     # YAML: {etag, timestamp}
+    user/
+        CustomProvider_MyBasemap.json
+        CustomProvider_MyBasemap.meta
+```
+
+- **Naming**: `{SafeProviderName}_{SafeBasemapName}` — non-alphanumeric characters stripped (same convention as preview thumbnails)
+- **`.meta` files**: YAML with `etag` (HTTP ETag from server) and `timestamp` (epoch)
+
+### Cache Flow
+
+| Scenario | Behavior |
+|----------|----------|
+| First load (no cache) | Download → rewrite relative URLs → save `.json` + `.meta` → load layer |
+| Subsequent loads | Read cached `file://` → load layer immediately → background ETag validation |
+| ETag returns 304 | Silent (cache still valid) |
+| ETag returns 200 | Update cache → notify user via `MessageBar` |
+| Basemap/provider deleted | Delete corresponding `.json` + `.meta` files |
+
+### URL Rewriting
+
+Style JSON documents from providers like Esri use relative paths for `sprite`, `glyphs`, and `sources[*].url` (e.g. `../sprites/sprite`). When loaded from a local `file://` URL, QGIS cannot resolve these relative paths against the remote server. `StyleCache._rewrite_relative_urls()` resolves them to absolute URLs using `urljoin(base_url, relative_path)` before saving.
+
+### Encoding Caveat
+
+When constructing `file://` URLs for `QgsVectorTileLayer`, use `safe_file_url()` (which wraps `QUrl.fromLocalFile().toString()`) and **append via string concatenation** to the encoded URI — do **not** use `uri.setParam("styleUrl", file_url)`, which double-encodes the percent characters:
+
+```python
+# ✅ Correct — string concatenation after encodedUri()
+uri += f"&styleUrl={safe_file_url(cache_path)}"
+
+# ❌ Wrong — setParam double-encodes %20 → %2520
+uri.setParam("styleUrl", safe_file_url(cache_path))
+```
+
+### Double-click vs Drag-and-drop
+
+- **Double-click** (`VectorTileLoadTask` in `basemaps_dialog.py` / `layer_loader.py`): Uses cache + calls `layer.loadDefaultStyle()` — style loads correctly including sprites
+- **Drag-and-drop** (`BasemapLayerItem._build_mime_uri` in `browser_items.py`): Uses cache via string concatenation to the MIME URI. QGIS creates the layer internally without calling `loadDefaultStyle()`, so sprite warnings may appear (QGIS limitation, not a cache issue)
+
+### Cleanup
+
+Style cache files are deleted alongside preview images in `remove_provider()`, `remove_basemap()`, `remove_xyz_provider()`, and `remove_xyz_basemap()`. The `StyleCache.delete_provider_styles()` and `delete_cached_style()` methods handle the file removal.
 
 ## UI Features
 

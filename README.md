@@ -4,7 +4,10 @@ A QGIS plugin with 12 providers and 1500+ basemaps — XYZ tiles, vector tiles, 
 
 ## Features
 
-- **12 providers with 1500+ basemaps** — XYZ tiles, Vector tiles, WMS, and WMTS, including Esri, Google Maps, Bing Maps, OpenStreetMap, Sentinel-2 Cloudless, NASA, USGS, and more.
+- **12 providers with 1500+ basemaps** — XYZ tiles, Vector tiles, WMS, and WMTS, including Esri, Google Maps, Bing Maps, OpenStreetMap, OpenFreeMap, Sentinel-2 Cloudless, NASA, USGS, and more.
+- **QGIS Browser panel integration** — browse and load basemaps directly from the Browser panel with preview thumbnails in tooltips.
+- **Vector tile style cache** — vector tile styles are cached locally with automatic ETag-based freshness validation. First load downloads and caches the style; subsequent loads read from cache instantly with background refresh.
+- **Detail panel** — toggleable side panel showing rich metadata for each basemap layer (copyright, terms of use, tile source URL, etc.).
 - **QGIS 3.x and 4.x** compatible.
 - **12 languages**: English, 中文, 日本語, 한국어, Français, Deutsch, Русский, العربية, Español, Português, हिन्दी, বাংলা.
 - **Add, edit, remove**, and **import/export** custom basemaps — share configs with colleagues or back up your settings.
@@ -32,15 +35,18 @@ A QGIS plugin with 12 providers and 1500+ basemaps — XYZ tiles, vector tiles, 
 1. **Open the Plugin** either by: 
    - Click the **Basemaps** icon ![Basemaps Plugin](docs/imgs/icon.png) in the toolbar 
    - or go to `Plugins` -> `Basemap Management` -> `Load Basemaps`.
+   - or expand **Basemaps** in the QGIS **Browser** panel to browse and drag-and-drop layers directly.
 2. **Load Basemaps**: 
    1. Browse and select a provider in `XYZ Tiles` or `WMS/WMTS` tab
    2. Select the desired Basemaps or Layers (hold `Shift` or `Ctrl`/`Command` to select multiple), then click `Load` to add them to your project.
-3. **Manage Providers**:
+   3. Alternatively, **double-click** any basemap or layer to load it directly.
+3. **View Layer Details**: Click the **Detail** button to toggle the side panel showing metadata for the selected layer (copyright, terms of use, tile URL, etc.).
+4. **Manage Providers**:
    - **Add**: Click the `Add` button to add a new custom provider.
    - **Edit**: Right-click on a user-defined provider to edit it.
    - **Remove**: Click the `Remove` button to remove it.
    - **Duplicated as user provider**: Right-click on a default provider, then click `Duplicated as user provider` to duplicate it as a user provider. Then, you can edit the duplicated provider.
-4. **Import/Export**: 
+5. **Import/Export**: 
    - **Import**: Click the `Import` button to import a custom provider.
    - **Export**: Click the `Export` button to export a custom provider.
 

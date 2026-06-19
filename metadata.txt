@@ -23,9 +23,22 @@ about=A QGIS 3.x/4.x plugin with 12 providers and 1500+ basemaps — XYZ tiles, 
    If you'd like to contribute new basemap services, report issues, or suggest improvements, feel free to open an issue or pull request on GitHub: https://github.com/Fanchengyan/Basemaps
 
 changelog=Version 2.1:
-      - [New] Detail panel: toggleable side panel showing providers and layers information of basemap
-      - [New] Bing Maps : added Bing Aerial, Road, and Hybrid
-      - [Improvements] better experience for handling provider icons 
+      - [New] QGIS Browser panel integration — browse and load basemaps directly from the Browser panel with preview thumbnails
+      - [New] Double-click any basemap to load directly
+      - [New] Vector tile style cache — persistent local cache with ETag-based background refresh for faster offline-capable vector tile loading
+      - [New] Detail panel: toggleable side panel showing provider and layer metadata (copyright, terms of use, tile source URL, etc.)
+      - [New] OpenFreeMap provider: 5 vector tile styles (Bright, Dark, Positron, Liberty, Fiordland)
+      - [New] Bing Maps: expanded from 1 to 8 layers (Aerial, Hybrid, Road, Hillshade, + label variants)
+      - [New] Esri Vector: added OpenStreetMap v2, World StreetMap Night, Artificial Sky Brightness
+      - [New] USGS: added Imagery Hybrid and Imagery Plates
+      - [Improved] HTTP/2 compatible networking — replaced Python requests with Qt network stack, fixes SSLEOFError on EOX and similar servers
+      - [Improved] Provider icons rendered as rounded-rectangle containers
+      - [Improved] Form validation — required fields marked, OK disabled until valid
+      - [Improved] Token auth UX — prompts to edit token directly instead of passive warning
+      - [Improved] Config preservation — optional metadata fields kept during save cycles
+      - [Fixed] Provider icons not displaying correctly
+      - [Fixed] XYZ basemap icon size mismatch between text and gallery views
+      - [Updated] Complete translations for 12 new strings across all 11 languages; fixed tag badge translations
 
    Version 2.0:
       - [New] basemap providers: MapTiler, NASA, OpenRailwayMap, USGS, Open Topo Map
