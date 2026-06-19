@@ -29,8 +29,6 @@ warning so the user knows to configure the provider first.
 
 from __future__ import annotations
 
-import os
-import tempfile
 from typing import Any
 from urllib.parse import urlencode
 
@@ -48,6 +46,7 @@ from qgis.PyQt.QtCore import QCoreApplication, QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from .messageTool import Logger, MessageBar, MessageBox
+from .style_cache import get_style_cache, safe_file_url
 
 # Qt5/Qt6 compatibility for the HTTP-status attribute enum scope.
 try:  # Qt6 / QGIS 3.28+
@@ -208,7 +207,11 @@ def _load_vector_tile(
         uri.setParam("url", source_url)
     encoded_uri = str(uri.encodedUri(), "utf-8")
 
-    task = _VectorTileLoadTask(encoded_uri, name, style_url)
+    # Determine default/user status from provider source file.
+    source_file = provider.get("source_file", "")
+    is_default = "default" in source_file if source_file else True
+
+    task = _VectorTileLoadTask(encoded_uri, name, style_url, provider.get("name", ""), basemap.get("name", ""), is_default)
     # Keep a reference on the task manager's app-level registry to avoid GC.
     # The task removes itself from this list when it finishes.
     _VectorTileLoadTask._active_tasks.append(task)
@@ -223,17 +226,36 @@ class _VectorTileLoadTask(QgsTask):
     This is a compact sibling of ``BasemapsDialog.VectorTileLoadTask`` kept
     inside this module so the Browser integration stays independent of the
     dialog module (and its heavy UI imports).
+
+    Uses :class:`StyleCache` so the first download is persisted locally and
+    subsequent loads read from the cache immediately.  A background ETag
+    conditional request validates freshness after the layer is added.
     """
 
     # Module-level keep-alive list; cleared as tasks finish.
     _active_tasks: list["_VectorTileLoadTask"] = []
+    # Keep-alive for background validation tasks spawned after layer load.
+    _validation_tasks: list["_StyleCacheValidationTask"] = []
 
     @classmethod
     def _drop(cls, task: "_VectorTileLoadTask") -> None:
         if task in cls._active_tasks:
             cls._active_tasks.remove(task)
 
-    def __init__(self, encoded_uri: str, name: str, style_url: str) -> None:
+    @classmethod
+    def _drop_validation(cls, task: "_StyleCacheValidationTask") -> None:
+        if task in cls._validation_tasks:
+            cls._validation_tasks.remove(task)
+
+    def __init__(
+        self,
+        encoded_uri: str,
+        name: str,
+        style_url: str,
+        provider_name: str = "",
+        basemap_name: str = "",
+        is_default: bool = True,
+    ) -> None:
         super().__init__(
             QCoreApplication.translate(
                 "BasemapsBrowser", "Loading vector tile basemap..."
@@ -243,32 +265,48 @@ class _VectorTileLoadTask(QgsTask):
         self.encoded_uri = encoded_uri
         self.name = name
         self.style_url = style_url
+        self.provider_name = provider_name
+        self.basemap_name = basemap_name
+        self.is_default = is_default
         self.temp_style_path: str | None = None
+        self._needs_background_validation = False
 
     def run(self) -> bool:
         """Download the style JSON (best effort). Always returns True."""
         if not self.style_url:
             return True
 
-        style_text = self._fetch_style_text()
-        if style_text is None:
+        cache = get_style_cache()
+        cached = cache.get_cached_style(
+            self.provider_name, self.basemap_name, self.is_default
+        )
+
+        if cached:
+            # Use cached file immediately; validate freshness in background.
+            self.temp_style_path = str(cached)
+            self._needs_background_validation = True
             return True
 
-        try:
-            fd, self.temp_style_path = tempfile.mkstemp(suffix=".json")
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                f.write(style_text)
-        except Exception as error:  # pragma: no cover - best effort
-            Logger.warning(
-                QCoreApplication.translate(
-                    "BasemapsBrowser",
-                    "Failed to write vector tile style '{}': {}",
-                ).format(self.style_url, error)
+        # First download — fetch and persist to cache.
+        style_text, etag = self._fetch_style()
+        if style_text:
+            cache.save(
+                self.provider_name,
+                self.basemap_name,
+                self.is_default,
+                style_text,
+                etag or "",
+                style_url=self.style_url,
             )
+            cached = cache.get_cached_style(
+                self.provider_name, self.basemap_name, self.is_default
+            )
+            if cached:
+                self.temp_style_path = str(cached)
         return True
 
-    def _fetch_style_text(self) -> str | None:
-        """Fetch the style JSON body via QGIS network settings."""
+    def _fetch_style(self) -> tuple[str | None, str | None]:
+        """Fetch the style JSON body; return (text, etag)."""
         request = QNetworkRequest(QUrl(self.style_url))
         for header, value in _VECTOR_STYLE_REQUEST_HEADERS:
             request.setRawHeader(header, value)
@@ -282,7 +320,7 @@ class _VectorTileLoadTask(QgsTask):
                     "Failed to download vector tile style '{}': {}",
                 ).format(self.style_url, network_request.errorMessage())
             )
-            return None
+            return None, None
 
         reply = network_request.reply()
         status_code = reply.attribute(_HTTP_STATUS_ATTRIBUTE)
@@ -293,21 +331,36 @@ class _VectorTileLoadTask(QgsTask):
                     "Failed to download vector tile style '{}': HTTP {}",
                 ).format(self.style_url, status_code)
             )
-            return None
+            return None, None
 
+        etag = self._extract_etag(reply)
         content = bytes(reply.content())
         if not content:
+            return None, None
+        try:
+            return content.decode("utf-8"), etag
+        except UnicodeDecodeError:
+            return None, None
+
+    @staticmethod
+    def _extract_etag(reply) -> str | None:
+        """Extract and clean the ETag header value."""
+        raw = reply.rawHeader(b"ETag")
+        if not raw:
             return None
         try:
-            return content.decode("utf-8")
-        except UnicodeDecodeError:
+            value = bytes(raw).decode("utf-8").strip()
+        except (UnicodeDecodeError, TypeError):
             return None
+        if value.startswith('"') and value.endswith('"') and len(value) >= 2:
+            value = value[1:-1]
+        return value or None
 
     def finished(self, result: bool) -> None:
         """Build the vector tile layer on the main thread."""
         uri = self.encoded_uri
         if self.temp_style_path:
-            uri += f"&styleUrl=file://{self.temp_style_path}"
+            uri += f"&styleUrl={safe_file_url(self.temp_style_path)}"
         elif self.style_url:
             uri += f"&styleUrl={self.style_url}"
 
@@ -319,6 +372,77 @@ class _VectorTileLoadTask(QgsTask):
         else:
             Logger.critical(f"Failed to load vector tile layer: {self.name}")
             _report_load_failure(self.name)
+
+        # Background freshness check (ETag conditional request).
+        if (
+            self._needs_background_validation
+            and self.provider_name
+            and self.basemap_name
+            and self.style_url
+        ):
+            vtask = _StyleCacheValidationTask(
+                self.provider_name,
+                self.basemap_name,
+                self.is_default,
+                self.style_url,
+            )
+            _VectorTileLoadTask._validation_tasks.append(vtask)
+            vtask.taskCompleted.connect(
+                lambda t=vtask: _VectorTileLoadTask._drop_validation(t)
+            )
+            vtask.taskTerminated.connect(
+                lambda t=vtask: _VectorTileLoadTask._drop_validation(t)
+            )
+            QgsApplication.taskManager().addTask(vtask)
+
+
+class _StyleCacheValidationTask(QgsTask):
+    """Background ETag conditional GET to refresh a cached style.
+
+    Runs silently; shows a message bar notification only when new content
+    is downloaded.
+    """
+
+    def __init__(
+        self,
+        provider_name: str,
+        basemap_name: str,
+        is_default: bool,
+        style_url: str,
+    ) -> None:
+        super().__init__(
+            QCoreApplication.translate(
+                "BasemapsBrowser", "Validating vector tile style cache..."
+            ),
+            QgsTask.Flag.CanCancel,
+        )
+        self._provider_name = provider_name
+        self._basemap_name = basemap_name
+        self._is_default = is_default
+        self._style_url = style_url
+        self._updated = False
+
+    def run(self) -> bool:
+        cache = get_style_cache()
+        self._updated = cache.validate_cache(
+            self._provider_name,
+            self._basemap_name,
+            self._is_default,
+            self._style_url,
+        )
+        return True
+
+    def finished(self, result: bool) -> None:
+        if self._updated:
+            MessageBar.show(
+                QCoreApplication.translate("BasemapsBrowser", "Basemaps"),
+                QCoreApplication.translate(
+                    "BasemapsBrowser",
+                    "Vector tile style updated: '{}'",
+                ).format(self._basemap_name),
+                level=Qgis.MessageLevel.Info,
+                duration=8,
+            )
 
 
 # ---------------------------------------------------------------------------

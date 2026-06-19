@@ -51,6 +51,7 @@ from qgis.PyQt.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPixma
 
 from . import config_loader, layer_loader
 from .icon_utils import make_rounded_icon
+from .style_cache import get_style_cache, safe_file_url
 
 # Qt5/Qt6 + QGIS enum-scope compatibility. The BrowserItemType and
 # BrowserItemState enums were moved into the Qgis scope in QGIS 3.30+.
@@ -524,13 +525,34 @@ class BasemapLayerItem(QgsDataItem):
         uri = QgsDataSourceUri()
         uri.setParam("type", "xyz")
         uri.setParam("url", url)
+
+        # For vector tiles, track a cached style path so we can append it
+        # AFTER encodedUri() — same technique as the double-click load path.
+        # Using uri.setParam() on a file:// URL would double-encode the
+        # percent characters, breaking the path.
+        _cached_style_url: str | None = None
+
         if tile_type == "vector":
             style_url = layer_loader.append_token(
                 self._basemap.get("style_url", ""), token, token_param
             )
             if style_url:
-                uri.setParam("styleUrl", style_url)
+                source = self._provider.get("source_file", "")
+                is_default = "/providers/default/" in source.replace("\\", "/")
+                cache = get_style_cache()
+                cached = cache.get_cached_style(
+                    self._provider.get("name", ""),
+                    self._basemap.get("name", ""),
+                    is_default,
+                )
+                if cached:
+                    _cached_style_url = safe_file_url(str(cached))
+                else:
+                    uri.setParam("styleUrl", style_url)
         encoded = str(uri.encodedUri(), "utf-8")
+
+        if _cached_style_url:
+            encoded += f"&styleUrl={_cached_style_url}"
 
         if tile_type == "vector":
             return _mime_uri(self.name(), "xyz", "vector-tile", encoded)
