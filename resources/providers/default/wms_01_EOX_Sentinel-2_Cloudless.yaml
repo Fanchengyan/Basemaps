@@ -9,6 +9,29 @@ wms:
     url: https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml
     service_type: wmts
     layers:
+      - layer_name: s2cloudless-2025
+        layer_title: Sentinel-2 cloudless layer for 2025 by EOX - 4326
+        crs:
+          - WGS84
+        format:
+          - image/jpeg
+        styles:
+          - default
+        tags:
+          - Satellite
+        resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
+      - layer_name: s2cloudless-2025_3857
+        layer_title: Sentinel-2 cloudless layer for 2025 by EOX - 3857
+        crs:
+          - g
+          - GoogleMapsCompatible
+        format:
+          - image/jpeg
+        styles:
+          - default
+        tags:
+          - Satellite
+        resource_url: http://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg
       - layer_name: s2cloudless-2024
         layer_title: Sentinel-2 cloudless layer for 2024 by EOX - 4326
         crs:
