@@ -62,6 +62,14 @@ class BasemapsPlugin:
 
         self._unregister_browser_provider()
 
+        # Clean up expandedPaths so stale paths don't persist after uninstall.
+        try:
+            from .browser_items import uninstall_browser_expansion
+
+            uninstall_browser_expansion()
+        except Exception:
+            pass
+
         if self.translator:
             QCoreApplication.removeTranslator(self.translator)
 
@@ -111,6 +119,19 @@ class BasemapsPlugin:
                 self.dialog.edit_provider_by_name(name, provider_type)
 
             set_token_missing_callback(_on_token_missing)
+
+            # Persist group-level expandedPaths so QGIS restores them on
+            # restart, and install a signal handler so children auto-expand
+            # when the user opens the Basemaps node.
+            from .browser_items import (
+                install_auto_child_expansion,
+                install_default_browser_expansion,
+                preload_catalog,
+            )
+
+            preload_catalog()
+            install_default_browser_expansion()
+            install_auto_child_expansion()
         except Exception as e:
             # Browser integration is a convenience feature; never let it
             # break plugin loading.

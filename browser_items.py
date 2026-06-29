@@ -13,17 +13,19 @@
 """QGIS Browser panel integration for the Basemaps plugin.
 
 Adds a top-level ``Basemaps`` node to the QGIS Browser panel that mirrors
-the provider/layer catalog of the main plugin window. The tree is built
-lazily: each level only populates when the user expands it, so the 1500+
-basemaps catalog never blocks QGIS startup or browsing.
+the provider/layer catalog of the main plugin window.  Group nodes are
+auto-expanded on first load via ``QgsSettings`` expanded-paths and a
+one-shot :class:`QgsBrowserTreeView` expand call.  Provider children are
+eagerly populated so they appear immediately when a group is expanded;
+layer items remain lazy.
 
 Hierarchy::
 
-    Basemaps                       (BasemapsRootItem)
-    ├── XYZ / Vector Tiles         (GroupCollectionItem, type=xyz)
+    Basemaps                       (BasemapsRootItem, path=basemaps:)
+    ├── XYZ / Vector Tiles         (GroupCollectionItem, path=basemaps:/xyz)
     │   └── Provider               (ProviderCollectionItem)
     │       └── Layer              (BasemapLayerItem)
-    └── WMS / WMTS                 (GroupCollectionItem, type=wms)
+    └── WMS / WMTS                 (GroupCollectionItem, path=basemaps:/wms)
         └── Provider               (ProviderCollectionItem)
             └── Layer              (WmsLayerItem)
 
@@ -284,12 +286,42 @@ def _preview_path(provider: dict[str, Any], layer_name: str) -> Path | None:
     return path if path.exists() else None
 
 
+def _newest_provider_mtime() -> float:
+    """Return the newest modification time across all provider YAML files."""
+    newest = 0.0
+    for prefix in ("default", "user"):
+        d = _RESOURCES_DIR / "providers" / prefix
+        if not d.exists():
+            continue
+        for f in d.glob("*.yaml"):
+            try:
+                mt = f.stat().st_mtime
+                if mt > newest:
+                    newest = mt
+            except OSError:
+                continue
+    return newest
+
+
+# Module-level catalog cache.  ``_load_catalog()`` checks file mtimes to
+# decide whether the cache is still valid, so external edits (manual,
+# git pull, etc.) are picked up automatically.
+_catalog_cache: list[dict[str, Any]] | None = None
+_catalog_cache_mtime: float = 0.0
+
+
 def _load_catalog() -> list[dict[str, Any]]:
     """Load and merge default + user providers, applying tag overrides.
 
-    Returns the flat provider list exactly as the main dialog uses it, so
-    the Browser never maintains a second copy of the catalog.
+    Results are cached in memory and only refreshed when any provider YAML
+    file has a newer modification time than the cached snapshot.
     """
+    global _catalog_cache, _catalog_cache_mtime
+
+    current_mtime = _newest_provider_mtime()
+    if _catalog_cache is not None and _catalog_cache_mtime >= current_mtime:
+        return _catalog_cache
+
     providers: list[dict[str, Any]] = []
     for prefix in ("default", "user"):
         try:
@@ -306,7 +338,137 @@ def _load_catalog() -> list[dict[str, Any]]:
     except Exception:
         pass
 
-    return providers
+    _catalog_cache = providers
+    _catalog_cache_mtime = current_mtime
+    return _catalog_cache
+
+
+def preload_catalog() -> None:
+    """Warm the catalog cache so the first browser click is instant."""
+    _load_catalog()
+
+
+# ---------------------------------------------------------------------------
+# Browser auto-expansion helpers
+# ---------------------------------------------------------------------------
+
+# Paths for QgsSettings — group-level only, so Basemaps starts collapsed
+# but XYZ / WMS auto-expand when the user opens Basemaps.
+_DEFAULT_EXPANDED_PATHS = [
+    "basemaps:/xyz",
+    "basemaps:/wms",
+]
+
+
+def _as_list(value) -> list:
+    """Normalise a QgsSettings value to a list of strings."""
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value] if value else []
+    return list(value)
+
+
+def install_default_browser_expansion() -> None:
+    """Persist ``expandedPaths`` in QgsSettings so QGIS restores them.
+
+    QGIS reads ``/<section>/expandedPaths`` on startup and expands
+    matching nodes in every :class:`QgsBrowserTreeView`.  This only
+    needs to run once; subsequent calls are no-ops.
+    """
+    from qgis.core import QgsSettings
+
+    settings = QgsSettings()
+    for section in ("browser", "browser2"):
+        key = f"/{section}/expandedPaths"
+        current = _as_list(settings.value(key, []))
+
+        changed = False
+        for path in _DEFAULT_EXPANDED_PATHS:
+            if path not in current:
+                current.append(path)
+                changed = True
+
+        if changed:
+            settings.setValue(key, current)
+
+
+def uninstall_browser_expansion() -> None:
+    """Remove Basemaps paths from ``expandedPaths`` on plugin unload."""
+    from qgis.core import QgsSettings
+
+    settings = QgsSettings()
+    for section in ("browser", "browser2"):
+        key = f"/{section}/expandedPaths"
+        current = _as_list(settings.value(key, []))
+        cleaned = [p for p in current if p not in _DEFAULT_EXPANDED_PATHS]
+        if len(cleaned) != len(current):
+            settings.setValue(key, cleaned)
+
+
+def install_auto_child_expansion() -> None:
+    """Connect ``rowsInserted`` on every visible Browser model.
+
+    When the user expands ``Basemaps``, the framework inserts child group
+    items (XYZ / WMS).  This handler detects that insertion and expands
+    the new children immediately, so providers are visible without a
+    second click.
+    """
+    from qgis.PyQt.QtCore import QTimer
+    from qgis.PyQt.QtWidgets import QTreeView
+
+    from .messageTool import Logger
+
+    MAX_RETRIES = 5
+
+    def _connect(attempt: int = 0):
+        from qgis.PyQt.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        views = [w for w in app.allWidgets() if isinstance(w, QTreeView)]
+        connected = False
+
+        for tv in views:
+            model = tv.model()
+            if model is None:
+                continue
+
+            # Check if this model has a "Basemaps" top-level item.
+            has_basemaps = False
+            for row in range(model.rowCount()):
+                if (model.data(model.index(row, 0)) or "") == "Basemaps":
+                    has_basemaps = True
+                    break
+            if not has_basemaps:
+                continue
+
+            def _on_rows_inserted(parent, first, last, tree=tv, mdl=model):
+                # Only react to children of the "Basemaps" node.
+                if not parent.isValid():
+                    return
+                if (mdl.data(parent) or "") != "Basemaps":
+                    return
+                for r in range(first, last + 1):
+                    cidx = mdl.index(r, 0, parent)
+                    cname = mdl.data(cidx) or ""
+                    Logger.info(f"Browser: auto-expanding {cname!r}")
+                    tree.expand(cidx)
+
+            model.rowsInserted.connect(_on_rows_inserted)
+            connected = True
+
+        if connected:
+            Logger.info("Browser: installed auto child expansion")
+        elif attempt < MAX_RETRIES:
+            delay = 200 * (attempt + 1)
+            QTimer.singleShot(delay, lambda: _connect(attempt + 1))
+        else:
+            Logger.info(
+                "Browser: no Browser model found —"
+                " QgsSettings expandedPaths will take effect on restart"
+            )
+
+    QTimer.singleShot(200, _connect)
 
 
 # ---------------------------------------------------------------------------
@@ -318,7 +480,7 @@ class BasemapsRootItem(QgsDataCollectionItem):
     """Top-level ``Basemaps`` node shown in the Browser panel."""
 
     def __init__(self, icon: QIcon | None = None) -> None:
-        super().__init__(None, "Basemaps", "/Basemaps")
+        super().__init__(None, "Basemaps", "basemaps:")
         if icon is not None:
             self.setIcon(icon)
         self.setSortKey(0)
@@ -339,8 +501,8 @@ class BasemapsRootItem(QgsDataCollectionItem):
 class GroupCollectionItem(QgsDataCollectionItem):
     """One of the two category nodes: XYZ/Vector Tiles or WMS/WMTS.
 
-    Children (provider nodes) are built lazily in :meth:`createChildren`,
-    which only runs when the user expands this group.
+    Providers are populated eagerly so they appear immediately when the
+    group is expanded.  Layers inside each provider remain lazy.
     """
 
     def __init__(self, parent: QgsDataItem, group_key: str) -> None:
@@ -348,18 +510,16 @@ class GroupCollectionItem(QgsDataCollectionItem):
             label = _tr("XYZ / Vector Tiles")
         else:
             label = _tr("WMS / WMTS")
-        super().__init__(parent, label, f"/Basemaps/{group_key}")
+        super().__init__(parent, label, f"basemaps:/{group_key}")
         self._group_key = group_key
 
-    def createChildren(self):
+    def _build_children(self) -> list:
+        """Build the list of child provider items from the catalog."""
         from qgis.PyQt import sip
 
         children = []
         for idx, provider in enumerate(_load_catalog()):
             if provider.get("type") != self._group_key:
-                continue
-            # Skip separators / unknown entries defensively.
-            if provider.get("type") == "separator":
                 continue
             if not provider.get("name"):
                 continue
@@ -369,6 +529,28 @@ class GroupCollectionItem(QgsDataCollectionItem):
             sip.transferto(item, self)
             children.append(item)
         return children
+
+    def createChildren(self):
+        return self._build_children()
+
+    def populate(self, *args):
+        """Eagerly build provider children on first population."""
+        if self.state() == _STATE_POPULATED:
+            return
+        super().populate(*args)
+        if not self.children():
+            for child in self._build_children():
+                self.addChildItem(child, refresh=False)
+            self.setState(_STATE_POPULATED)
+
+    def capabilities2(self):
+        """Remove Collapse so QGIS does not refuse to expand this node."""
+        try:
+            caps = super().capabilities2()
+            caps &= ~Qgis.BrowserItemCapability.Collapse
+            return caps
+        except (AttributeError, TypeError):
+            return super().capabilities2()
 
 
 # ---------------------------------------------------------------------------
@@ -381,7 +563,7 @@ class ProviderCollectionItem(QgsDataCollectionItem):
 
     def __init__(self, parent: QgsDataItem, provider: dict[str, Any]) -> None:
         name = provider.get("name", "provider")
-        super().__init__(parent, name, f"/Basemaps/{provider.get('type')}/{name}")
+        super().__init__(parent, name, f"basemaps:/{provider.get('type')}/{name}")
         self._provider = provider
         self.setIcon(_provider_icon(provider.get("icon", "")))
 
@@ -489,7 +671,7 @@ class BasemapLayerItem(QgsDataItem):
             _LAYER_TYPE,
             parent,
             basemap.get("name", "basemap"),
-            f"/Basemaps/xyz/{provider.get('name')}/{basemap.get('name')}",
+            f"basemaps:/xyz/{provider.get('name')}/{basemap.get('name')}",
         )
         # Leaf node: mark as populated so QGIS does not look for children.
         self.setState(_STATE_POPULATED)
@@ -584,7 +766,7 @@ class WmsLayerItem(QgsDataItem):
             _LAYER_TYPE,
             parent,
             title,
-            f"/Basemaps/wms/{provider.get('name')}/{title}",
+            f"basemaps:/wms/{provider.get('name')}/{title}",
         )
         self.setState(_STATE_POPULATED)
         self._provider = provider
