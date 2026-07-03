@@ -46,6 +46,7 @@ from qgis.core import (
     QgsDataCollectionItem,
     QgsDataItem,
     QgsDataSourceUri,
+    QgsLayerItem,
     QgsMimeDataUtils,
 )
 from qgis.PyQt.QtCore import QBuffer, QCoreApplication, QIODevice, Qt
@@ -57,15 +58,19 @@ from .style_cache import get_style_cache, safe_file_url
 
 # Qt5/Qt6 + QGIS enum-scope compatibility. The BrowserItemType and
 # BrowserItemState enums were moved into the Qgis scope in QGIS 3.30+.
-try:
-    _LAYER_TYPE = Qgis.BrowserItemType.Layer  # QGIS 3.30+
-except AttributeError:  # pragma: no cover - QGIS < 3.30
-    _LAYER_TYPE = QgsDataItem.Layer
-
+# Leaf items subclass :class:`QgsLayerItem` (whose C++ ``type()`` is
+# already ``Layer``) so :cpp:func:`QgsBrowserModel::data` casts correctly
+# to ``QgsLayerItem *`` instead of UB-deref'ing a NULL cast on a plain
+# ``QgsDataItem``.
 try:
     _STATE_POPULATED = Qgis.BrowserItemState.Populated  # QGIS 3.30+
 except AttributeError:  # pragma: no cover - QGIS < 3.30
     _STATE_POPULATED = QgsDataItem.Populated
+
+try:
+    _STATE_POPULATING = Qgis.BrowserItemState.Populating  # QGIS 3.30+
+except AttributeError:  # pragma: no cover - QGIS < 3.30
+    _STATE_POPULATING = QgsDataItem.Populating
 
 # QGIS raster/vector-tile layer type codes for mime URIs.
 try:
@@ -531,17 +536,28 @@ class GroupCollectionItem(QgsDataCollectionItem):
         return children
 
     def createChildren(self):
-        return self._build_children()
+        # Return empty – children are built synchronously in populate().
+        # In QGIS 3.28+ createChildren() runs in a background worker thread;
+        # Python wrappers returned from a thread can be garbage-collected
+        # before C++ adds them to the tree, leaving dangling pointers that
+        # crash QgsBrowserModel::data() when the Browser filter is used.
+        return []
 
     def populate(self, *args):
-        """Eagerly build provider children on first population."""
+        """Eagerly build provider children on first population.
+
+        Children are created **synchronously** here instead of via the async
+        ``createChildren()`` path to avoid the SIP ownership / GC race
+        described in :meth:`createChildren`.
+        """
         if self.state() == _STATE_POPULATED:
             return
-        super().populate(*args)
-        if not self.children():
-            for child in self._build_children():
-                self.addChildItem(child, refresh=False)
-            self.setState(_STATE_POPULATED)
+        # Skip super().populate() which triggers the async createChildren()
+        # task.  We handle child creation and state ourselves.
+        self.setState(_STATE_POPULATING)
+        for child in self._build_children():
+            self.addChildItem(child, refresh=False)
+        self.setState(_STATE_POPULATED)
 
     def capabilities2(self):
         """Remove Collapse so QGIS does not refuse to expand this node."""
@@ -568,7 +584,17 @@ class ProviderCollectionItem(QgsDataCollectionItem):
         self.setIcon(_provider_icon(provider.get("icon", "")))
 
     def _build_children(self) -> list:
-        """Build the list of child layer items from provider data."""
+        """Build the list of child layer items from provider data.
+
+        Each child is transferred to ``self`` via ``sip.transferto`` so the
+        C++ parent takes ownership and Python's garbage collector does not
+        destroy the underlying ``QgsDataItem`` after this method returns.
+        Without the transfer, ``QgsBrowserModel`` is left with dangling
+        internal pointers that crash ``data()`` when the Browser filter is
+        invoked.
+        """
+        from qgis.PyQt import sip
+
         children: list = []
         provider_type = self._provider.get("type")
         if provider_type == _XYZ_GROUP_KEY:
@@ -581,6 +607,7 @@ class ProviderCollectionItem(QgsDataCollectionItem):
                     continue
                 item = BasemapLayerItem(self, self._provider, basemap)
                 item.setSortKey(idx)
+                sip.transferto(item, self)
                 children.append(item)
         elif provider_type == _WMS_GROUP_KEY:
             items = sorted(
@@ -593,29 +620,28 @@ class ProviderCollectionItem(QgsDataCollectionItem):
                     continue
                 item = WmsLayerItem(self, self._provider, layer_data)
                 item.setSortKey(idx)
+                sip.transferto(item, self)
                 children.append(item)
         return children
 
     def createChildren(self):
-        return self._build_children()
+        # Return empty – children are built synchronously in populate().
+        # See GroupCollectionItem.createChildren() for the rationale.
+        return []
 
     def populate(self, *args):
-        """Override to manually add children after framework populate.
+        """Build layer children synchronously on first expand.
 
-        In QGIS 4 the internal populate/addChildItem flow changed such that
-        createChildren() results may not be wired into the tree for custom
-        QgsDataCollectionItem subclasses.  Calling addChildItem() ourselves
-        after super().populate() guarantees the layers appear.
+        Children are created **synchronously** here instead of via the async
+        ``createChildren()`` path to avoid the SIP ownership / GC race that
+        causes crashes when filtering in the Browser panel.
         """
         if self.state() == _STATE_POPULATED:
             return
-        super().populate(*args)
-        # Only add if the framework did not already populate (children count
-        # would still be 0 after a failed framework populate).
-        if not self.children():
-            for child in self._build_children():
-                self.addChildItem(child, refresh=False)
-            self.setState(_STATE_POPULATED)
+        self.setState(_STATE_POPULATING)
+        for child in self._build_children():
+            self.addChildItem(child, refresh=False)
+        self.setState(_STATE_POPULATED)
 
 
 # ---------------------------------------------------------------------------
@@ -654,8 +680,15 @@ def _mime_uri(
     return mime
 
 
-class BasemapLayerItem(QgsDataItem):
+class BasemapLayerItem(QgsLayerItem):
     """A single XYZ raster or vector tile layer leaf node.
+
+    Subclasses :class:`QgsLayerItem` rather than the bare
+    :class:`QgsDataItem` so that QGIS' ``qobject_cast<QgsLayerItem*>``
+    succeeds — otherwise ``QgsBrowserModel::data`` for the
+    ``Comment``/``LayerMetadata`` roles dereferences a NULL cast and
+    crashes the Browser filter.  The actual layer data is delivered via
+    custom :meth:`mimeUri`/``mimeUris``.
 
     Loads the layer via :mod:`layer_loader` on double-click or drag-and-drop.
     No preview thumbnails are fetched here — that stays in the main window.
@@ -667,18 +700,19 @@ class BasemapLayerItem(QgsDataItem):
         provider: dict[str, Any],
         basemap: dict[str, Any],
     ) -> None:
-        super().__init__(
-            _LAYER_TYPE,
-            parent,
-            basemap.get("name", "basemap"),
-            f"basemaps:/xyz/{provider.get('name')}/{basemap.get('name')}",
-        )
+        name = basemap.get("name", "basemap")
+        path = f"basemaps:/xyz/{provider.get('name')}/{name}"
+        tile_type = basemap.get("tile_type", "raster")
+        # The real mimeUri is constructed in :meth:`_build_mime_uri`; the
+        # ``uri`` here is only used for equality / drag-and-drop fallback.
+        dummy_uri = f"basemaps://xyz/{provider.get('name')}/{name}"
+        layer_code = _BROWSER_VTILE if tile_type == "vector" else _BROWSER_RASTER
+        super().__init__(parent, name, path, dummy_uri, layer_code, "")
         # Leaf node: mark as populated so QGIS does not look for children.
         self.setState(_STATE_POPULATED)
         self._provider = provider
         self._basemap = basemap
 
-        tile_type = basemap.get("tile_type", "raster")
         tags = basemap.get("tags", [])
         type_label = "Vector Tile" if tile_type == "vector" else "XYZ Tile"
         if tile_type == "vector":
@@ -687,6 +721,13 @@ class BasemapLayerItem(QgsDataItem):
             self.setIcon(QgsApplication.getThemeIcon("mIconXyz.svg"))
         preview = _preview_path(provider, basemap.get("name", ""))
         self.setToolTip(_format_tooltip(preview, tags, type_label))
+
+    def comments(self) -> str:  # noqa: D401
+        """Return empty comments — required to avoid QGIS reading uninitialised
+        ``QgsLayerItem::comments`` when the Browser filter asks for the
+        ``Comment`` role on a Basemaps leaf item.
+        """
+        return ""
 
     # ---- interaction ------------------------------------------------------
 
@@ -752,8 +793,15 @@ class BasemapLayerItem(QgsDataItem):
         return True
 
 
-class WmsLayerItem(QgsDataItem):
-    """A single WMS/WMTS layer leaf node."""
+class WmsLayerItem(QgsLayerItem):
+    """A single WMS/WMTS layer leaf node.
+
+    Subclasses :class:`QgsLayerItem` (rather than plain :class:`QgsDataItem`)
+    so QGIS' ``qobject_cast<QgsLayerItem*>`` succeeds — otherwise
+    ``QgsBrowserModel::data`` for the ``Comment``/``LayerMetadata`` roles
+    dereferences a NULL cast and crashes the Browser filter.  The actual
+    layer data is delivered via custom :meth:`mimeUri`/``mimeUris``.
+    """
 
     def __init__(
         self,
@@ -762,12 +810,11 @@ class WmsLayerItem(QgsDataItem):
         layer_data: dict[str, Any],
     ) -> None:
         title = layer_data.get("layer_title") or layer_data.get("layer_name", "layer")
-        super().__init__(
-            _LAYER_TYPE,
-            parent,
-            title,
-            f"basemaps:/wms/{provider.get('name')}/{title}",
-        )
+        path = f"basemaps:/wms/{provider.get('name')}/{title}"
+        # The real mimeUri is constructed in :meth:`_build_mime_uri`; the
+        # ``uri`` here is only used for equality / drag-and-drop fallback.
+        dummy_uri = f"basemaps://wms/{provider.get('name')}/{title}"
+        super().__init__(parent, title, path, dummy_uri, _BROWSER_RASTER, "")
         self.setState(_STATE_POPULATED)
         self._provider = provider
         self._layer_data = layer_data
@@ -779,6 +826,12 @@ class WmsLayerItem(QgsDataItem):
         )
         preview = _preview_path(provider, title)
         self.setToolTip(_format_tooltip(preview, tags, service_type.upper()))
+
+    def comments(self) -> str:  # noqa: D401
+        """Return empty comments — same reason as
+        :meth:`BasemapLayerItem.comments` (NULL-cast crash workaround).
+        """
+        return ""
 
     def handleDoubleClick(self):
         layer_loader.load_wms_layer(self._provider, self._layer_data)
