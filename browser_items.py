@@ -171,6 +171,26 @@ _TAG_COLORS: dict[str, str] = {
 }
 
 
+def _wrap_tooltip(body: str) -> str:
+    """Wrap a tooltip body in a fixed-background table cell.
+
+    Qt paints the *platform* tooltip colour behind rich-text content via
+    ``PE_PanelTipLabel`` — lemon-yellow on Windows/Linux, white on macOS —
+    so the same HTML tooltip looks different per OS.  A ``<table>`` cell
+    with an explicit ``background-color`` is honoured by
+    :class:`QTextDocument` and produces a consistent white frame across
+    all platforms and themes (including dark mode).
+    """
+    return (
+        '<table cellspacing="0" cellpadding="0" '
+        'style="background-color:#ffffff;border:0;margin:0;">'
+        '<tr><td style="background-color:#ffffff;'
+        'border:0;padding:3px;">'
+        f"{body}"
+        "</td></tr></table>"
+    )
+
+
 def _format_tooltip(
     preview: Path | None,
     tags: list[str],
@@ -198,12 +218,16 @@ def _format_tooltip(
 
     # No preview: compact badge row (no image to overlay onto).
     if not preview:
-        return f'<p style="margin:0;"><nobr>{tag_spans}{type_span}</nobr></p>'
+        return _wrap_tooltip(
+            f'<p style="margin:0;"><nobr>{tag_spans}{type_span}</nobr></p>'
+        )
 
     # --- Paint badges onto a scaled copy of the preview image. ---------------
     src = QPixmap(str(preview))
     if src.isNull():
-        return f'<p style="margin:0;"><nobr>{tag_spans}{type_span}</nobr></p>'
+        return _wrap_tooltip(
+            f'<p style="margin:0;"><nobr>{tag_spans}{type_span}</nobr></p>'
+        )
 
     # Logical (display) sizes — these stay constant in the HTML output.
     img_w, img_h, outer = 140, 100, 1
@@ -232,8 +256,13 @@ def _format_tooltip(
     painter.drawPixmap(outer, outer, src_scaled)
     painter.setClipping(False)
 
+    # Match the gallery card badge size (setPointSize(7) in
+    # ui.basemap_delegate.py) so the rendered badge is visually consistent
+    # between the Browser tooltip and the main dialog's card view. Using
+    # point size rather than pixel size lets Qt scale correctly on high-DPI
+    # displays on every platform.
     badge_font = QFont()
-    badge_font.setPointSize(8)
+    badge_font.setPointSize(7)
     badge_font.setBold(True)
     painter.setFont(badge_font)
     fm = QFontMetrics(badge_font)
@@ -279,7 +308,7 @@ def _format_tooltip(
     b64 = base64.b64encode(buf.data().data()).decode("ascii")
     data_uri = f"data:image/png;base64,{b64}"
 
-    return (
+    return _wrap_tooltip(
         f'<img src="{data_uri}" width="{out_w}" height="{out_h}">'
     )
 
