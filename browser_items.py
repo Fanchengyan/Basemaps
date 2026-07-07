@@ -453,12 +453,29 @@ def uninstall_browser_expansion() -> None:
 
 
 def install_auto_child_expansion() -> None:
-    """Connect ``rowsInserted`` on every visible Browser model.
+    """Auto-expand the XYZ / WMS group nodes when ``Basemaps`` is opened.
 
-    When the user expands ``Basemaps``, the framework inserts child group
-    items (XYZ / WMS).  This handler detects that insertion and expands
-    the new children immediately, so providers are visible without a
-    second click.
+    Three complementary mechanisms ensure the group children of the
+    ``Basemaps`` root are revealed without a second click, regardless of
+    whether the children already exist in the model:
+
+    - ``model.rowsInserted`` expands group children that are *freshly
+      inserted* under the Basemaps root (first population, scenario where
+      the user opens Basemaps before any background population).
+
+    - ``tree.expanded`` re-expands the group children whenever the user
+      (re-)expands the Basemaps root, even when the children already exist.
+      This is required because opening the main Basemaps dialog triggers a
+      catalog reload that, via the Qt event loop, causes QGIS to eagerly
+      populate the Basemaps root's children behind the scenes; when the
+      user later double-clicks ``Basemaps``, the group rows already exist
+      so ``rowsInserted`` does not fire.
+
+    - A bounded poller re-checks every 500 ms for a short window after the
+      first Browser view is seen.  This catches the rare case where the
+      above two signals do not fire at the right moment (e.g. QGIS expands
+      the root programmatically without emitting ``expanded``), and also
+      handles sibling Browser panels that may appear later.
     """
     from qgis.PyQt.QtCore import QTimer
     from qgis.PyQt.QtWidgets import QTreeView
@@ -466,6 +483,64 @@ def install_auto_child_expansion() -> None:
     from .messageTool import Logger
 
     MAX_RETRIES = 5
+    POLL_MS = 500
+    POLL_MAX_TICKS = 40  # ~20 s after first Browser view is seen
+
+    _connected_views: set[int] = set()
+    _poll_ticks = {"n": 0, "saw_view": 0}
+
+    def _expand_basemaps_children(index, tree, mdl) -> None:
+        """Expand every child row of the Basemaps root at ``index``.
+
+        ``index`` must already be validated as the Basemaps root in the
+        same model (``mdl``) the tree view is showing.
+        """
+        for r in range(mdl.rowCount(index)):
+            cidx = mdl.index(r, 0, index)
+            cname = mdl.data(cidx) or ""
+            if cname:
+                Logger.info(f"Browser: auto-expanding {cname!r}")
+                tree.expand(cidx)
+
+    def _find_basemaps_root(mdl):
+        """Return the top-level index of the 'Basemaps' row, or invalid."""
+        for row in range(mdl.rowCount()):
+            ridx = mdl.index(row, 0)
+            if (mdl.data(ridx) or "") == "Basemaps":
+                return ridx
+        return None
+
+    def _poll():
+        from qgis.PyQt.QtWidgets import QApplication
+
+        app = QApplication.instance()
+        saw_view = False
+        for tv in app.allWidgets():
+            if not isinstance(tv, QTreeView):
+                continue
+            mdl = tv.model()
+            if mdl is None:
+                continue
+            root = _find_basemaps_root(mdl)
+            if root is None:
+                continue
+            saw_view = True
+
+            # If the root is expanded, ensure its children are too.
+            # This is the belt-and-suspenders path that does not depend on
+            # signal delivery timing.
+            if tv.isExpanded(root):
+                for r in range(mdl.rowCount(root)):
+                    cidx = mdl.index(r, 0, root)
+                    cname = mdl.data(cidx) or ""
+                    if cname and not tv.isExpanded(cidx):
+                        Logger.info(f"Browser: auto-expanding {cname!r}")
+                        tv.expand(cidx)
+
+        if saw_view:
+            _poll_ticks["saw_view"] += 1
+        if _poll_ticks["saw_view"] < POLL_MAX_TICKS:
+            QTimer.singleShot(POLL_MS, _poll)
 
     def _connect(attempt: int = 0):
         from qgis.PyQt.QtWidgets import QApplication
@@ -488,23 +563,39 @@ def install_auto_child_expansion() -> None:
             if not has_basemaps:
                 continue
 
+            # Connect each tree view only once per widget instance.
+            if id(tv) in _connected_views:
+                connected = True
+                continue
+
             def _on_rows_inserted(parent, first, last, tree=tv, mdl=model):
-                # Only react to children of the "Basemaps" node.
+                # Only react to children newly inserted under "Basemaps".
                 if not parent.isValid():
                     return
                 if (mdl.data(parent) or "") != "Basemaps":
                     return
-                for r in range(first, last + 1):
-                    cidx = mdl.index(r, 0, parent)
-                    cname = mdl.data(cidx) or ""
-                    Logger.info(f"Browser: auto-expanding {cname!r}")
-                    tree.expand(cidx)
+                _expand_basemaps_children(parent, tree, mdl)
+
+            def _on_expanded(index, tree=tv, mdl=model):
+                # Fires every time the user expands any node.  We only act
+                # when the Basemaps root itself is expanded, then reveal
+                # group children that may already exist (dialog-opened case).
+                if not index.isValid():
+                    return
+                if (mdl.data(index) or "") != "Basemaps":
+                    return
+                _expand_basemaps_children(index, tree, mdl)
 
             model.rowsInserted.connect(_on_rows_inserted)
+            tv.expanded.connect(_on_expanded)
+            _connected_views.add(id(tv))
             connected = True
 
         if connected:
             Logger.info("Browser: installed auto child expansion")
+            # Kick off the bounded poller once we have at least one view.
+            if _poll_ticks["saw_view"] == 0:
+                QTimer.singleShot(POLL_MS, _poll)
         elif attempt < MAX_RETRIES:
             delay = 200 * (attempt + 1)
             QTimer.singleShot(delay, lambda: _connect(attempt + 1))
