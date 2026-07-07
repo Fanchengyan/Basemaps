@@ -58,10 +58,14 @@ from .style_cache import get_style_cache, safe_file_url
 
 # Qt5/Qt6 + QGIS enum-scope compatibility. The BrowserItemType and
 # BrowserItemState enums were moved into the Qgis scope in QGIS 3.30+.
-# Leaf items subclass :class:`QgsLayerItem` (whose C++ ``type()`` is
-# already ``Layer``) so :cpp:func:`QgsBrowserModel::data` casts correctly
-# to ``QgsLayerItem *`` instead of UB-deref'ing a NULL cast on a plain
-# ``QgsDataItem``.
+#
+# Leaf items declare :data:`_LEAF_ITEM_TYPE` = ``Custom`` (rather than
+# ``Layer``).  This is what avoids the Browser-filter crash:
+# ``QgsBrowserModel::data()`` only queries the ``Comment`` /
+# ``LayerMetadata`` roles for items with ``type() == Layer``; staying
+# ``Custom`` keeps us out of that branch, so QGIS never attempts the
+# ``qobject_cast<QgsLayerItem*>`` that would dereference NULL on a plain
+# :class:`QgsDataItem`.
 try:
     _STATE_POPULATED = Qgis.BrowserItemState.Populated  # QGIS 3.30+
 except AttributeError:  # pragma: no cover - QGIS < 3.30
@@ -72,13 +76,21 @@ try:
 except AttributeError:  # pragma: no cover - QGIS < 3.30
     _STATE_POPULATING = QgsDataItem.Populating
 
-# QGIS raster/vector-tile layer type codes for mime URIs.
+try:
+    _LEAF_ITEM_TYPE = Qgis.BrowserItemType.Custom  # QGIS 3.30+
+except AttributeError:  # pragma: no cover - QGIS < 3.30
+    _LEAF_ITEM_TYPE = QgsDataItem.Custom
+
+# QGIS raster/vector-tile layer type codes for mime URIs.  These are used by
+# :func:`_mime_uri` to populate the ``supportedLayer`` field on the MIME data
+# so QGIS recognises dragged items as loadable raster / vector-tile layers.
+# They are *not* used as the browser item ``type()`` (see _LEAF_ITEM_TYPE).
 try:
     _BROWSER_RASTER = Qgis.BrowserLayerType.Raster
     _BROWSER_VTILE = Qgis.BrowserLayerType.VectorTile
 except AttributeError:  # pragma: no cover - very old QGIS
-    _BROWSER_RASTER = QgsDataItem.Layer
-    _BROWSER_VTILE = QgsDataItem.Layer
+    _BROWSER_RASTER = QgsLayerItem.Raster
+    _BROWSER_VTILE = QgsLayerItem.VectorTile
 
 # Path to the plugin's resources directory (used for provider icons).
 _RESOURCES_DIR = Path(__file__).parent / "resources"
@@ -680,15 +692,28 @@ def _mime_uri(
     return mime
 
 
-class BasemapLayerItem(QgsLayerItem):
+class BasemapLayerItem(QgsDataItem):
     """A single XYZ raster or vector tile layer leaf node.
 
-    Subclasses :class:`QgsLayerItem` rather than the bare
-    :class:`QgsDataItem` so that QGIS' ``qobject_cast<QgsLayerItem*>``
-    succeeds — otherwise ``QgsBrowserModel::data`` for the
-    ``Comment``/``LayerMetadata`` roles dereferences a NULL cast and
-    crashes the Browser filter.  The actual layer data is delivered via
-    custom :meth:`mimeUri`/``mimeUris``.
+    Subclasses the bare :class:`QgsDataItem` (not :class:`QgsLayerItem`) and
+    declares its browser item type as :class:`Qgis.BrowserItemType.Custom`.
+
+    This is deliberate and fixes two distinct problems at once:
+
+    1. **Browser-filter crash** — ``QgsBrowserModel::data()`` only queries the
+       ``Comment`` / ``LayerMetadata`` roles for items whose ``type()`` equals
+       :class:`Qgis.BrowserItemType.Layer`.  Using ``Custom`` keeps us out of
+       that branch entirely, so no NULL ``qobject_cast<QgsLayerItem*>`` ever
+       happens — without having to actually *be* a ``QgsLayerItem``.
+    2. **Async double-click** — the built-in ``QgsLayerItemGuiProvider`` only
+       intercepts the double-click (and re-routes it through the synchronous
+       drag-and-drop path) for items that successfully cast to
+       ``QgsLayerItem*``.  Staying a plain ``QgsDataItem`` lets our own
+       :meth:`handleDoubleClick` run, which loads vector tiles through the
+       background :class:`_VectorTileLoadTask` (style-cache aware).
+
+    Drag-and-drop keeps working because :meth:`hasDragEnabled` /
+    :meth:`mimeUris` are virtual on :class:`QgsDataItem` itself.
 
     Loads the layer via :mod:`layer_loader` on double-click or drag-and-drop.
     No preview thumbnails are fetched here — that stays in the main window.
@@ -700,19 +725,18 @@ class BasemapLayerItem(QgsLayerItem):
         provider: dict[str, Any],
         basemap: dict[str, Any],
     ) -> None:
-        name = basemap.get("name", "basemap")
-        path = f"basemaps:/xyz/{provider.get('name')}/{name}"
-        tile_type = basemap.get("tile_type", "raster")
-        # The real mimeUri is constructed in :meth:`_build_mime_uri`; the
-        # ``uri`` here is only used for equality / drag-and-drop fallback.
-        dummy_uri = f"basemaps://xyz/{provider.get('name')}/{name}"
-        layer_code = _BROWSER_VTILE if tile_type == "vector" else _BROWSER_RASTER
-        super().__init__(parent, name, path, dummy_uri, layer_code, "")
+        super().__init__(
+            _LEAF_ITEM_TYPE,
+            parent,
+            basemap.get("name", "basemap"),
+            f"basemaps:/xyz/{provider.get('name')}/{basemap.get('name')}",
+        )
         # Leaf node: mark as populated so QGIS does not look for children.
         self.setState(_STATE_POPULATED)
         self._provider = provider
         self._basemap = basemap
 
+        tile_type = basemap.get("tile_type", "raster")
         tags = basemap.get("tags", [])
         type_label = "Vector Tile" if tile_type == "vector" else "XYZ Tile"
         if tile_type == "vector":
@@ -721,13 +745,6 @@ class BasemapLayerItem(QgsLayerItem):
             self.setIcon(QgsApplication.getThemeIcon("mIconXyz.svg"))
         preview = _preview_path(provider, basemap.get("name", ""))
         self.setToolTip(_format_tooltip(preview, tags, type_label))
-
-    def comments(self) -> str:  # noqa: D401
-        """Return empty comments — required to avoid QGIS reading uninitialised
-        ``QgsLayerItem::comments`` when the Browser filter asks for the
-        ``Comment`` role on a Basemaps leaf item.
-        """
-        return ""
 
     # ---- interaction ------------------------------------------------------
 
@@ -793,14 +810,14 @@ class BasemapLayerItem(QgsLayerItem):
         return True
 
 
-class WmsLayerItem(QgsLayerItem):
+class WmsLayerItem(QgsDataItem):
     """A single WMS/WMTS layer leaf node.
 
-    Subclasses :class:`QgsLayerItem` (rather than plain :class:`QgsDataItem`)
-    so QGIS' ``qobject_cast<QgsLayerItem*>`` succeeds — otherwise
-    ``QgsBrowserModel::data`` for the ``Comment``/``LayerMetadata`` roles
-    dereferences a NULL cast and crashes the Browser filter.  The actual
-    layer data is delivered via custom :meth:`mimeUri`/``mimeUris``.
+    See :class:`BasemapLayerItem` for why we subclass the bare
+    :class:`QgsDataItem` and use :data:`_LEAF_ITEM_TYPE`
+    (:class:`Qgis.BrowserItemType.Custom`) instead of inheriting
+    :class:`QgsLayerItem` — it avoids the Browser-filter NULL-cast crash
+    *and* keeps double-click on our own async load path.
     """
 
     def __init__(
@@ -810,11 +827,12 @@ class WmsLayerItem(QgsLayerItem):
         layer_data: dict[str, Any],
     ) -> None:
         title = layer_data.get("layer_title") or layer_data.get("layer_name", "layer")
-        path = f"basemaps:/wms/{provider.get('name')}/{title}"
-        # The real mimeUri is constructed in :meth:`_build_mime_uri`; the
-        # ``uri`` here is only used for equality / drag-and-drop fallback.
-        dummy_uri = f"basemaps://wms/{provider.get('name')}/{title}"
-        super().__init__(parent, title, path, dummy_uri, _BROWSER_RASTER, "")
+        super().__init__(
+            _LEAF_ITEM_TYPE,
+            parent,
+            title,
+            f"basemaps:/wms/{provider.get('name')}/{title}",
+        )
         self.setState(_STATE_POPULATED)
         self._provider = provider
         self._layer_data = layer_data
@@ -826,12 +844,6 @@ class WmsLayerItem(QgsLayerItem):
         )
         preview = _preview_path(provider, title)
         self.setToolTip(_format_tooltip(preview, tags, service_type.upper()))
-
-    def comments(self) -> str:  # noqa: D401
-        """Return empty comments — same reason as
-        :meth:`BasemapLayerItem.comments` (NULL-cast crash workaround).
-        """
-        return ""
 
     def handleDoubleClick(self):
         layer_loader.load_wms_layer(self._provider, self._layer_data)
