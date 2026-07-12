@@ -59,6 +59,7 @@ from qgis.PyQt.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QSplitter,
+    QTabWidget,
     QToolTip,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -1649,6 +1650,15 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                         )
                     )
                     QgsApplication.taskManager().addTask(task)
+                elif tile_type == "group":
+                    # Composite basemaps create a layer group with one layer
+                    # per source; reuse the loader's implementation to avoid
+                    # duplicating the group/style-cache logic here.
+                    from . import layer_loader
+
+                    layer_loader._load_group_tile(
+                        provider, basemap, token, token_param, name
+                    )
                 else:
                     url = self._append_token(basemap["url"], token, token_param)
                     uri = QgsDataSourceUri()
@@ -1714,7 +1724,10 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             )
             if isinstance(bm, dict)
             and "name" in bm
-            and ("url" in bm or bm.get("tile_type") == "vector")
+            and (
+                "url" in bm
+                or bm.get("tile_type") in ("vector", "group")
+            )
         ]
 
         CHUNK = 15
@@ -1728,7 +1741,12 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
             for i in range(start, end):
                 basemap = basemaps[i]
                 tile_type = basemap.get("tile_type", "raster")
-                protocol = "vector" if tile_type == "vector" else "xyz"
+                if tile_type == "vector":
+                    protocol = "vector"
+                elif tile_type == "group":
+                    protocol = "group"
+                else:
+                    protocol = "xyz"
 
                 item = QListWidgetItem(basemap["name"])
                 item.setIcon(provider_icon)
@@ -1763,6 +1781,39 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
                             preview_style_url,
                             is_default_provider,
                         )
+                elif tile_type == "group":
+                    # Composite preview: use the first vector source's tile
+                    # URL + the source's own style_url if present, else the
+                    # shared group style_url.  Multi-source overlay preview is
+                    # intentionally deferred (high complexity, low ROI).
+                    sources = basemap.get("sources", [])
+                    first_vec = next(
+                        (s for s in sources
+                         if s.get("source_type", "vector") == "vector"),
+                        None,
+                    )
+                    if first_vec:
+                        preview_url = self._append_token(
+                            first_vec.get("url", ""), token, token_param
+                        )
+                        # Prefer the source's own style_url; fall back to group.
+                        src_style = first_vec.get("style_url", "").strip()
+                        if src_style:
+                            preview_style_url = self._append_token(
+                                src_style, token, token_param
+                            )
+                        else:
+                            preview_style_url = self._append_token(
+                                basemap.get("style_url", ""), token, token_param
+                            )
+                        if preview_url:
+                            self.preview_manager.request_vector_preview(
+                                provider_name,
+                                basemap["name"],
+                                preview_url,
+                                preview_style_url,
+                                is_default_provider,
+                            )
                 else:
                     preview_url = self._append_token(basemap["url"], token, token_param)
                     self.preview_manager.request_preview(
@@ -3788,7 +3839,13 @@ class BasemapsDialog(QDialog, UIBasemapsBase):
         if items:
             basemap = items[0].data(user_role)
             if isinstance(basemap, dict):
-                protocol = "vector" if basemap.get("tile_type") == "vector" else "xyz"
+                tile_type = basemap.get("tile_type", "raster")
+                if tile_type == "vector":
+                    protocol = "vector"
+                elif tile_type == "group":
+                    protocol = "group"
+                else:
+                    protocol = "xyz"
                 return basemap, protocol
         return None, ""
 
@@ -4495,116 +4552,31 @@ class BasemapInputDialog(QDialog):
 
         layout = QVBoxLayout(self)
 
-        # Name input
+        # Name input (shared, outside tabs)
         name_layout = QHBoxLayout()
         name_label = QLabel(self.tr("Name:") + '<span style="color:red">*</span>')
         self.name_edit = QLineEdit()
+        self.name_edit.setMinimumHeight(24)
         if self.basemap:
             self.name_edit.setText(self.basemap["name"])
         name_layout.addWidget(name_label)
         name_layout.addWidget(self.name_edit)
         layout.addLayout(name_layout)
 
-        # Tile Type (only for non-WMS providers)
-        is_vector = bool(self.basemap and self.basemap.get("tile_type") == "vector")
-        if provider_type != "wms":
-            tile_type_layout = QHBoxLayout()
-            tile_type_label = QLabel(self.tr("Tile Type:"))
-            self.tile_type_combo = QComboBox()
-            self.tile_type_combo.addItems([self.tr("Raster (XYZ)"), self.tr("Vector")])
-            if is_vector:
-                self.tile_type_combo.setCurrentIndex(1)
-            self.tile_type_combo.currentIndexChanged.connect(self._on_tile_type_changed)
-            tile_type_layout.addWidget(tile_type_label)
-            tile_type_layout.addWidget(self.tile_type_combo, 1)
-            layout.addLayout(tile_type_layout)
+        is_wms = provider_type == "wms"
+        is_group = bool(self.basemap and self.basemap.get("tile_type") == "group")
 
-        # Source URL input
-        url_layout = QHBoxLayout()
-        _url_required = '<span style="color:red">*</span>'
-        self.url_label = QLabel(
-            (self.tr("Source URL:") if is_vector else self.tr("URL:")) + _url_required
-        )
-        self.url_edit = QLineEdit()
-        if self.basemap:
-            self.url_edit.setText(self.basemap.get("url", ""))
-        url_layout.addWidget(self.url_label)
-        url_layout.addWidget(self.url_edit)
-        layout.addLayout(url_layout)
+        if is_wms:
+            self._build_wms_fields(layout)
+        else:
+            self._build_tabs(layout)
 
-        # Style URL input (only for vector tiles)
-        self.style_url_layout = QHBoxLayout()
-        style_url_label = QLabel(self.tr("Style URL:"))
-        self.style_url_edit = QLineEdit()
-        if self.basemap:
-            self.style_url_edit.setText(self.basemap.get("style_url", ""))
-        self.style_url_layout.addWidget(style_url_label)
-        self.style_url_layout.addWidget(self.style_url_edit)
-        layout.addLayout(self.style_url_layout)
-        if not is_vector:
-            self._set_style_url_visible(False)
-
-        # Layer settings (only show when WMS type)
-        if provider_type == "wms":
-            layer_group = QGroupBox(self.tr("Layer Settings"))
-            layer_layout = QVBoxLayout()
-
-            # Layer name
-            layer_name_layout = QHBoxLayout()
-            layer_name_label = QLabel(self.tr("Layer Name:"))
-            self.layer_name_edit = QLineEdit()
-            if self.basemap:
-                self.layer_name_edit.setText(self.basemap.get("layer_name", ""))
-            layer_name_layout.addWidget(layer_name_label)
-            layer_name_layout.addWidget(self.layer_name_edit)
-            layer_layout.addLayout(layer_name_layout)
-
-            # Layer title
-            layer_title_layout = QHBoxLayout()
-            layer_title_label = QLabel(self.tr("Layer Title:"))
-            self.layer_title_edit = QLineEdit()
-            if self.basemap:
-                self.layer_title_edit.setText(self.basemap.get("layer_title", ""))
-            layer_title_layout.addWidget(layer_title_label)
-            layer_title_layout.addWidget(self.layer_title_edit)
-            layer_layout.addLayout(layer_title_layout)
-
-            # CRS
-            crs_layout = QHBoxLayout()
-            crs_label = QLabel(self.tr("CRS:"))
-            self.crs_edit = QLineEdit()
-            self.crs_edit.setText(self.tr("EPSG:4326"))  # Default value
-            if self.basemap:
-                self.crs_edit.setText(self.basemap.get("crs", "EPSG:4326"))
-            crs_layout.addWidget(crs_label)
-            crs_layout.addWidget(self.crs_edit)
-            layer_layout.addLayout(crs_layout)
-
-            # Format
-            format_layout = QHBoxLayout()
-            format_label = QLabel(self.tr("Format:"))
-            self.format_combo = QComboBox()
-            self.format_combo.addItems([
-                self.tr("image/png"),
-                self.tr("image/jpeg"),
-                self.tr("image/tiff"),
-            ])
-            if self.basemap:
-                self.format_combo.setCurrentText(
-                    self.basemap.get("format", "image/png")
-                )
-            format_layout.addWidget(format_label)
-            format_layout.addWidget(self.format_combo)
-            layer_layout.addLayout(format_layout)
-
-            layer_group.setLayout(layer_layout)
-            layout.addWidget(layer_group)
-
-        # Tag — store English tag values as item data
+        # Tag (shared, outside tabs)
         tag_layout = QHBoxLayout()
         tag_layout.setSpacing(4)
         tag_label = QLabel(self.tr("Tag:"))
         self.tag_combo = QComboBox()
+        self.tag_combo.setMinimumHeight(24)
         self.tag_combo.addItem("", "")
         for tag in ASSIGNABLE_TAGS:
             self.tag_combo.addItem(
@@ -4619,14 +4591,31 @@ class BasemapInputDialog(QDialog):
         tag_layout.addWidget(self.tag_combo, 1)
         layout.addLayout(tag_layout)
 
-        # ── Layer Metadata (optional) ─────────────────────────────
-        meta_group = QGroupBox(self.tr("Layer Metadata (optional)"))
-        meta_layout = QVBoxLayout(meta_group)
+        # Layer Metadata (shared, outside tabs) — collapsible via a triangle
+        # toggle button; the dialog grows/shrinks as the section expands.
+        self.meta_toggle_btn = QPushButton(self.tr("▶ Layer Metadata (optional)"))
+        self.meta_toggle_btn.setFlat(True)
+        self.meta_toggle_btn.setCheckable(True)
+        self.meta_toggle_btn.setChecked(False)
+        self.meta_toggle_btn.setStyleSheet(
+            "QPushButton { text-align: left; padding: 2px 6px; "
+            "font-weight: bold; border: none; background: transparent; }"
+        )
+        # Make the button span the full width so the label sits flush left.
+        self.meta_toggle_btn.setSizePolicy(
+            QSizePolicy.Expanding if QT_VERSION_INT <= 5 else QSizePolicy.Policy.Expanding,
+            QSizePolicy.Fixed if QT_VERSION_INT <= 5 else QSizePolicy.Policy.Fixed,
+        )
+        layout.addWidget(self.meta_toggle_btn)
 
-        # Website
+        self.meta_container = QWidget()
+        meta_layout = QVBoxLayout(self.meta_container)
+        meta_layout.setContentsMargins(20, 0, 0, 0)
+
         website_layout = QHBoxLayout()
         website_label = QLabel(self.tr("Website:"))
         self.website_edit = QLineEdit()
+        self.website_edit.setMinimumHeight(22)
         self.website_edit.setPlaceholderText("https://...")
         if self.basemap:
             self.website_edit.setText(self.basemap.get("website", ""))
@@ -4634,10 +4623,10 @@ class BasemapInputDialog(QDialog):
         website_layout.addWidget(self.website_edit)
         meta_layout.addLayout(website_layout)
 
-        # Copyright
         copyright_layout = QHBoxLayout()
         copyright_label = QLabel(self.tr("Copyright:"))
         self.copyright_edit = QLineEdit()
+        self.copyright_edit.setMinimumHeight(22)
         self.copyright_edit.setPlaceholderText("© ...")
         if self.basemap:
             self.copyright_edit.setText(self.basemap.get("copyright", ""))
@@ -4645,10 +4634,10 @@ class BasemapInputDialog(QDialog):
         copyright_layout.addWidget(self.copyright_edit)
         meta_layout.addLayout(copyright_layout)
 
-        # Terms of Use
         terms_layout = QHBoxLayout()
         terms_label = QLabel(self.tr("Terms of Use:"))
         self.terms_edit = QLineEdit()
+        self.terms_edit.setMinimumHeight(22)
         self.terms_edit.setPlaceholderText("https://...")
         if self.basemap:
             self.terms_edit.setText(self.basemap.get("terms_of_use", ""))
@@ -4656,10 +4645,10 @@ class BasemapInputDialog(QDialog):
         terms_layout.addWidget(self.terms_edit)
         meta_layout.addLayout(terms_layout)
 
-        # Description
-        desc_layout = QVBoxLayout()
+        desc_layout = QHBoxLayout()
         desc_label = QLabel(self.tr("Description:"))
         self.desc_edit = QLineEdit()
+        self.desc_edit.setMinimumHeight(22)
         self.desc_edit.setPlaceholderText(self.tr("Brief description of the layer..."))
         if self.basemap:
             self.desc_edit.setText(self.basemap.get("description", ""))
@@ -4667,7 +4656,9 @@ class BasemapInputDialog(QDialog):
         desc_layout.addWidget(self.desc_edit)
         meta_layout.addLayout(desc_layout)
 
-        layout.addWidget(meta_group)
+        self.meta_container.setVisible(False)
+        layout.addWidget(self.meta_container)
+        self.meta_toggle_btn.toggled.connect(self._on_meta_toggled)
 
         # Buttons
         button_box = QDialogButtonBox(button_ok | button_cancel)
@@ -4675,16 +4666,567 @@ class BasemapInputDialog(QDialog):
         self._ok_button = button_box.button(button_ok)
         self._update_ok_state()
         self.name_edit.textChanged.connect(self._update_ok_state)
-        self.url_edit.textChanged.connect(self._update_ok_state)
-        button_box.accepted.connect(self.accept)
+        if hasattr(self, "url_edit"):
+            self.url_edit.textChanged.connect(self._update_ok_state)
+        if hasattr(self, "group_sources_list"):
+            self.group_sources_list.model().rowsInserted.connect(self._update_ok_state)
+            self.group_sources_list.model().rowsRemoved.connect(self._update_ok_state)
+        button_box.accepted.connect(self._validate_and_accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
 
+        self.resize(580, 520)
+        self.setMinimumSize(540, 360)
+
+        # Now that metadata is built, wire mode-change and apply the initial
+        # state (dialog height + metadata fold + container visibility).
+        if hasattr(self, "mode_combo"):
+            self.mode_combo.currentIndexChanged.connect(self._on_mode_changed)
+            if self.basemap and self.basemap.get("tile_type") == "group":
+                self.mode_combo.setCurrentIndex(1)
+            self._on_mode_changed(self.mode_combo.currentIndex())
+
+    # ── WMS fields (unchanged layout) ──────────────────────────────
+
+    def _build_wms_fields(self, layout: QVBoxLayout) -> None:
+        """Build WMS-specific fields (URL + Layer Settings group)."""
+        url_layout = QHBoxLayout()
+        self.url_label = QLabel(self.tr("URL:") + '<span style="color:red">*</span>')
+        self.url_edit = QLineEdit()
+        self.url_edit.setMinimumHeight(24)
+        if self.basemap:
+            self.url_edit.setText(self.basemap.get("url", ""))
+        url_layout.addWidget(self.url_label)
+        url_layout.addWidget(self.url_edit)
+        layout.addLayout(url_layout)
+
+        layer_group = QGroupBox(self.tr("Layer Settings"))
+        layer_layout = QVBoxLayout()
+
+        layer_name_layout = QHBoxLayout()
+        layer_name_label = QLabel(self.tr("Layer Name:"))
+        self.layer_name_edit = QLineEdit()
+        self.layer_name_edit.setMinimumHeight(24)
+        if self.basemap:
+            self.layer_name_edit.setText(self.basemap.get("layer_name", ""))
+        layer_name_layout.addWidget(layer_name_label)
+        layer_name_layout.addWidget(self.layer_name_edit)
+        layer_layout.addLayout(layer_name_layout)
+
+        layer_title_layout = QHBoxLayout()
+        layer_title_label = QLabel(self.tr("Layer Title:"))
+        self.layer_title_edit = QLineEdit()
+        self.layer_title_edit.setMinimumHeight(24)
+        if self.basemap:
+            self.layer_title_edit.setText(self.basemap.get("layer_title", ""))
+        layer_title_layout.addWidget(layer_title_label)
+        layer_title_layout.addWidget(self.layer_title_edit)
+        layer_layout.addLayout(layer_title_layout)
+
+        crs_layout = QHBoxLayout()
+        crs_label = QLabel(self.tr("CRS:"))
+        self.crs_edit = QLineEdit()
+        self.crs_edit.setMinimumHeight(24)
+        self.crs_edit.setText(self.tr("EPSG:4326"))
+        if self.basemap:
+            self.crs_edit.setText(self.basemap.get("crs", "EPSG:4326"))
+        crs_layout.addWidget(crs_label)
+        crs_layout.addWidget(self.crs_edit)
+        layer_layout.addLayout(crs_layout)
+
+        format_layout = QHBoxLayout()
+        format_label = QLabel(self.tr("Format:"))
+        self.format_combo = QComboBox()
+        self.format_combo.setMinimumHeight(24)
+        self.format_combo.addItems([
+            self.tr("image/png"),
+            self.tr("image/jpeg"),
+            self.tr("image/tiff"),
+        ])
+        if self.basemap:
+            self.format_combo.setCurrentText(
+                self.basemap.get("format", "image/png")
+            )
+        format_layout.addWidget(format_label)
+        format_layout.addWidget(self.format_combo)
+        layer_layout.addLayout(format_layout)
+
+        layer_group.setLayout(layer_layout)
+        layout.addWidget(layer_group)
+
+    # ── XYZ: Single Layer + Grouped Layers (combo + show/hide) ──────
+
+    def _build_tabs(self, layout: QVBoxLayout) -> None:
+        """Build the Single Layer / Grouped Layers UI for XYZ providers.
+
+        A drop-down menu controls which set of fields is visible.  All
+        fields live directly on the main layout (no stacked container) so
+        they share the same visual level as Name / Type / Tag.
+        """
+        is_group = bool(self.basemap and self.basemap.get("tile_type") == "group")
+        is_vector = bool(self.basemap and self.basemap.get("tile_type") == "vector")
+
+        # Drop-down selector
+        mode_layout = QHBoxLayout()
+        mode_label = QLabel(self.tr("Type:"))
+        self.mode_combo = QComboBox()
+        self.mode_combo.setMinimumHeight(24)
+        self.mode_combo.addItems([self.tr("Single Layer"), self.tr("Grouped Layers")])
+        mode_layout.addWidget(mode_label)
+        mode_layout.addWidget(self.mode_combo, 1)
+        layout.addLayout(mode_layout)
+
+        # ── Single Layer fields ─────────────────────────────────────
+        self.single_container = QWidget()
+        single_layout = QVBoxLayout(self.single_container)
+        single_layout.setContentsMargins(0, 0, 0, 0)
+
+        tile_type_layout = QHBoxLayout()
+        tile_type_label = QLabel(self.tr("Tile Type:"))
+        self.tile_type_combo = QComboBox()
+        self.tile_type_combo.setMinimumHeight(24)
+        self.tile_type_combo.addItems([self.tr("Raster (XYZ)"), self.tr("Vector")])
+        if is_vector:
+            self.tile_type_combo.setCurrentIndex(1)
+        self.tile_type_combo.currentIndexChanged.connect(self._on_tile_type_changed)
+        tile_type_layout.addWidget(tile_type_label)
+        tile_type_layout.addWidget(self.tile_type_combo, 1)
+        single_layout.addLayout(tile_type_layout)
+
+        url_layout = QHBoxLayout()
+        _url_required = '<span style="color:red">*</span>'
+        self.url_label = QLabel(
+            (self.tr("Source URL:") if is_vector else self.tr("URL:")) + _url_required
+        )
+        self.url_edit = QLineEdit()
+        self.url_edit.setMinimumHeight(24)
+        if self.basemap and not is_group:
+            self.url_edit.setText(self.basemap.get("url", ""))
+        url_layout.addWidget(self.url_label)
+        url_layout.addWidget(self.url_edit)
+        single_layout.addLayout(url_layout)
+
+        self.style_url_layout = QHBoxLayout()
+        style_url_label = QLabel(self.tr("Style URL:"))
+        self.style_url_edit = QLineEdit()
+        self.style_url_edit.setMinimumHeight(24)
+        if self.basemap and not is_group:
+            self.style_url_edit.setText(self.basemap.get("style_url", ""))
+        self.style_url_layout.addWidget(style_url_label)
+        self.style_url_layout.addWidget(self.style_url_edit)
+        single_layout.addLayout(self.style_url_layout)
+        if not is_vector:
+            self._set_style_url_visible(False)
+
+        layout.addWidget(self.single_container)
+
+        # ── Grouped Layers fields ───────────────────────────────────
+        self.group_container = QWidget()
+        group_layout = QVBoxLayout(self.group_container)
+        group_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Group Style URL (optional, shared fallback for vector sources)
+        group_style_layout = QHBoxLayout()
+        group_style_label = QLabel(self.tr("Group Style:"))
+        self.group_style_url_edit = QLineEdit()
+        self.group_style_url_edit.setMinimumHeight(24)
+        self.group_style_url_edit.setPlaceholderText(
+            self.tr("Optional shared style URL for the group")
+        )
+        if self.basemap and is_group:
+            self.group_style_url_edit.setText(self.basemap.get("style_url", ""))
+        group_style_layout.addWidget(group_style_label)
+        group_style_layout.addWidget(self.group_style_url_edit)
+        group_layout.addLayout(group_style_layout)
+
+        # Source Layer editor group box
+        source_box = QGroupBox(self.tr("Source Layer"))
+        source_layout = QVBoxLayout(source_box)
+        # Prevent the source editor from being compressed when the dialog
+        # is resized — set a fixed vertical policy and enough minimum height
+        # for the title + 4 rows of inputs.
+        source_box.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum
+        )
+        source_box.setMinimumHeight(160)
+
+        # Source tile type
+        src_type_layout = QHBoxLayout()
+        src_type_label = QLabel(self.tr("Tile Type:"))
+        self.group_src_type_combo = QComboBox()
+        self.group_src_type_combo.setMinimumHeight(24)
+        self.group_src_type_combo.addItems([self.tr("Vector"), self.tr("Raster")])
+        self.group_src_type_combo.currentIndexChanged.connect(
+            self._on_group_src_type_changed
+        )
+        src_type_layout.addWidget(src_type_label)
+        src_type_layout.addWidget(self.group_src_type_combo, 1)
+        source_layout.addLayout(src_type_layout)
+
+        # Source name
+        src_name_layout = QHBoxLayout()
+        src_name_label = QLabel(self.tr("Source Name:") + '<span style="color:red">*</span>')
+        self.group_src_name_edit = QLineEdit()
+        self.group_src_name_edit.setMinimumHeight(24)
+        src_name_layout.addWidget(src_name_label)
+        src_name_layout.addWidget(self.group_src_name_edit)
+        source_layout.addLayout(src_name_layout)
+
+        # Source URL
+        src_url_layout = QHBoxLayout()
+        src_url_label = QLabel(self.tr("Source URL:") + '<span style="color:red">*</span>')
+        self.group_src_url_edit = QLineEdit()
+        self.group_src_url_edit.setMinimumHeight(24)
+        src_url_layout.addWidget(src_url_label)
+        src_url_layout.addWidget(self.group_src_url_edit)
+        source_layout.addLayout(src_url_layout)
+
+        # Per-source Style URL (optional, vector only) — hidden for raster
+        self.group_src_style_layout = QHBoxLayout()
+        self.group_src_style_label = QLabel(self.tr("Style URL:"))
+        self.group_src_style_edit = QLineEdit()
+        self.group_src_style_edit.setMinimumHeight(24)
+        self.group_src_style_edit.setPlaceholderText(
+            self.tr("Optional — overrides Group Style for this source")
+        )
+        self.group_src_style_layout.addWidget(self.group_src_style_label)
+        self.group_src_style_layout.addWidget(self.group_src_style_edit)
+        source_layout.addLayout(self.group_src_style_layout)
+
+        group_layout.addWidget(source_box)
+
+        # Add (New) + Remove buttons
+        src_btn_layout = QHBoxLayout()
+        self.group_add_btn = QPushButton(self.tr("New"))
+        self.group_add_btn.setMinimumHeight(24)
+        self.group_add_btn.clicked.connect(self._on_group_add_source)
+        self.group_remove_btn = QPushButton(self.tr("Remove"))
+        self.group_remove_btn.setMinimumHeight(24)
+        self.group_remove_btn.clicked.connect(self._on_group_remove_source)
+        self.group_remove_btn.setEnabled(False)
+        src_btn_layout.addWidget(self.group_add_btn)
+        src_btn_layout.addWidget(self.group_remove_btn)
+        src_btn_layout.addStretch()
+        group_layout.addLayout(src_btn_layout)
+
+        # Sources list — capped height so it no longer stretches the dialog
+        self.group_sources_list = QListWidget()
+        self.group_sources_list.setIconSize(QSize(14, 14))
+        self.group_sources_list.setSelectionMode(
+            QAbstractItemView.SingleSelection
+            if QT_VERSION_INT <= 5
+            else QAbstractItemView.SelectionMode.SingleSelection
+        )
+        self.group_sources_list.setMaximumHeight(150)
+        self.group_sources_list.currentRowChanged.connect(
+            self._on_group_source_selected
+        )
+        group_layout.addWidget(self.group_sources_list)
+
+        # Source list — starts empty; only stored sources are seeded.
+        self._group_sources: list[dict] = []
+        if is_group:
+            self._group_sources = list(self.basemap.get("sources", []))
+            self._refresh_group_sources_list()
+            if self._group_sources:
+                self.group_sources_list.setCurrentRow(0)
+
+        # Real-time update: commit editor fields to the selected source on
+        # focus loss / tile-type switch.
+        self.group_src_url_edit.editingFinished.connect(self._commit_current_source)
+        self.group_src_name_edit.editingFinished.connect(self._commit_current_source)
+        self.group_src_style_edit.editingFinished.connect(self._commit_current_source)
+
+        # Initial visibility of per-source style field depends on tile type.
+        self._set_group_src_style_visible(
+            self.group_src_type_combo.currentIndex() == 0  # 0 = Vector
+        )
+
+        layout.addWidget(self.group_container)
+
+        # Wire the combo to OK-state updates now; mode-changed (which touches
+        # meta_toggle_btn / meta_container) is connected later in __init__
+        # after the metadata section is built, and the initial call is made
+        # at the very end of __init__.
+        self.mode_combo.currentIndexChanged.connect(self._update_ok_state)
+
+        # If editing an existing group, pre-select Grouped Layers.  The
+        # container visibility will be synced by the initial _on_mode_changed
+        # call at the end of __init__.
+        if is_group:
+            self.group_container.setVisible(True)
+            self.single_container.setVisible(False)
+        else:
+            self.group_container.setVisible(False)
+            self.single_container.setVisible(True)
+
+    # ── Group source management ─────────────────────────────────────
+
+    @staticmethod
+    def _source_icon(source: dict) -> "QIcon":
+        """Layer-type icon for a source, matching the Browser panel."""
+        if source.get("source_type") == "raster":
+            return QgsApplication.getThemeIcon("mIconXyz.svg")
+        return QgsApplication.getThemeIcon("mIconVectorTileLayer.svg")
+
+    def _set_group_src_style_visible(self, visible: bool) -> None:
+        """Show or hide the per-source Style URL row (vector only)."""
+        for i in range(self.group_src_style_layout.count()):
+            w = self.group_src_style_layout.itemAt(i).widget()
+            if w:
+                w.setVisible(visible)
+
+    def _on_group_src_type_changed(self, index: int) -> None:
+        """Commit the tile-type change and toggle per-source style visibility."""
+        is_vector = index == 0  # 0 = Vector, 1 = Raster
+        self._set_group_src_style_visible(is_vector)
+        self._commit_current_source()
+
+    def _on_group_add_source(self) -> None:
+        """Validate and append a new source to the list (New button).
+
+        Both URL and Name are required — no empty records are created.
+        The Tile Type combo keeps its current value so consecutive adds
+        inherit the last-edited type.
+        """
+        url = self.group_src_url_edit.text().strip()
+        name = self.group_src_name_edit.text().strip()
+        if not url or not name:
+            MessageBox.warning(
+                self.tr("Please fill in both Source URL and Source Name before adding."),
+                self.tr("Warning"),
+                self,
+            )
+            return
+        is_raster = self.group_src_type_combo.currentIndex() == 1
+        source = {"url": url, "source_name": name}
+        if is_raster:
+            source["source_type"] = "raster"
+        else:
+            style_url = self.group_src_style_edit.text().strip()
+            if style_url:
+                source["style_url"] = style_url
+        self._group_sources.append(source)
+        self._refresh_group_sources_list()
+        new_row = len(self._group_sources) - 1
+        self.group_sources_list.setCurrentRow(new_row)
+        # Clear text fields, keep tile-type combo.
+        self.group_src_url_edit.clear()
+        self.group_src_name_edit.clear()
+        self.group_src_style_edit.clear()
+        self.group_src_url_edit.setFocus()
+        self._update_ok_state()
+
+    def _on_group_remove_source(self) -> None:
+        """Remove the selected source row from the list."""
+        row = self.group_sources_list.currentRow()
+        if 0 <= row < len(self._group_sources):
+            del self._group_sources[row]
+            self._refresh_group_sources_list()
+            self.group_src_url_edit.clear()
+            self.group_src_name_edit.clear()
+            self.group_src_style_edit.clear()
+            self.group_remove_btn.setEnabled(False)
+            self._update_ok_state()
+
+    def _on_group_source_selected(self, row: int) -> None:
+        """Populate the source editor fields when a list item is selected.
+
+        NOTE: we intentionally do NOT commit here — committing on selection
+        was overwriting the previous row with the newly-selected row's empty
+        editor values.  Real-time commits happen only on focus loss /
+        tile-type switch, driven by the editor signals.
+        """
+        if 0 <= row < len(self._group_sources):
+            source = self._group_sources[row]
+            self.group_src_url_edit.blockSignals(True)
+            self.group_src_name_edit.blockSignals(True)
+            self.group_src_type_combo.blockSignals(True)
+            self.group_src_style_edit.blockSignals(True)
+            self.group_src_url_edit.setText(source.get("url", ""))
+            self.group_src_name_edit.setText(source.get("source_name", ""))
+            is_raster = source.get("source_type") == "raster"
+            self.group_src_type_combo.setCurrentIndex(1 if is_raster else 0)
+            self.group_src_style_edit.setText(source.get("style_url", ""))
+            self.group_src_url_edit.blockSignals(False)
+            self.group_src_name_edit.blockSignals(False)
+            self.group_src_type_combo.blockSignals(False)
+            self.group_src_style_edit.blockSignals(False)
+            # Per-source style field visible only for vector sources.
+            self._set_group_src_style_visible(not is_raster)
+            self.group_remove_btn.setEnabled(True)
+        else:
+            self.group_remove_btn.setEnabled(False)
+
+    def _commit_current_source(self) -> None:
+        """Write the current editor fields back to the selected source row.
+
+        Called on focus loss of the URL/Name/Style fields and on tile-type
+        switch.  Updates the affected list item's text + icon in place
+        without disturbing the current selection.
+        """
+        row = self.group_sources_list.currentRow()
+        if row < 0 or row >= len(self._group_sources):
+            return
+        url = self.group_src_url_edit.text().strip()
+        name = self.group_src_name_edit.text().strip()
+        is_raster = self.group_src_type_combo.currentIndex() == 1
+        source = self._group_sources[row]
+        source["url"] = url
+        source["source_name"] = name
+        if is_raster:
+            source["source_type"] = "raster"
+            source.pop("style_url", None)
+        else:
+            source["source_type"] = "vector"
+            style_url = self.group_src_style_edit.text().strip()
+            if style_url:
+                source["style_url"] = style_url
+            else:
+                source.pop("style_url", None)
+        # In-place refresh of the single row label + icon.
+        item = self.group_sources_list.item(row)
+        if item is not None:
+            item.setText(self._source_label(source))
+            item.setIcon(self._source_icon(source))
+        self._update_ok_state()
+
+    @staticmethod
+    def _source_label(source: dict) -> str:
+        """Human-readable label for a source list row (icon carries the type)."""
+        name = source.get("source_name", "").strip()
+        url = source.get("url", "").strip()
+        if not name and not url:
+            return "(blank)"
+        return f"{name or '?'}  {url}"
+
+    def _refresh_group_sources_list(self) -> None:
+        """Rebuild the QListWidget from ``self._group_sources``."""
+        prev_row = self.group_sources_list.currentRow()
+        self.group_sources_list.clear()
+        for source in self._group_sources:
+            item = QListWidgetItem(self._source_label(source))
+            item.setIcon(self._source_icon(source))
+            self.group_sources_list.addItem(item)
+        if 0 <= prev_row < len(self._group_sources):
+            self.group_sources_list.setCurrentRow(prev_row)
+
+    def _collect_group_sources(self) -> list[dict]:
+        """Return the list of source dicts for the group basemap."""
+        return [dict(s) for s in self._group_sources]
+
+    def _on_mode_changed(self, index: int) -> None:
+        """Switch between Single Layer and Grouped Layers field sets.
+
+        Single Layer (0): metadata expanded by default.
+        Grouped Layers (1): metadata collapsed by default.
+        Dialog height follows the actual layout size hint.
+        """
+        is_group = index == 1
+        self.single_container.setVisible(not is_group)
+        self.group_container.setVisible(is_group)
+        # Set metadata fold state directly, without triggering
+        # _on_meta_toggled's own resize (which would compound with ours).
+        self.meta_toggle_btn.blockSignals(True)
+        if is_group:
+            self.meta_toggle_btn.setChecked(False)
+            self.meta_toggle_btn.setText(self.tr("▶ Layer Metadata (optional)"))
+            self.meta_container.setVisible(False)
+        else:
+            self.meta_toggle_btn.setChecked(True)
+            self.meta_toggle_btn.setText(self.tr("▼ Layer Metadata (optional)"))
+            self.meta_container.setVisible(True)
+        self.meta_toggle_btn.blockSignals(False)
+        # Let Qt recompute the layout and clamp the dialog to the actual
+        # minimum height needed for the current mode.  This prevents the
+        # user from dragging the dialog smaller than its content requires.
+        self.layout().activate()
+        hint_h = self.layout().sizeHint().height()
+        min_h = max(360, hint_h + 20)
+        self.setMinimumHeight(min_h)
+        self.resize(self.width(), min_h)
+
+    def _on_meta_toggled(self, checked: bool) -> None:
+        """Expand/collapse the Layer Metadata section.
+
+        Swaps the triangle glyph, shows/hides the content container, and
+        grows/shrinks the dialog height to match so the layout stays compact.
+        """
+        self.meta_toggle_btn.setText(
+            (self.tr("▼ Layer Metadata (optional)") if checked
+             else self.tr("▶ Layer Metadata (optional)"))
+        )
+        self.meta_container.setVisible(checked)
+        # Let Qt recompute the layout and clamp the dialog so that dragging
+        # cannot compress the content below what the widgets actually need.
+        self.layout().activate()
+        hint_h = self.layout().sizeHint().height()
+        min_h = max(360, hint_h + 20)
+        self.setMinimumHeight(min_h)
+        self.resize(self.width(), min_h)
+
+    def _validate_and_accept(self) -> None:
+        """OK guard: validate required fields before accepting the dialog."""
+        # Capture any pending edits on the Layer Group tab.
+        self._commit_current_source()
+
+        name = self.name_edit.text().strip()
+        if not name:
+            MessageBox.warning(
+                self.tr("Please fill in the Name field."),
+                self.tr("Warning"),
+                self,
+            )
+            return
+
+        if hasattr(self, "mode_combo") and self.mode_combo.currentIndex() == 1:
+            # Grouped Layers — every source must have both url + name.
+            missing = []
+            for i, source in enumerate(self._group_sources, start=1):
+                if not source.get("url", "").strip():
+                    missing.append(self.tr("Source #{} is missing URL.").format(i))
+                if not source.get("source_name", "").strip():
+                    missing.append(self.tr("Source #{} is missing Source Name.").format(i))
+            if missing:
+                MessageBox.warning(
+                    "\n".join(missing),
+                    self.tr("Warning"),
+                    self,
+                )
+                return
+            # Must have at least one source.
+            if not self._group_sources:
+                MessageBox.warning(
+                    self.tr("Please add at least one source with URL and Source Name."),
+                    self.tr("Warning"),
+                    self,
+                )
+                return
+
+        self.accept()
+
+    # ── Shared helpers ──────────────────────────────────────────────
+
     def _update_ok_state(self) -> None:
-        """Enable OK only when both Name and URL are non-empty."""
+        """Enable OK based on the current tab and required fields."""
         has_name = bool(self.name_edit.text().strip())
-        has_url = bool(self.url_edit.text().strip())
-        self._ok_button.setEnabled(has_name and has_url)
+        if not has_name:
+            self._ok_button.setEnabled(False)
+            return
+
+        if hasattr(self, "mode_combo"):
+            if self.mode_combo.currentIndex() == 0:
+                # Single Layer — needs URL
+                has_url = bool(self.url_edit.text().strip())
+                self._ok_button.setEnabled(has_url)
+            else:
+                # Grouped Layers — needs at least one source.
+                self._ok_button.setEnabled(len(self._group_sources) > 0)
+        elif hasattr(self, "url_edit"):
+            # WMS — needs URL
+            self._ok_button.setEnabled(bool(self.url_edit.text().strip()))
+        else:
+            self._ok_button.setEnabled(True)
 
     def _on_tile_type_changed(self, index: int) -> None:
         """Toggle visibility of style URL field based on tile type selection."""
@@ -4733,23 +5275,39 @@ class BasemapInputDialog(QDialog):
             }
             data.update(metadata)
             return data
-        else:
-            is_vector = (
-                hasattr(self, "tile_type_combo")
-                and self.tile_type_combo.currentIndex() == 1
-            )
+
+        # XYZ — dispatch by mode
+        if hasattr(self, "mode_combo") and self.mode_combo.currentIndex() == 1:
+            # Grouped Layers
             data = {
                 "name": self.name_edit.text(),
-                "tile_type": "vector" if is_vector else "raster",
-                "url": self.url_edit.text(),
+                "tile_type": "group",
                 "tags": tags,
             }
-            if is_vector and hasattr(self, "style_url_edit"):
-                style_url = self.style_url_edit.text().strip()
-                if style_url:
-                    data["style_url"] = style_url
+            style_url = self.group_style_url_edit.text().strip()
+            if style_url:
+                data["style_url"] = style_url
+            data["sources"] = self._collect_group_sources()
             data.update(metadata)
             return data
+
+        # Single Layer tab
+        is_vector = (
+            hasattr(self, "tile_type_combo")
+            and self.tile_type_combo.currentIndex() == 1
+        )
+        data = {
+            "name": self.name_edit.text(),
+            "tile_type": "vector" if is_vector else "raster",
+            "url": self.url_edit.text(),
+            "tags": tags,
+        }
+        if is_vector and hasattr(self, "style_url_edit"):
+            style_url = self.style_url_edit.text().strip()
+            if style_url:
+                data["style_url"] = style_url
+        data.update(metadata)
+        return data
 
 
 class TagEditDialog(QDialog):

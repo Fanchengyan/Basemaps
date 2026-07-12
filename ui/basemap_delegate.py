@@ -29,6 +29,7 @@ TAG_COLORS: dict[str, QColor] = {
 PROTOCOL_COLORS: dict[str, QColor] = {
     "xyz": QColor("#000000"),
     "vector": QColor("#000000"),
+    "group": QColor("#7C3AED"),
     "wms": QColor("#000000"),
     "wmts": QColor("#000000"),
 }
@@ -206,9 +207,9 @@ class BasemapCardDelegate(QStyledItemDelegate):
             display_text_rect, Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter | Qt.TextFlag.TextWordWrap, name
         )
 
-        # Protocol badge (top-left corner, only for vector tiles)
+        # Protocol badge (top-left corner, for vector and group tiles)
         protocol = index.data(Qt.ItemDataRole.UserRole + 12)
-        if protocol and protocol == "vector":
+        if protocol and protocol in ("vector", "group"):
             painter.save()
             proto_color = PROTOCOL_COLORS.get(protocol, QColor(0, 0, 0))
             proto_label = QCoreApplication.translate("BasemapInputDialog", protocol.capitalize())
@@ -230,10 +231,18 @@ class BasemapCardDelegate(QStyledItemDelegate):
                 proto_w,
                 proto_h,
             )
+            # Group badge: black background with light purple text; others: color
+            # background with white text.
+            if protocol == "group":
+                bg_color = QColor("#000000")
+                text_color = QColor("#FF0055")
+            else:
+                bg_color = proto_color
+                text_color = QColor(255, 255, 255)
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QBrush(proto_color))
+            painter.setBrush(QBrush(bg_color))
             painter.drawRoundedRect(proto_rect, 3, 3)
-            painter.setPen(QColor(255, 255, 255))
+            painter.setPen(text_color)
             painter.drawText(proto_rect, Qt.AlignmentFlag.AlignCenter, proto_label)
             painter.restore()
 
