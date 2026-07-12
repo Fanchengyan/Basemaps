@@ -858,10 +858,14 @@ class BasemapLayerItem(QgsDataItem):
 
         tile_type = basemap.get("tile_type", "raster")
         tags = basemap.get("tags", [])
-        type_label = "Vector Tile" if tile_type == "vector" else "XYZ Tile"
         if tile_type == "vector":
+            type_label = "Vector Tile"
+            self.setIcon(QgsApplication.getThemeIcon("mIconVectorTileLayer.svg"))
+        elif tile_type == "group":
+            type_label = "Composite Tile"
             self.setIcon(QgsApplication.getThemeIcon("mIconVectorTileLayer.svg"))
         else:
+            type_label = "XYZ Tile"
             self.setIcon(QgsApplication.getThemeIcon("mIconXyz.svg"))
         preview = _preview_path(provider, basemap.get("name", ""))
         self.setToolTip(_format_tooltip(preview, tags, type_label))
@@ -878,6 +882,45 @@ class BasemapLayerItem(QgsDataItem):
         token_param = self._provider.get(
             "token_param", layer_loader.DEFAULT_TOKEN_PARAM
         )
+
+        # Composite basemaps contain multiple sources; drag-and-drop only
+        # supports a single URI, so fall back to the first vector source.
+        # The full multi-layer group is created via double-click.
+        if tile_type == "group":
+            sources = self._basemap.get("sources", [])
+            first_vec = next(
+                (s for s in sources
+                 if s.get("source_type", "vector") == "vector"),
+                None,
+            )
+            if not first_vec:
+                # No vector source — nothing meaningful to drag.
+                return _mime_uri(self.name(), "xyz", "vector-tile", "")
+            url = layer_loader.append_token(
+                first_vec.get("url", ""), token, token_param
+            )
+            style_url = layer_loader.append_token(
+                self._basemap.get("style_url", ""), token, token_param
+            )
+            uri = QgsDataSourceUri()
+            uri.setParam("type", "xyz")
+            uri.setParam("url", url)
+            encoded = str(uri.encodedUri(), "utf-8")
+            if style_url:
+                source = self._provider.get("source_file", "")
+                is_default = "/providers/default/" in source.replace("\\", "/")
+                cache = get_style_cache()
+                cached = cache.get_cached_style(
+                    self._provider.get("name", ""),
+                    self._basemap.get("name", ""),
+                    is_default,
+                )
+                if cached:
+                    encoded += f"&styleUrl={safe_file_url(str(cached))}"
+                else:
+                    encoded += f"&styleUrl={style_url}"
+            return _mime_uri(self.name(), "xyz", "vector-tile", encoded)
+
         url = layer_loader.append_token(
             self._basemap.get("url", ""), token, token_param
         )

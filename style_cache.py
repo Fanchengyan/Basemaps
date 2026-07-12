@@ -33,6 +33,7 @@ from qgis.core import QgsBlockingNetworkRequest
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.PyQt.QtCore import QUrl
 
+from ._vtile_style_util import normalize_style_text
 from .messageTool import Logger
 
 # Qt5/Qt6 compatibility for the HTTP-status attribute enum scope.
@@ -131,14 +132,23 @@ class StyleCache:
     ) -> None:
         """Persist *style_text* and *etag* to the cache.
 
-        Relative URLs in the style document (``sprite``, ``glyphs``, and
-        ``sources[*].url``) are rewritten to absolute URLs against
-        *style_url* before saving.  Without this rewrite QGIS would resolve
-        the relative paths against the local ``file://`` cache location,
-        where those resources do not exist.
+        The document is normalized via :func:`normalize_style_text` before
+        saving:
+
+        * **Mapbox style** → relative ``sprite`` / ``glyphs`` /
+          ``sources[*].url`` are rewritten to absolute URLs against
+          *style_url* (otherwise QGIS resolves them against the local
+          ``file://`` cache path, where those resources do not exist).
+        * **TileJSON** (when *style_url* was mistakenly pointed at a
+          ``tiles.json`` endpoint) → a generic Mapbox v8 style is
+          synthesized from ``vector_layers`` so the layer renders with
+          visible colors instead of an empty style.
+
+        Non-JSON or unrecognized payloads are persisted unchanged as a
+        best-effort cache.
         """
         if style_url:
-            style_text = self._rewrite_relative_urls(style_text, style_url)
+            style_text = normalize_style_text(style_text, style_url, basemap_name)
         path = self._style_path(provider_name, basemap_name, is_default)
         try:
             path.write_text(style_text, encoding="utf-8")
@@ -300,47 +310,3 @@ class StyleCache:
                     p.unlink()
                 except OSError as exc:
                     Logger.warning(f"Failed to delete style cache {p}: {exc}")
-
-    @staticmethod
-    def _rewrite_relative_urls(style_text: str, base_url: str) -> str:
-        """Rewrite relative URLs in a Mapbox style document to absolute.
-
-        Rewrites ``sprite``, ``glyphs``, and every ``sources[*].url`` that
-        contains a relative path.  ``{fontstack}``, ``{range}`` and similar
-        template placeholders are preserved — only the path portion is
-        joined with *base_url*.
-
-        Returns the original text unchanged when the JSON cannot be parsed.
-        """
-        import json
-        from urllib.parse import urljoin
-
-        try:
-            data = json.loads(style_text)
-        except (ValueError, TypeError):
-            return style_text
-
-        changed = False
-        for field in ("sprite", "glyphs"):
-            value = data.get(field)
-            if isinstance(value, str) and not value.startswith(("http://", "https://", "file://")):
-                data[field] = urljoin(base_url, value)
-                changed = True
-
-        sources = data.get("sources")
-        if isinstance(sources, dict):
-            for src in sources.values():
-                if not isinstance(src, dict):
-                    continue
-                url = src.get("url")
-                if isinstance(url, str) and not url.startswith(("http://", "https://", "file://")):
-                    src["url"] = urljoin(base_url, url)
-                    changed = True
-
-        if not changed:
-            return style_text
-
-        try:
-            return json.dumps(data, ensure_ascii=False, indent=2)
-        except (ValueError, TypeError):
-            return style_text

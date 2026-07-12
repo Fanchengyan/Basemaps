@@ -2051,7 +2051,9 @@ class PreviewManager(QObject):
     @classmethod
     def _symbol_surrogate_color(cls, source_layer: str, index: int) -> str:
         """Return a deterministic preview color for a symbol source layer."""
-        fill_color, line_color = cls._layer_palette(source_layer, index)
+        from ._vtile_style_util import layer_palette as _layer_palette
+
+        fill_color, line_color = _layer_palette(source_layer, index)
         return line_color or fill_color
 
     @classmethod
@@ -2117,110 +2119,38 @@ class PreviewManager(QObject):
 
     @staticmethod
     def _looks_like_mapbox_style(payload: dict) -> bool:
-        """Return whether a JSON payload resembles a Mapbox style."""
-        return bool(
-            payload.get("version") and payload.get("layers") and payload.get("sources")
-        )
+        """Return whether a JSON payload resembles a Mapbox style.
+
+        Thin delegating proxy over :func:`_vtile_style_util.looks_like_mapbox_style`
+        so the preview pipeline shares one implementation with the style
+        cache used by the real layer-loading path.
+        """
+        from ._vtile_style_util import looks_like_mapbox_style as _impl
+
+        return _impl(payload)
 
     @staticmethod
     def _looks_like_tilejson(payload: dict) -> bool:
-        """Return whether a JSON payload resembles TileJSON metadata."""
-        return bool(payload.get("tiles"))
+        """Return whether a JSON payload resembles TileJSON metadata.
+
+        Thin delegating proxy over :func:`_vtile_style_util.looks_like_tilejson`.
+        """
+        from ._vtile_style_util import looks_like_tilejson as _impl
+
+        return _impl(payload)
 
     @classmethod
     def _build_generic_vector_style(
         cls, tilejson_payload: dict, layer_name: str
     ) -> dict | None:
-        """Build a generic preview style from TileJSON metadata."""
-        tiles = tilejson_payload.get("tiles")
-        if not isinstance(tiles, list) or not tiles:
-            return None
+        """Build a generic preview style from TileJSON metadata.
 
-        vector_layers = tilejson_payload.get("vector_layers", [])
-        if not isinstance(vector_layers, list) or not vector_layers:
-            Logger.warning(
-                f"TileJSON metadata for {layer_name} does not include vector_layers"
-            )
-            return None
+        Thin delegating proxy over
+        :func:`_vtile_style_util.build_generic_vector_style`.
+        """
+        from ._vtile_style_util import build_generic_vector_style as _impl
 
-        source_name = "preview_source"
-        style_layers: list[dict] = []
-        for index, source_layer in enumerate(vector_layers):
-            source_layer_name = source_layer.get("id")
-            if not source_layer_name:
-                continue
-            fill_color, line_color = cls._layer_palette(source_layer_name, index)
-            style_layers.append(
-                {
-                    "id": f"{source_layer_name}_fill",
-                    "type": "fill",
-                    "source": source_name,
-                    "source-layer": source_layer_name,
-                    "paint": {
-                        "fill-color": fill_color,
-                        "fill-opacity": 0.55,
-                    },
-                }
-            )
-            style_layers.append(
-                {
-                    "id": f"{source_layer_name}_line",
-                    "type": "line",
-                    "source": source_name,
-                    "source-layer": source_layer_name,
-                    "paint": {
-                        "line-color": line_color,
-                        "line-width": 1.1,
-                        "line-opacity": 0.9,
-                    },
-                }
-            )
-            style_layers.append(
-                {
-                    "id": f"{source_layer_name}_circle",
-                    "type": "circle",
-                    "source": source_name,
-                    "source-layer": source_layer_name,
-                    "paint": {
-                        "circle-color": line_color,
-                        "circle-radius": 2.5,
-                        "circle-opacity": 0.95,
-                    },
-                }
-            )
-
-        if not style_layers:
-            return None
-
-        return {
-            "version": 8,
-            "name": f"{layer_name} preview",
-            "sources": {
-                source_name: {
-                    "type": "vector",
-                    "tiles": tiles,
-                    "minzoom": tilejson_payload.get("minzoom", 0),
-                    "maxzoom": tilejson_payload.get("maxzoom", 14),
-                }
-            },
-            "layers": style_layers,
-        }
-
-    @staticmethod
-    def _layer_palette(source_layer_name: str, index: int) -> tuple[str, str]:
-        """Generate deterministic fill/line colors for a source layer."""
-        palettes = [
-            ("#6f9ceb", "#315fba"),
-            ("#83b992", "#2f7d4f"),
-            ("#c9a35b", "#8c5c1e"),
-            ("#b989c5", "#7d3f9c"),
-            ("#6db6b2", "#246f79"),
-            ("#d07b7b", "#993232"),
-        ]
-        palette_index = (sum(ord(char) for char in source_layer_name) + index) % len(
-            palettes
-        )
-        return palettes[palette_index]
+        return _impl(tilejson_payload, layer_name)
 
     @staticmethod
     def _derive_tilejson_url(tile_url: str) -> str:

@@ -164,6 +164,8 @@ def load_xyz_basemap(provider: dict[str, Any], basemap: dict[str, Any]) -> None:
     try:
         if tile_type == "vector":
             _load_vector_tile(provider, basemap, token, token_param, name)
+        elif tile_type == "group":
+            _load_group_tile(provider, basemap, token, token_param, name)
         else:
             _load_xyz_raster(basemap, token, token_param, name)
     except (KeyError, TypeError) as exc:
@@ -218,6 +220,323 @@ def _load_vector_tile(
     task.taskCompleted.connect(lambda t=task: _VectorTileLoadTask._drop(t))
     task.taskTerminated.connect(lambda t=task: _VectorTileLoadTask._drop(t))
     QgsApplication.taskManager().addTask(task)
+
+
+def _fetch_group_style(style_url: str) -> tuple[str | None, str | None]:
+    """Synchronously fetch a group style JSON; return (text, etag).
+
+    A simplified non-QgsTask version of
+    :meth:`_VectorTileLoadTask._fetch_style` for group basemaps, which
+    need the style.json available before any child layer can be created.
+    """
+    request = QNetworkRequest(QUrl(style_url))
+    for header, value in _VECTOR_STYLE_REQUEST_HEADERS:
+        request.setRawHeader(header, value)
+
+    network_request = QgsBlockingNetworkRequest()
+    error_code = network_request.get(request, True)
+    if error_code != QgsBlockingNetworkRequest.NoError:
+        Logger.warning(
+            QCoreApplication.translate(
+                "BasemapsBrowser",
+                "Failed to download group style '{}': {}",
+            ).format(style_url, network_request.errorMessage())
+        )
+        return None, None
+
+    reply = network_request.reply()
+    status_code = reply.attribute(_HTTP_STATUS_ATTRIBUTE)
+    if status_code and int(status_code) >= 400:
+        Logger.warning(
+            QCoreApplication.translate(
+                "BasemapsBrowser",
+                "Failed to download group style '{}': HTTP {}",
+            ).format(style_url, status_code)
+        )
+        return None, None
+
+    # Extract ETag
+    raw_etag = reply.rawHeader(b"ETag")
+    etag: str | None = None
+    if raw_etag:
+        try:
+            etag = bytes(raw_etag).decode("utf-8").strip()
+        except (UnicodeDecodeError, TypeError):
+            etag = None
+        if etag and etag.startswith('"') and etag.endswith('"') and len(etag) >= 2:
+            etag = etag[1:-1]
+
+    content = bytes(reply.content())
+    if not content:
+        return None, None
+    try:
+        return content.decode("utf-8"), etag
+    except UnicodeDecodeError:
+        return None, None
+
+
+def _load_group_tile(
+    provider: dict[str, Any],
+    basemap: dict[str, Any],
+    token: str,
+    token_param: str,
+    name: str,
+) -> None:
+    """Schedule async creation of a group (multi-source) basemap.
+
+    A group basemap has a ``sources`` list — each entry references one
+    tileset that the shared ``style_url`` (a Mapbox style document) uses as a
+    ``sources`` key.  QGIS's :class:`QgsVectorTileLayer` URI accepts only one
+    tile ``url``; the style.json is applied for rendering and QGIS draws only
+    the style layers whose ``source`` field matches the layer's tile URL.
+
+    For each source we create one layer (vector or raster) and add it to a
+    :class:`QgsLayerTreeGroup` so all sources render together as one basemap.
+
+    The style.json download runs in a background :class:`QgsTask` to avoid
+    blocking the UI; layer/group creation happens on the main thread in
+    :meth:`_GroupLoadTask.finished`.
+    """
+    style_url = append_token(basemap.get("style_url", ""), token, token_param)
+    sources = basemap.get("sources", [])
+    # Need at least sources; style_url is optional if every vector source
+    # carries its own style_url.
+    has_per_source_styles = any(
+        s.get("style_url", "").strip() for s in sources
+        if s.get("source_type", "vector") == "vector"
+    )
+    if not sources or (not style_url and not has_per_source_styles):
+        Logger.warning(
+            QCoreApplication.translate(
+                "BasemapsBrowser",
+                "Group basemap '{}' is missing sources or style_url",
+            ).format(name)
+        )
+        return
+
+    source_file = provider.get("source_file", "")
+    is_default = "default" in source_file if source_file else True
+
+    # Prepend tokens to each source URL so the background task doesn't need
+    # to touch provider/basemap dicts again.
+    prepared_sources = []
+    for src in sources:
+        prepared_sources.append({
+            "url": append_token(src.get("url", ""), token, token_param),
+            "source_name": src.get("source_name", ""),
+            "source_type": src.get("source_type", "vector"),
+            # Per-source style_url (optional) overrides the group style.
+            "style_url": append_token(src.get("style_url", ""), token, token_param),
+        })
+
+    task = _GroupLoadTask(
+        name,
+        style_url,
+        provider.get("name", ""),
+        is_default,
+        prepared_sources,
+    )
+    _GroupLoadTask._active_tasks.append(task)
+    task.taskCompleted.connect(lambda t=task: _GroupLoadTask._drop(t))
+    task.taskTerminated.connect(lambda t=task: _GroupLoadTask._drop(t))
+    QgsApplication.taskManager().addTask(task)
+
+
+def _insert_group_above_selection(root, name: str):
+    """Insert a new layer group above the currently selected layer.
+
+    Falls back to appending at the end when nothing is selected or the
+    selection cannot be located (same behaviour as ``root.addGroup``).
+    """
+    try:
+        from qgis.utils import iface as _iface
+    except ImportError:
+        return root.addGroup(name)
+
+    view = _iface.layerTreeView() if _iface else None
+    if view is None:
+        return root.addGroup(name)
+
+    selected = view.selectedNodes()
+    if not selected:
+        return root.addGroup(name)
+
+    node = selected[0]
+    parent = node.parent() if node.parent() else root
+    try:
+        index = parent.children().index(node)
+    except (ValueError, AttributeError):
+        return root.addGroup(name)
+
+    return parent.insertGroup(index, name)
+
+
+class _GroupLoadTask(QgsTask):
+    """Background task for loading a group (multi-source) basemap.
+
+    Downloads the shared style.json in ``run()`` (background thread), then
+    creates a :class:`QgsLayerTreeGroup` with one layer per source in
+    ``finished()`` (main thread).
+    """
+
+    _active_tasks: list["_GroupLoadTask"] = []
+
+    @classmethod
+    def _drop(cls, task: "_GroupLoadTask") -> None:
+        if task in cls._active_tasks:
+            cls._active_tasks.remove(task)
+
+    def __init__(
+        self,
+        name: str,
+        style_url: str,
+        provider_name: str,
+        is_default: bool,
+        sources: list[dict[str, str]],
+    ) -> None:
+        super().__init__(
+            QCoreApplication.translate(
+                "BasemapsBrowser", "Loading group basemap..."
+            ),
+            QgsTask.Flag.CanCancel,
+        )
+        self.name = name
+        self.style_url = style_url
+        self.provider_name = provider_name
+        self.is_default = is_default
+        self.sources = sources
+        self.temp_style_path: str | None = None
+        # Per-source cached style paths, keyed by source index.  A source
+        # may carry its own ``style_url`` that overrides the group style.
+        self.per_source_style_paths: dict[int, str] = {}
+
+    def run(self) -> bool:
+        """Download style JSONs (background thread). Always returns True."""
+        cache = get_style_cache()
+
+        # Group style (shared fallback).
+        if self.style_url:
+            cached = cache.get_cached_style(
+                self.provider_name, self.name, self.is_default
+            )
+            if cached:
+                self.temp_style_path = str(cached)
+            else:
+                style_text, etag = _fetch_group_style(self.style_url)
+                if style_text:
+                    cache.save(
+                        self.provider_name, self.name, self.is_default,
+                        style_text, etag or "", style_url=self.style_url,
+                    )
+                    cached = cache.get_cached_style(
+                        self.provider_name, self.name, self.is_default
+                    )
+                    if cached:
+                        self.temp_style_path = str(cached)
+
+        # Per-source styles (override the group style when present).
+        for idx, src in enumerate(self.sources):
+            src_style_url = src.get("style_url", "")
+            if not src_style_url:
+                continue
+            src_name = src.get("source_name", "") or f"{self.name}_{idx}"
+            cached = cache.get_cached_style(
+                self.provider_name, f"{self.name}__{src_name}", self.is_default
+            )
+            if cached:
+                self.per_source_style_paths[idx] = str(cached)
+                continue
+            style_text, etag = _fetch_group_style(src_style_url)
+            if style_text:
+                cache.save(
+                    self.provider_name,
+                    f"{self.name}__{src_name}",
+                    self.is_default,
+                    style_text, etag or "", style_url=src_style_url,
+                )
+                cached = cache.get_cached_style(
+                    self.provider_name, f"{self.name}__{src_name}", self.is_default
+                )
+                if cached:
+                    self.per_source_style_paths[idx] = str(cached)
+        return True
+
+    def finished(self, result: bool) -> None:
+        """Create the layer group and child layers on the main thread."""
+        if not self.temp_style_path and not self.per_source_style_paths:
+            Logger.critical(
+                QCoreApplication.translate(
+                    "BasemapsBrowser",
+                    "Failed to download group style: '{}'",
+                ).format(self.name)
+            )
+            _report_load_failure(self.name)
+            return
+
+        cached_style_url = safe_file_url(self.temp_style_path) if self.temp_style_path else ""
+
+        # Create the layer group, inserting above the currently selected
+        # layer so it behaves like a normal layer addition (selected layers
+        # and everything below shift down by one).
+        root = QgsProject.instance().layerTreeRoot()
+        group = _insert_group_above_selection(root, self.name)
+
+        for idx, src in enumerate(self.sources):
+            src_url = src.get("url", "")
+            src_name = src.get("source_name", "")
+            src_type = src.get("source_type", "vector")
+            layer_display_name = src_name or self.name
+
+            if not src_url:
+                Logger.warning(
+                    QCoreApplication.translate(
+                        "BasemapsBrowser",
+                        "Composite source '{}' has no url; skipped",
+                    ).format(src_name or "?")
+                )
+                continue
+
+            if src_type == "raster":
+                # Raster / raster-dem source: load as plain RGB raster via the
+                # wms (xyz) provider. QGIS has no built-in terrain-rgb decoder,
+                # so raster-dem tiles render as coloured RGB, not hillshade.
+                uri = QgsDataSourceUri()
+                uri.setParam("type", "xyz")
+                uri.setParam("url", src_url)
+                layer = QgsRasterLayer(
+                    str(uri.encodedUri(), "utf-8"), layer_display_name, "wms"
+                )
+            else:
+                # Vector source: prefer a per-source style if one was
+                # downloaded; otherwise fall back to the shared group style.
+                src_style_path = self.per_source_style_paths.get(idx)
+                if src_style_path:
+                    style_url_for_layer = safe_file_url(src_style_path)
+                else:
+                    style_url_for_layer = cached_style_url
+                uri = QgsDataSourceUri()
+                uri.setParam("type", "xyz")
+                uri.setParam("url", src_url)
+                encoded = str(uri.encodedUri(), "utf-8")
+                if style_url_for_layer:
+                    encoded += f"&styleUrl={style_url_for_layer}"
+                layer = QgsVectorTileLayer(encoded, layer_display_name)
+                if layer.isValid():
+                    layer.loadDefaultStyle()
+
+            if layer.isValid():
+                # Register in the project without adding to the root tree,
+                # then move into the group.
+                QgsProject.instance().addMapLayer(layer, False)
+                group.addLayer(layer)
+            else:
+                error = layer.error().message() if layer.error() else ""
+                Logger.warning(
+                    QCoreApplication.translate(
+                        "BasemapsBrowser",
+                        "Failed to load group source '{}': {}",
+                    ).format(layer_display_name, error)
+                )
 
 
 class _VectorTileLoadTask(QgsTask):
